@@ -46,7 +46,7 @@ const RegisterForm = () => {
     <div className="register-container">
       <div className="auth-card">
         <h1 className="auth-title">ControlFlow</h1>
-        <p className="auth-subtitle">Регистрация нового аккаунта</p>
+        <p className="auth-subtitle">регистрация</p>
         
         <form onSubmit={handleSubmit}>
           {error && typeof error === 'string' && (
@@ -54,7 +54,7 @@ const RegisterForm = () => {
           )}
           
           <div className="form-group">
-            <label>Email *</label>
+            <label>Email</label>
             <input
               type="email"
               name="email"
@@ -70,7 +70,7 @@ const RegisterForm = () => {
           
           <div className="row">
             <div className="form-group">
-              <label>Имя *</label>
+              <label>Имя</label>
               <input
                 type="text"
                 name="first_name"
@@ -81,7 +81,7 @@ const RegisterForm = () => {
             </div>
             
             <div className="form-group">
-              <label>Фамилия *</label>
+              <label>Фамилия</label>
               <input
                 type="text"
                 name="last_name"
@@ -93,25 +93,25 @@ const RegisterForm = () => {
           </div>
           
           <div className="form-group">
-            <label>Пароль *</label>
+            <label>Пароль</label>
             <input
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="••••••••"
+              placeholder="········"
             />
           </div>
           
           <div className="form-group">
-            <label>Подтверждение пароля *</label>
+            <label>Подтверждение пароля</label>
             <input
               type="password"
               name="password_confirm"
               value={formData.password_confirm}
               onChange={handleChange}
               className={localErrors.password_confirm ? 'error' : ''}
-              placeholder="••••••••"
+              placeholder="········"
             />
             {localErrors.password_confirm && (
               <div className="error-message">{localErrors.password_confirm}</div>
@@ -122,7 +122,7 @@ const RegisterForm = () => {
             {isLoading ? <span className="spinner"></span> : 'Зарегистрироваться'}
           </button>
           
-          <p className="auth-subtitle" style={{ marginTop: '20px' }}>
+          <p className="auth-subtitle" style={{ marginTop: '24px' }}>
             Уже есть аккаунт? <Link to="/login">Войти</Link>
           </p>
         </form>

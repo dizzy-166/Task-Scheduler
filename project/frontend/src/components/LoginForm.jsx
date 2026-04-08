@@ -20,7 +20,7 @@ const LoginForm = () => {
     <div className="login-container">
       <div className="auth-card">
         <h1 className="auth-title">ControlFlow</h1>
-        <p className="auth-subtitle">Вход в систему</p>
+        <p className="auth-subtitle">вход в систему</p>
         
         <form onSubmit={handleSubmit}>
           {error && (
@@ -44,7 +44,7 @@ const LoginForm = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="········"
               required
             />
           </div>
@@ -53,8 +53,8 @@ const LoginForm = () => {
             {isLoading ? <span className="spinner"></span> : 'Войти'}
           </button>
           
-          <p className="auth-subtitle" style={{ marginTop: '20px' }}>
-            Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
+          <p className="auth-subtitle" style={{ marginTop: '24px' }}>
+            Нет аккаунта? <Link to="/register">Регистрация</Link>
           </p>
         </form>
       </div>

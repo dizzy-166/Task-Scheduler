@@ -5,9 +5,10 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: #f3f4f6;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: #ffffff;
   min-height: 100vh;
+  color: #000000;
 }
 
 #root {
@@ -24,42 +25,43 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #ffffff;
 }
 
 /* Карточка авторизации */
 .auth-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 400px;
   padding: 40px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border: 1px solid #000000;
 }
 
 .auth-title {
-  font-size: 28px;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-size: 24px;
+  font-weight: 400;
+  color: #000000;
   text-align: center;
   margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 .auth-subtitle {
   font-size: 14px;
-  color: #6b7280;
+  color: #666666;
   text-align: center;
   margin-bottom: 32px;
 }
 
 .auth-subtitle a {
-  color: #667eea;
+  color: #000000;
   text-decoration: none;
-  font-weight: 500;
+  border-bottom: 1px solid #000000;
 }
 
 .auth-subtitle a:hover {
-  text-decoration: underline;
+  border-bottom: 2px solid #000000;
 }
 
 /* Формы */
@@ -69,43 +71,44 @@ body {
 
 .form-group label {
   display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
+  font-size: 12px;
+  font-weight: 400;
+  color: #666666;
   margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .form-group input {
   width: 100%;
-  padding: 12px 16px;
+  padding: 12px 0;
   font-size: 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: none;
+  border-bottom: 1px solid #cccccc;
   outline: none;
-  transition: all 0.2s;
+  transition: border-color 0.2s;
+  background: transparent;
 }
 
 .form-group input:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-bottom-color: #000000;
 }
 
 .form-group input.error {
-  border-color: #ef4444;
+  border-bottom-color: #000000;
 }
 
 .error-message {
   font-size: 12px;
-  color: #ef4444;
+  color: #666666;
   margin-top: 4px;
 }
 
 .global-error {
   padding: 12px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  color: #dc2626;
+  background: #f5f5f5;
+  border-left: 3px solid #000000;
+  color: #000000;
   font-size: 14px;
   margin-bottom: 20px;
 }
@@ -113,38 +116,39 @@ body {
 /* Кнопки */
 .btn {
   width: 100%;
-  padding: 12px 20px;
-  font-size: 16px;
-  font-weight: 500;
-  color: white;
-  background: #667eea;
-  border: none;
-  border-radius: 8px;
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #ffffff;
+  background: #000000;
+  border: 1px solid #000000;
   cursor: pointer;
   transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .btn:hover {
-  background: #5a67d8;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.btn:active {
-  transform: translateY(0);
+  background: #ffffff;
+  color: #000000;
 }
 
 .btn:disabled {
-  background: #9ca3af;
+  background: #cccccc;
+  border-color: #cccccc;
+  color: #666666;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+}
+
+.btn:disabled:hover {
+  background: #cccccc;
+  color: #666666;
 }
 
 /* Строка с двумя полями */
 .row {
   display: flex;
-  gap: 12px;
+  gap: 16px;
 }
 
 .row .form-group {
@@ -154,106 +158,117 @@ body {
 /* Дашборд */
 .dashboard {
   min-height: 100vh;
-  background: #f9fafb;
+  background: #ffffff;
 }
 
 .navbar {
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 16px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #000000;
+  padding: 20px 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .navbar-brand {
-  font-size: 20px;
-  font-weight: 600;
-  color: #667eea;
+  font-size: 18px;
+  font-weight: 400;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 .navbar-user {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 24px;
 }
 
 .user-info {
   font-size: 14px;
-  color: #374151;
+  color: #666666;
 }
 
 .btn-logout {
   padding: 8px 16px;
-  font-size: 14px;
-  color: white;
-  background: #ef4444;
-  border: none;
-  border-radius: 6px;
+  font-size: 12px;
+  color: #000000;
+  background: transparent;
+  border: 1px solid #000000;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .btn-logout:hover {
-  background: #dc2626;
+  background: #000000;
+  color: #ffffff;
 }
 
 .dashboard-content {
-  padding: 24px;
-  max-width: 1200px;
+  padding: 40px 32px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
 .welcome-card {
-  background: white;
-  border-radius: 12px;
-  padding: 32px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border: 1px solid #000000;
+  padding: 40px;
 }
 
 .welcome-title {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin-bottom: 16px;
+  font-size: 20px;
+  font-weight: 400;
+  color: #000000;
+  margin-bottom: 32px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .user-details {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-top: 24px;
+  display: block;
 }
 
 .detail-item {
-  padding: 16px;
-  background: #f9fafb;
-  border-radius: 8px;
+  padding: 16px 0;
+  border-bottom: 1px solid #eeeeee;
+  display: flex;
+  align-items: baseline;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
 }
 
 .detail-label {
   font-size: 12px;
-  color: #6b7280;
+  color: #666666;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  letter-spacing: 1px;
+  width: 140px;
 }
 
 .detail-value {
   font-size: 16px;
-  font-weight: 500;
-  color: #1a1a1a;
+  font-weight: 400;
+  color: #000000;
 }
 
 /* Спиннер загрузки */
 .spinner {
   display: inline-block;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  border-top-color: white;
+  border-top-color: #ffffff;
   animation: spin 0.8s linear infinite;
+}
+
+.btn:hover .spinner {
+  border-top-color: #000000;
 }
 
 @keyframes spin {
@@ -266,6 +281,7 @@ body {
 @media (max-width: 640px) {
   .auth-card {
     padding: 24px;
+    border: none;
   }
   
   .row {
@@ -275,7 +291,24 @@ body {
   
   .navbar {
     flex-direction: column;
-    gap: 12px;
-    text-align: center;
+    gap: 16px;
+    padding: 20px;
+  }
+  
+  .dashboard-content {
+    padding: 20px;
+  }
+  
+  .welcome-card {
+    padding: 24px;
+  }
+  
+  .detail-item {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .detail-label {
+    width: auto;
   }
 }

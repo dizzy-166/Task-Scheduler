@@ -35,7 +35,7 @@ const DashboardPage = () => {
       <div className="dashboard-content">
         <div className="welcome-card">
           <h2 className="welcome-title">
-            Добро пожаловать, {user?.first_name || 'пользователь'}!
+            {user?.first_name || 'Пользователь'}
           </h2>
           
           <div className="user-details">
@@ -45,20 +45,13 @@ const DashboardPage = () => {
             </div>
             
             <div className="detail-item">
-              <div className="detail-label">Полное имя</div>
+              <div className="detail-label">Имя</div>
               <div className="detail-value">{user?.full_name || '—'}</div>
             </div>
             
             <div className="detail-item">
               <div className="detail-label">Роль</div>
               <div className="detail-value">{getRoleName(user?.role)}</div>
-            </div>
-            
-            <div className="detail-item">
-              <div className="detail-label">Статус</div>
-              <div className="detail-value">
-                {user?.is_active ? '🟢 Активен' : '🔴 Неактивен'}
-              </div>
             </div>
           </div>
         </div>
