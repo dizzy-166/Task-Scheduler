@@ -6,9 +6,9 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  background: #ffffff;
+  background: #f5f5f5;
   min-height: 100vh;
-  color: #000000;
+  color: #1a1a1a;
 }
 
 #root {
@@ -25,7 +25,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: #ffffff;
+  background: #f5f5f5;
 }
 
 /* Карточка авторизации */
@@ -34,17 +34,16 @@ body {
   max-width: 400px;
   padding: 40px;
   background: #ffffff;
-  border: 1px solid #000000;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .auth-title {
-  font-size: 24px;
-  font-weight: 400;
-  color: #000000;
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
   text-align: center;
   margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
 }
 
 .auth-subtitle {
@@ -55,13 +54,12 @@ body {
 }
 
 .auth-subtitle a {
-  color: #000000;
+  color: #0066ff;
   text-decoration: none;
-  border-bottom: 1px solid #000000;
 }
 
 .auth-subtitle a:hover {
-  border-bottom: 2px solid #000000;
+  text-decoration: underline;
 }
 
 /* Формы */
@@ -71,44 +69,43 @@ body {
 
 .form-group label {
   display: block;
-  font-size: 12px;
-  font-weight: 400;
-  color: #666666;
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
 }
 
 .form-group input {
   width: 100%;
-  padding: 12px 0;
-  font-size: 16px;
-  border: none;
-  border-bottom: 1px solid #cccccc;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   outline: none;
-  transition: border-color 0.2s;
-  background: transparent;
+  transition: all 0.2s;
+  background: #ffffff;
 }
 
 .form-group input:focus {
-  border-bottom-color: #000000;
+  border-color: #0066ff;
+  box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.1);
 }
 
 .form-group input.error {
-  border-bottom-color: #000000;
+  border-color: #ff3b30;
 }
 
 .error-message {
   font-size: 12px;
-  color: #666666;
+  color: #ff3b30;
   margin-top: 4px;
 }
 
 .global-error {
   padding: 12px;
-  background: #f5f5f5;
-  border-left: 3px solid #000000;
-  color: #000000;
+  background: #fee;
+  border-radius: 8px;
+  color: #ff3b30;
   font-size: 14px;
   margin-bottom: 20px;
 }
@@ -116,33 +113,24 @@ body {
 /* Кнопки */
 .btn {
   width: 100%;
-  padding: 14px 20px;
+  padding: 12px 20px;
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 500;
   color: #ffffff;
-  background: #000000;
-  border: 1px solid #000000;
+  background: #0066ff;
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
 .btn:hover {
-  background: #ffffff;
-  color: #000000;
+  background: #0052cc;
 }
 
 .btn:disabled {
-  background: #cccccc;
-  border-color: #cccccc;
-  color: #666666;
+  background: #ccc;
   cursor: not-allowed;
-}
-
-.btn:disabled:hover {
-  background: #cccccc;
-  color: #666666;
 }
 
 /* Строка с двумя полями */
@@ -153,107 +141,6 @@ body {
 
 .row .form-group {
   flex: 1;
-}
-
-/* Дашборд */
-.dashboard {
-  min-height: 100vh;
-  background: #ffffff;
-}
-
-.navbar {
-  background: #ffffff;
-  border-bottom: 1px solid #000000;
-  padding: 20px 32px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.navbar-brand {
-  font-size: 18px;
-  font-weight: 400;
-  color: #000000;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-.navbar-user {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.user-info {
-  font-size: 14px;
-  color: #666666;
-}
-
-.btn-logout {
-  padding: 8px 16px;
-  font-size: 12px;
-  color: #000000;
-  background: transparent;
-  border: 1px solid #000000;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.btn-logout:hover {
-  background: #000000;
-  color: #ffffff;
-}
-
-.dashboard-content {
-  padding: 40px 32px;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.welcome-card {
-  background: #ffffff;
-  border: 1px solid #000000;
-  padding: 40px;
-}
-
-.welcome-title {
-  font-size: 20px;
-  font-weight: 400;
-  color: #000000;
-  margin-bottom: 32px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.user-details {
-  display: block;
-}
-
-.detail-item {
-  padding: 16px 0;
-  border-bottom: 1px solid #eeeeee;
-  display: flex;
-  align-items: baseline;
-}
-
-.detail-item:last-child {
-  border-bottom: none;
-}
-
-.detail-label {
-  font-size: 12px;
-  color: #666666;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  width: 140px;
-}
-
-.detail-value {
-  font-size: 16px;
-  font-weight: 400;
-  color: #000000;
 }
 
 /* Спиннер загрузки */
@@ -267,21 +154,599 @@ body {
   animation: spin 0.8s linear infinite;
 }
 
-.btn:hover .spinner {
-  border-top-color: #000000;
-}
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
+/* ============================================
+   DASHBOARD STYLES
+   ============================================ */
+
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background: #ffffff;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+}
+
+.sidebar-header {
+  padding: 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  color: #666;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.nav-item:hover {
+  background: #f5f5f5;
+  color: #1a1a1a;
+}
+
+.nav-item.active {
+  background: #0066ff;
+  color: #ffffff;
+}
+
+.nav-item svg {
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.user-info-sidebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  background: #0066ff;
+  color: #ffffff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.user-details-sidebar {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #666;
+}
+
+.logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background: #fee;
+  border-color: #ff3b30;
+  color: #ff3b30;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  margin-left: 260px;
+  padding: 24px 32px;
+}
+
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.header-title h2 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.header-title p {
+  font-size: 14px;
+  color: #666;
+}
+
+.btn-new-task {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #0066ff;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-new-task:hover {
+  background: #0052cc;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.stat-change {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.stat-change.positive {
+  background: #e6f4ea;
+  color: #34a853;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+/* View Tabs */
+.view-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  background: #ffffff;
+  padding: 4px;
+  border-radius: 12px;
+  width: fit-content;
+  border: 1px solid #e0e0e0;
+}
+
+.tab-btn {
+  padding: 8px 20px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  background: #0066ff;
+  color: #ffffff;
+}
+
+/* Kanban Board */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  overflow-x: auto;
+}
+
+.kanban-column {
+  background: #fafafa;
+  border-radius: 12px;
+  min-width: 280px;
+}
+
+.column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 12px 12px 0 0;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.column-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.task-count {
+  background: #e0e0e0;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+}
+
+.column-tasks {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+.task-card {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s;
+}
+
+.task-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.task-card.completed {
+  opacity: 0.7;
+  background: #f9f9f9;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.task-header h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  flex: 1;
+}
+
+.priority-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.priority-high {
+  background: #fee;
+  color: #ff3b30;
+}
+
+.priority-medium {
+  background: #fff3e0;
+  color: #ff9800;
+}
+
+.priority-low {
+  background: #e8f0fe;
+  color: #0066ff;
+}
+
+.task-description {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.task-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.task-assignee {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #666;
+}
+
+.assignee-avatar {
+  width: 24px;
+  height: 24px;
+  background: #e0e0e0;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: #666;
+}
+
+.task-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #ff9800;
+}
+
+.task-time.completed {
+  color: #34a853;
+}
+
+/* List View */
+.list-view {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+}
+
+.list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background 0.2s;
+}
+
+.list-item:hover {
+  background: #fafafa;
+}
+
+.list-item-checkbox {
+  padding-top: 2px;
+}
+
+.list-item-checkbox input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.list-item-content {
+  flex: 1;
+}
+
+.list-item-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.list-item-title h4 {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.list-item-desc {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.list-item-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: #999;
+}
+
+/* Calendar View */
+.calendar-view {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  padding: 20px;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.calendar-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.calendar-nav {
+  padding: 8px 16px;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.calendar-nav:hover {
+  background: #e0e0e0;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.calendar-weekday {
+  padding: 12px;
+  text-align: center;
+  font-weight: 500;
+  color: #666;
+  font-size: 13px;
+}
+
+.calendar-day {
+  min-height: 100px;
+  padding: 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  position: relative;
+}
+
+.day-number {
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  position: absolute;
+  top: 6px;
+  right: 8px;
+}
+
+.calendar-event {
+  background: #e8f0fe;
+  color: #0066ff;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  margin-top: 24px;
+  cursor: pointer;
+}
+
 /* Адаптив */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 80px;
+  }
+  
+  .sidebar-header h1,
+  .nav-item span,
+  .user-details-sidebar,
+  .logout-btn span {
+    display: none;
+  }
+  
+  .sidebar-nav {
+    padding: 20px 8px;
+  }
+  
+  .nav-item {
+    justify-content: center;
+    padding: 12px;
+  }
+  
+  .user-info-sidebar {
+    justify-content: center;
+  }
+  
+  .logout-btn {
+    padding: 10px;
+  }
+  
+  .main-content {
+    margin-left: 80px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .kanban-board {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 640px) {
   .auth-card {
     padding: 24px;
-    border: none;
+    margin: 16px;
   }
   
   .row {
@@ -289,26 +754,23 @@ body {
     gap: 0;
   }
   
-  .navbar {
-    flex-direction: column;
-    gap: 16px;
-    padding: 20px;
+  .main-content {
+    padding: 16px;
   }
   
-  .dashboard-content {
-    padding: 20px;
+  .stats-grid {
+    grid-template-columns: 1fr;
   }
   
-  .welcome-card {
-    padding: 24px;
+  .kanban-board {
+    grid-template-columns: 1fr;
   }
   
-  .detail-item {
-    flex-direction: column;
-    gap: 4px;
+  .view-tabs {
+    width: 100%;
   }
   
-  .detail-label {
-    width: auto;
+  .tab-btn {
+    flex: 1;
   }
 }
