@@ -1,11 +1,213 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
+import TaskModal from '../components/TaskModal';
+import { taskService } from '../api/taskService';
 
 const DashboardPage = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState('kanban'); // kanban, list, calendar
+  const [activeView, setActiveView] = useState('kanban');
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [tasks, setTasks] = useState({
+    todo: [],
+    inProgress: [],
+    onReview: [],
+    completed: []
+  });
+  const [stats, setStats] = useState({
+    total: 0,
+    totalChange: '+0',
+    inProgress: 0,
+    onReview: 0,
+    completed: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  const loadTasks = async () => {
+    setLoading(true);
+    try {
+      const data = await taskService.getTasks();
+      organizeTasks(data);
+    } catch (err) {
+      console.error('Ошибка загрузки задач:', err);
+      // Демо-данные на случай ошибки API
+      loadDemoData();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const organizeTasks = (tasksList) => {
+    const organized = {
+      todo: [],
+      inProgress: [],
+      onReview: [],
+      completed: []
+    };
+
+    tasksList.forEach(task => {
+      const taskItem = {
+        id: task.id,
+        title: task.title,
+        description: task.description || '',
+        priority: getPriorityText(task.priority),
+        assignee: task.assignee?.full_name || task.assignee?.email || 'Не назначен',
+        dueDate: task.due_date,
+        estimatedHours: task.estimated_hours,
+        status: task.status
+      };
+
+      switch(task.status) {
+        case 'new':
+          organized.todo.push(taskItem);
+          break;
+        case 'in_progress':
+          organized.inProgress.push(taskItem);
+          break;
+        case 'review':
+          organized.onReview.push(taskItem);
+          break;
+        case 'done':
+          organized.completed.push(taskItem);
+          break;
+        default:
+          organized.todo.push(taskItem);
+      }
+    });
+
+    setTasks(organized);
+    
+    // Обновляем статистику
+    setStats({
+      total: tasksList.length,
+      totalChange: `+${tasksList.filter(t => t.status === 'new').length}`,
+      inProgress: organized.inProgress.length,
+      onReview: organized.onReview.length,
+      completed: organized.completed.length
+    });
+  };
+
+  const loadDemoData = () => {
+    const demoTasks = {
+      todo: [
+        {
+          id: 1,
+          title: 'Подготовка контент-плана',
+          priority: 'Средний',
+          description: 'Составить план публикаций на апрель-май',
+          assignee: 'Дмитрий Козлов',
+          timeLeft: '1д 18ч'
+        },
+        {
+          id: 2,
+          title: 'Тестирование мобильной версии',
+          priority: 'Высокий',
+          description: 'Протестировать адаптивность на различных устройствах',
+          assignee: 'Дмитрий Козлов',
+          timeLeft: '13ч 44м'
+        },
+        {
+          id: 3,
+          title: 'Презентация результатов',
+          priority: 'Высокий',
+          description: 'Подготовить слайд для презентации руководству',
+          assignee: 'Павел Новиков',
+          timeLeft: '14ч 44м'
+        }
+      ],
+      inProgress: [
+        {
+          id: 4,
+          title: 'Разработка макетов главной страницы',
+          priority: 'Высокий',
+          description: 'Создать 3 варианта дизайна главной страницы в Figma',
+          assignee: 'Мария Иванова',
+          timeLeft: '2д 12ч'
+        },
+        {
+          id: 5,
+          title: 'Написание документации',
+          priority: 'Средний',
+          description: 'Документировать все API endpoints',
+          assignee: 'Мария Иванова',
+          timeLeft: '4д 12ч'
+        }
+      ],
+      onReview: [
+        {
+          id: 6,
+          title: 'Настройка интеграции с API',
+          priority: 'Высокий',
+          description: 'Подключить CRM к существующим системам через REST API',
+          assignee: 'Павел Новиков',
+          timeLeft: '3д 11ч'
+        },
+        {
+          id: 7,
+          title: 'Код-ревью фронтенд компонентов',
+          priority: 'Низкий',
+          description: 'Проверить React компоненты на соответствие стандартам',
+          assignee: 'Павел Новиков',
+          timeLeft: '2д 8ч'
+        }
+      ],
+      completed: [
+        {
+          id: 8,
+          title: 'Настройка CI/CD',
+          priority: 'Высокий',
+          description: 'Настроить автоматическое развертывание',
+          assignee: 'Алексей Смирнов',
+          timeLeft: 'Завершено'
+        }
+      ]
+    };
+    
+    setTasks(demoTasks);
+    setStats({
+      total: 12,
+      totalChange: '+2',
+      inProgress: 2,
+      onReview: 2,
+      completed: 1
+    });
+  };
+
+  const getPriorityText = (priority) => {
+    const priorities = {
+      low: 'Низкий',
+      medium: 'Средний',
+      high: 'Высокий',
+      critical: 'Критический'
+    };
+    return priorities[priority] || 'Средний';
+  };
+
+  const getPriorityColor = (priority) => {
+    switch(priority) {
+      case 'Критический': return 'priority-critical';
+      case 'Высокий': return 'priority-high';
+      case 'Средний': return 'priority-medium';
+      case 'Низкий': return 'priority-low';
+      default: return 'priority-medium';
+    }
+  };
+
+  const getStatusText = (status) => {
+    const statuses = {
+      new: 'К выполнению',
+      in_progress: 'В работе',
+      review: 'На проверке',
+      done: 'Завершено',
+      cancelled: 'Отменено'
+    };
+    return statuses[status] || status;
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -22,103 +224,54 @@ const DashboardPage = () => {
     return roles[role] || role;
   };
 
-  // Статистика
-  const stats = {
-    total: 12,
-    totalChange: '+2',
-    inProgress: 1,
-    onReview: 5,
-    completed: 4
+  const handleTaskCreated = (newTask) => {
+    loadTasks(); // Перезагружаем список задач
   };
 
-  // Данные для канбан-доски
-  const tasks = {
-    todo: [
-      {
-        id: 1,
-        title: 'Подготовка контент-плана',
-        priority: 'Средний',
-        description: 'Составить план публикаций на апрель-май',
-        assignee: 'Дмитрий Козлов',
-        timeLeft: '1д 18ч'
-      },
-      {
-        id: 2,
-        title: 'Тестирование мобильной версии',
-        priority: 'Высокий',
-        description: 'Протестировать адаптивность на различных устройствах',
-        assignee: 'Дмитрий Козлов',
-        timeLeft: '13ч 44м'
-      },
-      {
-        id: 3,
-        title: 'Презентация результатов',
-        priority: 'Высокий',
-        description: 'Подготовить слайд для презентации руководству',
-        assignee: 'Павел Новиков',
-        timeLeft: '14ч 44м'
-      }
-    ],
-    inProgress: [
-      {
-        id: 4,
-        title: 'Разработка макетов главной страницы',
-        priority: 'Высокий',
-        description: 'Создать 3 варианта дизайна главной страницы в Figma',
-        assignee: 'Мария Иванова',
-        timeLeft: '2д 12ч'
-      },
-      {
-        id: 5,
-        title: 'Написание документации',
-        priority: 'Средний',
-        description: 'Документировать все API endpoints',
-        assignee: 'Мария Иванова',
-        timeLeft: '4д 12ч'
-      }
-    ],
-    onReview: [
-      {
-        id: 6,
-        title: 'Настройка интеграции с API',
-        priority: 'Высокий',
-        description: 'Подключить CRM к существующим системам через REST API',
-        assignee: 'Павел Новиков',
-        timeLeft: '3д 11ч'
-      },
-      {
-        id: 7,
-        title: 'Код-ревью фронтенд компонентов',
-        priority: 'Низкий',
-        description: 'Проверить React компоненты на соответствие стандартам',
-        assignee: 'Павел Новиков',
-        timeLeft: '2д 8ч'
-      }
-    ],
-    completed: [
-      {
-        id: 8,
-        title: 'Настройка CI/CD',
-        priority: 'Высокий',
-        description: 'Настроить автоматическое развертывание',
-        assignee: 'Алексей Смирнов',
-        timeLeft: 'Завершено'
-      }
-    ]
-  };
-
-  const getPriorityColor = (priority) => {
-    switch(priority) {
-      case 'Высокий': return 'priority-high';
-      case 'Средний': return 'priority-medium';
-      case 'Низкий': return 'priority-low';
-      default: return '';
+  const formatTimeLeft = (dueDate, estimatedHours) => {
+    if (!dueDate && !estimatedHours) return '—';
+    
+    if (dueDate) {
+      const now = new Date();
+      const due = new Date(dueDate);
+      const diff = due - now;
+      
+      if (diff <= 0) return 'Просрочено';
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      
+      if (days > 0) return `${days}д ${hours}ч`;
+      if (hours > 0) return `${hours}ч`;
+      return 'Менее часа';
     }
+    
+    if (estimatedHours) {
+      const days = Math.floor(estimatedHours / 24);
+      const hours = estimatedHours % 24;
+      if (days > 0) return `${days}д ${hours}ч`;
+      return `${hours}ч`;
+    }
+    
+    return '—';
   };
+
+  if (loading) {
+    return (
+      <div className="dashboard">
+        <aside className="sidebar">...</aside>
+        <main className="main-content">
+          <div className="loading-container">
+            <div className="spinner-large"></div>
+            <p>Загрузка задач...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard">
-      {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
           <h1 className="logo">TaskFlow Pro</h1>
@@ -164,16 +317,14 @@ const DashboardPage = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="main-content">
-        {/* Header */}
         <header className="main-header">
           <div className="header-title">
             <h2>Дашборд</h2>
             <p>Управление задачами и проектами</p>
           </div>
           <div className="header-actions">
-            <button className="btn-new-task">
+            <button className="btn-new-task" onClick={() => setIsTaskModalOpen(true)}>
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="1.5"/>
               </svg>
@@ -182,7 +333,6 @@ const DashboardPage = () => {
           </div>
         </header>
 
-        {/* Stats Cards */}
         <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-header">
@@ -214,7 +364,6 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* View Tabs */}
         <div className="view-tabs">
           <button 
             className={`tab-btn ${activeView === 'list' ? 'active' : ''}`}
@@ -236,7 +385,6 @@ const DashboardPage = () => {
           </button>
         </div>
 
-        {/* Kanban Board */}
         {activeView === 'kanban' && (
           <div className="kanban-board">
             <div className="kanban-column">
@@ -266,7 +414,7 @@ const DashboardPage = () => {
                           <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1"/>
                           <path d="M7 3v4l2 2" stroke="currentColor" strokeWidth="1"/>
                         </svg>
-                        <span>{task.timeLeft}</span>
+                        <span>{task.timeLeft || formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
                       </div>
                     </div>
                   </div>
@@ -301,7 +449,7 @@ const DashboardPage = () => {
                           <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1"/>
                           <path d="M7 3v4l2 2" stroke="currentColor" strokeWidth="1"/>
                         </svg>
-                        <span>{task.timeLeft}</span>
+                        <span>{task.timeLeft || formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
                       </div>
                     </div>
                   </div>
@@ -336,7 +484,7 @@ const DashboardPage = () => {
                           <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1"/>
                           <path d="M7 3v4l2 2" stroke="currentColor" strokeWidth="1"/>
                         </svg>
-                        <span>{task.timeLeft}</span>
+                        <span>{task.timeLeft || formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
                       </div>
                     </div>
                   </div>
@@ -367,7 +515,7 @@ const DashboardPage = () => {
                         <span>{task.assignee}</span>
                       </div>
                       <div className="task-time completed">
-                        <span>✓ {task.timeLeft}</span>
+                        <span>✓ Завершено</span>
                       </div>
                     </div>
                   </div>
@@ -377,35 +525,31 @@ const DashboardPage = () => {
           </div>
         )}
 
-        {/* List View */}
         {activeView === 'list' && (
           <div className="list-view">
-            {Object.entries(tasks).map(([status, taskList]) => (
-              taskList.map(task => (
-                <div key={task.id} className="list-item">
-                  <div className="list-item-checkbox">
-                    <input type="checkbox" />
+            {[...tasks.todo, ...tasks.inProgress, ...tasks.onReview, ...tasks.completed].map(task => (
+              <div key={task.id} className="list-item">
+                <div className="list-item-checkbox">
+                  <input type="checkbox" />
+                </div>
+                <div className="list-item-content">
+                  <div className="list-item-title">
+                    <h4>{task.title}</h4>
+                    <span className={`priority-badge ${getPriorityColor(task.priority)}`}>
+                      {task.priority}
+                    </span>
                   </div>
-                  <div className="list-item-content">
-                    <div className="list-item-title">
-                      <h4>{task.title}</h4>
-                      <span className={`priority-badge ${getPriorityColor(task.priority)}`}>
-                        {task.priority}
-                      </span>
-                    </div>
-                    <p className="list-item-desc">{task.description}</p>
-                    <div className="list-item-meta">
-                      <span className="meta-assignee">{task.assignee}</span>
-                      <span className="meta-time">{task.timeLeft}</span>
-                    </div>
+                  <p className="list-item-desc">{task.description}</p>
+                  <div className="list-item-meta">
+                    <span className="meta-assignee">{task.assignee}</span>
+                    <span className="meta-time">{task.timeLeft || formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
                   </div>
                 </div>
-              ))
+              </div>
             ))}
           </div>
         )}
 
-        {/* Calendar View */}
         {activeView === 'calendar' && (
           <div className="calendar-view">
             <div className="calendar-header">
@@ -420,14 +564,21 @@ const DashboardPage = () => {
               {Array.from({ length: 30 }, (_, i) => i + 1).map(day => (
                 <div key={day} className="calendar-day">
                   <span className="day-number">{day}</span>
-                  {day === 15 && <div className="calendar-event">Подготовка контент-плана</div>}
-                  {day === 20 && <div className="calendar-event">Тестирование мобильной версии</div>}
+                  {tasks.todo.some(t => new Date(t.dueDate).getDate() === day) && (
+                    <div className="calendar-event">Задача</div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         )}
       </main>
+
+      <TaskModal 
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+        onTaskCreated={handleTaskCreated}
+      />
     </div>
   );
 };
