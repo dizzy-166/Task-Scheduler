@@ -48,10 +48,10 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_spectacular',
     
-    # Local apps - ВАЖНО: полный путь к приложениям
     'apps.users',
     'apps.core',
     'apps.activity',
+    'apps.tasks',
 ]
 
 MIDDLEWARE = [

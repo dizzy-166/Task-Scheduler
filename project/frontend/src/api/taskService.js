@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:8000/api'; // Замените на ваш URL
+// Правильный URL
+const API_URL = 'http://localhost:8000';  // Без /api в конце
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('accessToken');
@@ -9,28 +10,26 @@ const getAuthHeaders = () => {
 };
 
 export const taskService = {
-  // Получить все задачи
   async getTasks(params = {}) {
     const queryParams = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_URL}/tasks/?${queryParams}`, {
+    // ВАЖНО: добавляем /api/ перед эндпоинтом
+    const response = await fetch(`${API_URL}/api/tasks/?${queryParams}`, {
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Ошибка загрузки задач');
     return response.json();
   },
 
-  // Получить задачу по ID
   async getTaskById(id) {
-    const response = await fetch(`${API_URL}/tasks/${id}/`, {
+    const response = await fetch(`${API_URL}/api/tasks/${id}/`, {
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Ошибка загрузки задачи');
     return response.json();
   },
 
-  // Создать задачу
   async createTask(taskData) {
-    const response = await fetch(`${API_URL}/tasks/`, {
+    const response = await fetch(`${API_URL}/api/tasks/`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(taskData)
@@ -42,9 +41,8 @@ export const taskService = {
     return response.json();
   },
 
-  // Обновить задачу
   async updateTask(id, taskData) {
-    const response = await fetch(`${API_URL}/tasks/${id}/`, {
+    const response = await fetch(`${API_URL}/api/tasks/${id}/`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(taskData)
@@ -53,9 +51,8 @@ export const taskService = {
     return response.json();
   },
 
-  // Удалить задачу
   async deleteTask(id) {
-    const response = await fetch(`${API_URL}/tasks/${id}/`, {
+    const response = await fetch(`${API_URL}/api/tasks/${id}/`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
@@ -63,18 +60,18 @@ export const taskService = {
     return true;
   },
 
-  // Получить проекты для выбора
   async getProjects() {
-    const response = await fetch(`${API_URL}/projects/`, {
+    // Исправлен путь
+    const response = await fetch(`${API_URL}/api/projects/`, {
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Ошибка загрузки проектов');
     return response.json();
   },
 
-  // Получить пользователей для назначения
   async getUsers() {
-    const response = await fetch(`${API_URL}/users/`, {
+    // Исправлен путь
+    const response = await fetch(`${API_URL}/api/users/`, {
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Ошибка загрузки пользователей');
