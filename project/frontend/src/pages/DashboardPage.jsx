@@ -17,32 +17,83 @@ const DashboardPage = () => {
   });
   const [stats, setStats] = useState({
     total: 0,
-    totalChange: '+0',
     inProgress: 0,
     onReview: 0,
     completed: 0
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadTasks();
+    loadAllData();
   }, []);
 
-  const loadTasks = async () => {
+  const loadAllData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const data = await taskService.getTasks();
-      organizeTasks(data);
+      await Promise.all([
+        loadTasks(),
+        loadStats()
+      ]);
     } catch (err) {
-      console.error('Ошибка загрузки задач:', err);
-      // Демо-данные на случай ошибки API
-      loadDemoData();
+      console.error('Ошибка загрузки данных:', err);
+      setError('Не удалось загрузить данные. Проверьте подключение к серверу.');
     } finally {
       setLoading(false);
     }
   };
 
+  const loadTasks = async () => {
+    try {
+      const data = await taskService.getTasks();
+      console.log('Загружены задачи (сырые данные):', data);
+      
+      // Определяем, где находятся задачи в ответе
+      let tasksList = [];
+      if (data && data.results && Array.isArray(data.results)) {
+        // Пагинированный ответ DRF
+        tasksList = data.results;
+        console.log('Используем results, найдено задач:', tasksList.length);
+      } else if (Array.isArray(data)) {
+        // Прямой массив
+        tasksList = data;
+        console.log('Прямой массив, найдено задач:', tasksList.length);
+      } else {
+        console.error('Неизвестный формат ответа:', data);
+        tasksList = [];
+      }
+      
+      organizeTasks(tasksList);
+    } catch (err) {
+      console.error('Ошибка загрузки задач:', err);
+      setTasks({
+        todo: [],
+        inProgress: [],
+        onReview: [],
+        completed: []
+      });
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const data = await taskService.getStats();
+      console.log('Статистика:', data);
+      setStats({
+        total: data.total || 0,
+        inProgress: data.by_status?.in_progress || 0,
+        onReview: data.by_status?.review || 0,
+        completed: data.by_status?.done || 0
+      });
+    } catch (err) {
+      console.error('Ошибка загрузки статистики:', err);
+    }
+  };
+
   const organizeTasks = (tasksList) => {
+    console.log('organizeTasks получил массив задач:', tasksList);
+    
     const organized = {
       todo: [],
       inProgress: [],
@@ -50,132 +101,59 @@ const DashboardPage = () => {
       completed: []
     };
 
+    if (!tasksList || !Array.isArray(tasksList)) {
+      console.error('tasksList не является массивом!');
+      setTasks(organized);
+      return;
+    }
+
     tasksList.forEach(task => {
+      console.log(`Обработка задачи: ${task.title}, статус: "${task.status}"`);
+      
       const taskItem = {
         id: task.id,
         title: task.title,
         description: task.description || '',
-        priority: getPriorityText(task.priority),
-        assignee: task.assignee?.full_name || task.assignee?.email || 'Не назначен',
+        priority: task.priority_display || getPriorityText(task.priority),
+        assignee: task.assignee_name || 'Не назначен',
         dueDate: task.due_date,
         estimatedHours: task.estimated_hours,
-        status: task.status
+        status: task.status,
+        creator: task.creator_name,
+        createdAt: task.created_at
       };
 
       switch(task.status) {
         case 'new':
           organized.todo.push(taskItem);
+          console.log(`  → Добавлено в "К выполнению"`);
           break;
         case 'in_progress':
           organized.inProgress.push(taskItem);
+          console.log(`  → Добавлено в "В работе"`);
           break;
         case 'review':
           organized.onReview.push(taskItem);
+          console.log(`  → Добавлено в "На проверке"`);
           break;
         case 'done':
           organized.completed.push(taskItem);
+          console.log(`  → Добавлено в "Завершено"`);
           break;
         default:
+          console.log(`  → Неизвестный статус "${task.status}", помещаем в "К выполнению"`);
           organized.todo.push(taskItem);
       }
     });
 
-    setTasks(organized);
-    
-    // Обновляем статистику
-    setStats({
-      total: tasksList.length,
-      totalChange: `+${tasksList.filter(t => t.status === 'new').length}`,
+    console.log('Итоговое распределение:', {
+      todo: organized.todo.length,
       inProgress: organized.inProgress.length,
       onReview: organized.onReview.length,
       completed: organized.completed.length
     });
-  };
-
-  const loadDemoData = () => {
-    const demoTasks = {
-      todo: [
-        {
-          id: 1,
-          title: 'Подготовка контент-плана',
-          priority: 'Средний',
-          description: 'Составить план публикаций на апрель-май',
-          assignee: 'Дмитрий Козлов',
-          timeLeft: '1д 18ч'
-        },
-        {
-          id: 2,
-          title: 'Тестирование мобильной версии',
-          priority: 'Высокий',
-          description: 'Протестировать адаптивность на различных устройствах',
-          assignee: 'Дмитрий Козлов',
-          timeLeft: '13ч 44м'
-        },
-        {
-          id: 3,
-          title: 'Презентация результатов',
-          priority: 'Высокий',
-          description: 'Подготовить слайд для презентации руководству',
-          assignee: 'Павел Новиков',
-          timeLeft: '14ч 44м'
-        }
-      ],
-      inProgress: [
-        {
-          id: 4,
-          title: 'Разработка макетов главной страницы',
-          priority: 'Высокий',
-          description: 'Создать 3 варианта дизайна главной страницы в Figma',
-          assignee: 'Мария Иванова',
-          timeLeft: '2д 12ч'
-        },
-        {
-          id: 5,
-          title: 'Написание документации',
-          priority: 'Средний',
-          description: 'Документировать все API endpoints',
-          assignee: 'Мария Иванова',
-          timeLeft: '4д 12ч'
-        }
-      ],
-      onReview: [
-        {
-          id: 6,
-          title: 'Настройка интеграции с API',
-          priority: 'Высокий',
-          description: 'Подключить CRM к существующим системам через REST API',
-          assignee: 'Павел Новиков',
-          timeLeft: '3д 11ч'
-        },
-        {
-          id: 7,
-          title: 'Код-ревью фронтенд компонентов',
-          priority: 'Низкий',
-          description: 'Проверить React компоненты на соответствие стандартам',
-          assignee: 'Павел Новиков',
-          timeLeft: '2д 8ч'
-        }
-      ],
-      completed: [
-        {
-          id: 8,
-          title: 'Настройка CI/CD',
-          priority: 'Высокий',
-          description: 'Настроить автоматическое развертывание',
-          assignee: 'Алексей Смирнов',
-          timeLeft: 'Завершено'
-        }
-      ]
-    };
     
-    setTasks(demoTasks);
-    setStats({
-      total: 12,
-      totalChange: '+2',
-      inProgress: 2,
-      onReview: 2,
-      completed: 1
-    });
+    setTasks(organized);
   };
 
   const getPriorityText = (priority) => {
@@ -198,17 +176,6 @@ const DashboardPage = () => {
     }
   };
 
-  const getStatusText = (status) => {
-    const statuses = {
-      new: 'К выполнению',
-      in_progress: 'В работе',
-      review: 'На проверке',
-      done: 'Завершено',
-      cancelled: 'Отменено'
-    };
-    return statuses[status] || status;
-  };
-
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -224,8 +191,10 @@ const DashboardPage = () => {
     return roles[role] || role;
   };
 
-  const handleTaskCreated = (newTask) => {
-    loadTasks(); // Перезагружаем список задач
+  const handleTaskCreated = async (newTask) => {
+    console.log('Создана новая задача:', newTask);
+    await loadAllData();
+    setIsTaskModalOpen(false);
   };
 
   const formatTimeLeft = (dueDate, estimatedHours) => {
@@ -259,11 +228,43 @@ const DashboardPage = () => {
   if (loading) {
     return (
       <div className="dashboard">
-        <aside className="sidebar">...</aside>
+        <aside className="sidebar">
+          <div className="sidebar-header">
+            <h1 className="logo">TaskFlow Pro</h1>
+          </div>
+          <div className="sidebar-nav">
+            <a href="#" className="nav-item active">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z" fill="currentColor"/>
+              </svg>
+              <span>Главная</span>
+            </a>
+          </div>
+        </aside>
         <main className="main-content">
           <div className="loading-container">
             <div className="spinner-large"></div>
             <p>Загрузка задач...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard">
+        <aside className="sidebar">
+          <div className="sidebar-header">
+            <h1 className="logo">TaskFlow Pro</h1>
+          </div>
+        </aside>
+        <main className="main-content">
+          <div className="error-container">
+            <div className="error-icon">⚠️</div>
+            <h3>Ошибка загрузки</h3>
+            <p>{error}</p>
+            <button className="btn-primary" onClick={loadAllData}>Повторить</button>
           </div>
         </main>
       </div>
@@ -337,7 +338,6 @@ const DashboardPage = () => {
           <div className="stat-card">
             <div className="stat-header">
               <span className="stat-label">Всего задач</span>
-              <span className="stat-change positive">{stats.totalChange}</span>
             </div>
             <div className="stat-value">{stats.total}</div>
           </div>
@@ -405,7 +405,7 @@ const DashboardPage = () => {
                     <div className="task-footer">
                       <div className="task-assignee">
                         <div className="assignee-avatar">
-                          {task.assignee[0]}
+                          {task.assignee && task.assignee[0] ? task.assignee[0] : '?'}
                         </div>
                         <span>{task.assignee}</span>
                       </div>
@@ -414,11 +414,16 @@ const DashboardPage = () => {
                           <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1"/>
                           <path d="M7 3v4l2 2" stroke="currentColor" strokeWidth="1"/>
                         </svg>
-                        <span>{task.timeLeft || formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
+                        <span>{formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
                       </div>
                     </div>
                   </div>
                 ))}
+                {tasks.todo.length === 0 && (
+                  <div className="empty-column">
+                    <p>Нет задач</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -440,7 +445,7 @@ const DashboardPage = () => {
                     <div className="task-footer">
                       <div className="task-assignee">
                         <div className="assignee-avatar">
-                          {task.assignee[0]}
+                          {task.assignee && task.assignee[0] ? task.assignee[0] : '?'}
                         </div>
                         <span>{task.assignee}</span>
                       </div>
@@ -449,11 +454,16 @@ const DashboardPage = () => {
                           <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1"/>
                           <path d="M7 3v4l2 2" stroke="currentColor" strokeWidth="1"/>
                         </svg>
-                        <span>{task.timeLeft || formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
+                        <span>{formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
                       </div>
                     </div>
                   </div>
                 ))}
+                {tasks.inProgress.length === 0 && (
+                  <div className="empty-column">
+                    <p>Нет задач</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -475,7 +485,7 @@ const DashboardPage = () => {
                     <div className="task-footer">
                       <div className="task-assignee">
                         <div className="assignee-avatar">
-                          {task.assignee[0]}
+                          {task.assignee && task.assignee[0] ? task.assignee[0] : '?'}
                         </div>
                         <span>{task.assignee}</span>
                       </div>
@@ -484,11 +494,16 @@ const DashboardPage = () => {
                           <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1"/>
                           <path d="M7 3v4l2 2" stroke="currentColor" strokeWidth="1"/>
                         </svg>
-                        <span>{task.timeLeft || formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
+                        <span>{formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
                       </div>
                     </div>
                   </div>
                 ))}
+                {tasks.onReview.length === 0 && (
+                  <div className="empty-column">
+                    <p>Нет задач</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -510,7 +525,7 @@ const DashboardPage = () => {
                     <div className="task-footer">
                       <div className="task-assignee">
                         <div className="assignee-avatar">
-                          {task.assignee[0]}
+                          {task.assignee && task.assignee[0] ? task.assignee[0] : '?'}
                         </div>
                         <span>{task.assignee}</span>
                       </div>
@@ -520,6 +535,11 @@ const DashboardPage = () => {
                     </div>
                   </div>
                 ))}
+                {tasks.completed.length === 0 && (
+                  <div className="empty-column">
+                    <p>Нет задач</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -541,12 +561,17 @@ const DashboardPage = () => {
                   </div>
                   <p className="list-item-desc">{task.description}</p>
                   <div className="list-item-meta">
-                    <span className="meta-assignee">{task.assignee}</span>
-                    <span className="meta-time">{task.timeLeft || formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
+                    <span className="meta-assignee">👤 {task.assignee}</span>
+                    <span className="meta-time">⏱ {formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
                   </div>
                 </div>
               </div>
             ))}
+            {[...tasks.todo, ...tasks.inProgress, ...tasks.onReview, ...tasks.completed].length === 0 && (
+              <div className="empty-state">
+                <p>Нет задач. Создайте первую задачу!</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -561,14 +586,17 @@ const DashboardPage = () => {
               {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
                 <div key={day} className="calendar-weekday">{day}</div>
               ))}
-              {Array.from({ length: 30 }, (_, i) => i + 1).map(day => (
-                <div key={day} className="calendar-day">
-                  <span className="day-number">{day}</span>
-                  {tasks.todo.some(t => new Date(t.dueDate).getDate() === day) && (
-                    <div className="calendar-event">Задача</div>
-                  )}
-                </div>
-              ))}
+              {Array.from({ length: 30 }, (_, i) => i + 1).map(day => {
+                const hasTask = [...tasks.todo, ...tasks.inProgress, ...tasks.onReview].some(
+                  t => t.dueDate && new Date(t.dueDate).getDate() === day
+                );
+                return (
+                  <div key={day} className="calendar-day">
+                    <span className="day-number">{day}</span>
+                    {hasTask && <div className="calendar-event">📋 Задача</div>}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

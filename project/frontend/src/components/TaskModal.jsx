@@ -5,41 +5,37 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    project_id: '',
     assignee_id: '',
-    parent_task_id: '',
     priority: 'medium',
     status: 'new',
     due_date: '',
     estimated_hours: ''
   });
-  const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
-      loadProjects();
       loadUsers();
     }
   }, [isOpen]);
 
-  const loadProjects = async () => {
-    try {
-      const data = await taskService.getProjects();
-      setProjects(data);
-    } catch (err) {
-      console.error('Ошибка загрузки проектов:', err);
-    }
-  };
-
   const loadUsers = async () => {
     try {
       const data = await taskService.getUsers();
-      setUsers(data);
+      // Проверяем, что data - это массив
+      if (Array.isArray(data)) {
+        setUsers(data);
+      } else if (data.results && Array.isArray(data.results)) {
+        // Если API возвращает пагинированный ответ
+        setUsers(data.results);
+      } else {
+        setUsers([]);
+      }
     } catch (err) {
       console.error('Ошибка загрузки пользователей:', err);
+      setUsers([]);
     }
   };
 
@@ -59,21 +55,34 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
 
     setLoading(true);
     try {
+      let formattedDueDate = null;
+      if (formData.due_date) {
+        const date = new Date(formData.due_date);
+        if (!isNaN(date.getTime())) {
+          formattedDueDate = date.toISOString();
+        }
+      }
+
       const taskData = {
-        ...formData,
-        due_date: formData.due_date || null,
+        title: formData.title,
+        description: formData.description || '',
+        priority: formData.priority,
+        status: formData.status,
         estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null,
-        parent_task_id: formData.parent_task_id || null,
-        project_id: formData.project_id || null,
-        assignee_id: formData.assignee_id || null
+        due_date: formattedDueDate,
+        assignee_id: formData.assignee_id || null,
       };
       
       const newTask = await taskService.createTask(taskData);
-      onTaskCreated(newTask);
+      
+      if (onTaskCreated) {
+        onTaskCreated(newTask);
+      }
       onClose();
       resetForm();
     } catch (err) {
-      setError(err.message);
+      console.error('Ошибка создания задачи:', err);
+      setError(err.message || 'Ошибка создания задачи');
     } finally {
       setLoading(false);
     }
@@ -83,9 +92,7 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
     setFormData({
       title: '',
       description: '',
-      project_id: '',
       assignee_id: '',
-      parent_task_id: '',
       priority: 'medium',
       status: 'new',
       due_date: '',
@@ -94,6 +101,7 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
     setError('');
   };
 
+  // Если модальное окно закрыто - не рендерим ничего
   if (!isOpen) return null;
 
   return (
@@ -151,30 +159,16 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Проект</label>
-              <select name="project_id" value={formData.project_id} onChange={handleChange}>
-                <option value="">Без проекта</option>
-                {projects.map(project => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Исполнитель</label>
-              <select name="assignee_id" value={formData.assignee_id} onChange={handleChange}>
-                <option value="">Не назначен</option>
-                {users.map(user => (
-                  <option key={user.id} value={user.id}>
-                    {user.full_name || user.email}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="form-group">
+            <label>Исполнитель</label>
+            <select name="assignee_id" value={formData.assignee_id} onChange={handleChange}>
+              <option value="">Не назначен</option>
+              {users.map(user => (
+                <option key={user.id} value={user.id}>
+                  {user.full_name || user.email || user.username || 'Пользователь'}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="form-row">

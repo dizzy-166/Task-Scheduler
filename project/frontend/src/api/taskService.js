@@ -1,5 +1,4 @@
-// Правильный URL
-const API_URL = 'http://localhost:8000';  // Без /api в конце
+const API_URL = 'http://localhost:8000/api/v1';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('accessToken');
@@ -10,18 +9,49 @@ const getAuthHeaders = () => {
 };
 
 export const taskService = {
+  // Получить все задачи
   async getTasks(params = {}) {
     const queryParams = new URLSearchParams(params).toString();
-    // ВАЖНО: добавляем /api/ перед эндпоинтом
-    const response = await fetch(`${API_URL}/api/tasks/?${queryParams}`, {
+    const response = await fetch(`${API_URL}/tasks/?${queryParams}`, {
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Ошибка загрузки задач');
+    const data = await response.json();
+    // Возвращаем весь ответ (с пагинацией), чтобы фронтенд мог взять results
+    return data;
+  },
+
+  // Получить статистику
+  async getStats() {
+    const response = await fetch(`${API_URL}/tasks/stats/`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Ошибка загрузки статистики');
     return response.json();
   },
 
+  // Получить мои задачи
+  async getMyTasks() {
+    const response = await fetch(`${API_URL}/tasks/my_tasks/`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Ошибка загрузки моих задач');
+    const data = await response.json();
+    return data.results || data;
+  },
+
+  // Получить просроченные задачи
+  async getOverdueTasks() {
+    const response = await fetch(`${API_URL}/tasks/overdue/`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Ошибка загрузки просроченных задач');
+    const data = await response.json();
+    return data.results || data;
+  },
+
   async getTaskById(id) {
-    const response = await fetch(`${API_URL}/api/tasks/${id}/`, {
+    const response = await fetch(`${API_URL}/tasks/${id}/`, {
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Ошибка загрузки задачи');
@@ -29,7 +59,7 @@ export const taskService = {
   },
 
   async createTask(taskData) {
-    const response = await fetch(`${API_URL}/api/tasks/`, {
+    const response = await fetch(`${API_URL}/tasks/`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(taskData)
@@ -42,7 +72,7 @@ export const taskService = {
   },
 
   async updateTask(id, taskData) {
-    const response = await fetch(`${API_URL}/api/tasks/${id}/`, {
+    const response = await fetch(`${API_URL}/tasks/${id}/`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(taskData)
@@ -52,7 +82,7 @@ export const taskService = {
   },
 
   async deleteTask(id) {
-    const response = await fetch(`${API_URL}/api/tasks/${id}/`, {
+    const response = await fetch(`${API_URL}/tasks/${id}/`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
@@ -60,21 +90,22 @@ export const taskService = {
     return true;
   },
 
-  async getProjects() {
-    // Исправлен путь
-    const response = await fetch(`${API_URL}/api/projects/`, {
-      headers: getAuthHeaders()
+  async changeStatus(id, status) {
+    const response = await fetch(`${API_URL}/tasks/${id}/change_status/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ status })
     });
-    if (!response.ok) throw new Error('Ошибка загрузки проектов');
+    if (!response.ok) throw new Error('Ошибка изменения статуса');
     return response.json();
   },
 
   async getUsers() {
-    // Исправлен путь
-    const response = await fetch(`${API_URL}/api/users/`, {
+    const response = await fetch(`${API_URL}/users/`, {
       headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Ошибка загрузки пользователей');
-    return response.json();
+    const data = await response.json();
+    return data.results || data;
   }
 };
