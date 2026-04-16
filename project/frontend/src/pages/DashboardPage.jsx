@@ -23,6 +23,7 @@ const DashboardPage = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     loadAllData();
@@ -49,14 +50,11 @@ const DashboardPage = () => {
       const data = await taskService.getTasks();
       console.log('Загружены задачи (сырые данные):', data);
       
-      // Определяем, где находятся задачи в ответе
       let tasksList = [];
       if (data && data.results && Array.isArray(data.results)) {
-        // Пагинированный ответ DRF
         tasksList = data.results;
         console.log('Используем results, найдено задач:', tasksList.length);
       } else if (Array.isArray(data)) {
-        // Прямой массив
         tasksList = data;
         console.log('Прямой массив, найдено задач:', tasksList.length);
       } else {
@@ -126,31 +124,19 @@ const DashboardPage = () => {
       switch(task.status) {
         case 'new':
           organized.todo.push(taskItem);
-          console.log(`  → Добавлено в "К выполнению"`);
           break;
         case 'in_progress':
           organized.inProgress.push(taskItem);
-          console.log(`  → Добавлено в "В работе"`);
           break;
         case 'review':
           organized.onReview.push(taskItem);
-          console.log(`  → Добавлено в "На проверке"`);
           break;
         case 'done':
           organized.completed.push(taskItem);
-          console.log(`  → Добавлено в "Завершено"`);
           break;
         default:
-          console.log(`  → Неизвестный статус "${task.status}", помещаем в "К выполнению"`);
           organized.todo.push(taskItem);
       }
-    });
-
-    console.log('Итоговое распределение:', {
-      todo: organized.todo.length,
-      inProgress: organized.inProgress.length,
-      onReview: organized.onReview.length,
-      completed: organized.completed.length
     });
     
     setTasks(organized);
@@ -173,6 +159,137 @@ const DashboardPage = () => {
       case 'Средний': return 'priority-medium';
       case 'Низкий': return 'priority-low';
       default: return 'priority-medium';
+    }
+  };
+
+  const getStatusByColumn = (columnId) => {
+    const statusMap = {
+      'todo': 'new',
+      'inProgress': 'in_progress',
+      'onReview': 'review',
+      'completed': 'done'
+    };
+    return statusMap[columnId];
+  };
+
+  const getColumnByStatus = (status) => {
+    const columnMap = {
+      'new': 'todo',
+      'in_progress': 'inProgress',
+      'review': 'onReview',
+      'done': 'completed'
+    };
+    return columnMap[status];
+  };
+
+  // Обработчики drag & drop
+  const onDragStart = (e, task, sourceColumn) => {
+    // Сохраняем данные о перетаскиваемой задаче
+    e.dataTransfer.setData('taskId', task.id);
+    e.dataTransfer.setData('sourceColumn', sourceColumn);
+    e.dataTransfer.effectAllowed = 'move';
+    
+    // Сохраняем в состояние для быстрого доступа
+    const dragData = { task, sourceColumn };
+    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+    
+    // Устанавливаем стиль при перетаскивании
+    e.currentTarget.style.opacity = '0.5';
+    
+    console.log('Начато перетаскивание задачи:', task.title, 'из колонки:', sourceColumn);
+  };
+
+  const onDragEnd = (e) => {
+    // Восстанавливаем прозрачность
+    e.currentTarget.style.opacity = '1';
+    // Убираем классы drag-over со всех колонок
+    document.querySelectorAll('.kanban-column').forEach(col => {
+      col.classList.remove('drag-over');
+    });
+    console.log('Перетаскивание завершено');
+  };
+
+  const onDragOver = (e) => {
+    e.preventDefault(); // Обязательно для разрешения drop
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const onDragEnter = (e, columnId) => {
+    e.preventDefault();
+    const column = e.currentTarget;
+    column.classList.add('drag-over');
+  };
+
+  const onDragLeave = (e) => {
+    const column = e.currentTarget;
+    column.classList.remove('drag-over');
+  };
+
+  const onDrop = async (e, targetColumn) => {
+    e.preventDefault();
+    
+    // Убираем подсветку с колонки
+    const column = e.currentTarget;
+    column.classList.remove('drag-over');
+    
+    // Получаем данные о перетаскиваемой задаче
+    const taskId = e.dataTransfer.getData('taskId');
+    const sourceColumn = e.dataTransfer.getData('sourceColumn');
+    
+    if (!taskId || !sourceColumn) {
+      console.error('Нет данных о перетаскиваемой задаче');
+      return;
+    }
+    
+    // Проверяем, что задача перемещается в другую колонку
+    if (sourceColumn === targetColumn) {
+      console.log('Задача перемещена в ту же колонку, ничего не делаем');
+      return;
+    }
+    
+    console.log(`Перемещение задачи ${taskId} из ${sourceColumn} в ${targetColumn}`);
+    
+    // Находим задачу в текущем состоянии
+    let taskToMove = null;
+    const sourceTasks = [...tasks[sourceColumn]];
+    taskToMove = sourceTasks.find(t => t.id === taskId);
+    
+    if (!taskToMove) {
+      console.error('Задача не найдена в исходной колонке');
+      return;
+    }
+    
+    const newStatus = getStatusByColumn(targetColumn);
+    if (!newStatus) {
+      console.error('Неизвестная целевая колонка:', targetColumn);
+      return;
+    }
+    
+    // Оптимистичное обновление UI
+    const updatedTasks = { ...tasks };
+    // Удаляем из исходной колонки
+    updatedTasks[sourceColumn] = updatedTasks[sourceColumn].filter(t => t.id !== taskId);
+    // Добавляем в целевую колонку
+    const updatedTask = { ...taskToMove, status: newStatus };
+    updatedTasks[targetColumn] = [...updatedTasks[targetColumn], updatedTask];
+    
+    // Обновляем состояние мгновенно для плавного UI
+    setTasks(updatedTasks);
+    
+    // Отправляем запрос на сервер
+    setIsUpdating(true);
+    try {
+      await taskService.updateTaskStatus(taskId, newStatus);
+      console.log('Статус задачи успешно обновлен');
+      // Обновляем статистику
+      await loadStats();
+    } catch (error) {
+      console.error('Ошибка при обновлении статуса:', error);
+      // Откатываем изменения при ошибке
+      await loadTasks(); // Перезагружаем задачи для синхронизации
+      alert('Не удалось переместить задачу. Попробуйте еще раз.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -231,14 +348,6 @@ const DashboardPage = () => {
         <aside className="sidebar">
           <div className="sidebar-header">
             <h1 className="logo">TaskFlow Pro</h1>
-          </div>
-          <div className="sidebar-nav">
-            <a href="#" className="nav-item active">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z" fill="currentColor"/>
-              </svg>
-              <span>Главная</span>
-            </a>
           </div>
         </aside>
         <main className="main-content">
@@ -387,14 +496,27 @@ const DashboardPage = () => {
 
         {activeView === 'kanban' && (
           <div className="kanban-board">
-            <div className="kanban-column">
+            {/* Колонка "К выполнению" */}
+            <div 
+              className="kanban-column"
+              onDragOver={onDragOver}
+              onDragEnter={(e) => onDragEnter(e, 'todo')}
+              onDragLeave={onDragLeave}
+              onDrop={(e) => onDrop(e, 'todo')}
+            >
               <div className="column-header">
                 <h3>К выполнению</h3>
                 <span className="task-count">{tasks.todo.length}</span>
               </div>
               <div className="column-tasks">
                 {tasks.todo.map(task => (
-                  <div key={task.id} className="task-card">
+                  <div
+                    key={task.id}
+                    className="task-card"
+                    draggable={!isUpdating}
+                    onDragStart={(e) => onDragStart(e, task, 'todo')}
+                    onDragEnd={onDragEnd}
+                  >
                     <div className="task-header">
                       <h4>{task.title}</h4>
                       <span className={`priority-badge ${getPriorityColor(task.priority)}`}>
@@ -427,14 +549,27 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            <div className="kanban-column">
+            {/* Колонка "В работе" */}
+            <div 
+              className="kanban-column"
+              onDragOver={onDragOver}
+              onDragEnter={(e) => onDragEnter(e, 'inProgress')}
+              onDragLeave={onDragLeave}
+              onDrop={(e) => onDrop(e, 'inProgress')}
+            >
               <div className="column-header">
                 <h3>В работе</h3>
                 <span className="task-count">{tasks.inProgress.length}</span>
               </div>
               <div className="column-tasks">
                 {tasks.inProgress.map(task => (
-                  <div key={task.id} className="task-card">
+                  <div
+                    key={task.id}
+                    className="task-card"
+                    draggable={!isUpdating}
+                    onDragStart={(e) => onDragStart(e, task, 'inProgress')}
+                    onDragEnd={onDragEnd}
+                  >
                     <div className="task-header">
                       <h4>{task.title}</h4>
                       <span className={`priority-badge ${getPriorityColor(task.priority)}`}>
@@ -467,14 +602,27 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            <div className="kanban-column">
+            {/* Колонка "На проверке" */}
+            <div 
+              className="kanban-column"
+              onDragOver={onDragOver}
+              onDragEnter={(e) => onDragEnter(e, 'onReview')}
+              onDragLeave={onDragLeave}
+              onDrop={(e) => onDrop(e, 'onReview')}
+            >
               <div className="column-header">
                 <h3>На проверке</h3>
                 <span className="task-count">{tasks.onReview.length}</span>
               </div>
               <div className="column-tasks">
                 {tasks.onReview.map(task => (
-                  <div key={task.id} className="task-card">
+                  <div
+                    key={task.id}
+                    className="task-card"
+                    draggable={!isUpdating}
+                    onDragStart={(e) => onDragStart(e, task, 'onReview')}
+                    onDragEnd={onDragEnd}
+                  >
                     <div className="task-header">
                       <h4>{task.title}</h4>
                       <span className={`priority-badge ${getPriorityColor(task.priority)}`}>
@@ -507,14 +655,27 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            <div className="kanban-column">
+            {/* Колонка "Завершено" */}
+            <div 
+              className="kanban-column"
+              onDragOver={onDragOver}
+              onDragEnter={(e) => onDragEnter(e, 'completed')}
+              onDragLeave={onDragLeave}
+              onDrop={(e) => onDrop(e, 'completed')}
+            >
               <div className="column-header">
                 <h3>Завершено</h3>
                 <span className="task-count">{tasks.completed.length}</span>
               </div>
               <div className="column-tasks">
                 {tasks.completed.map(task => (
-                  <div key={task.id} className="task-card completed">
+                  <div
+                    key={task.id}
+                    className="task-card completed"
+                    draggable={!isUpdating}
+                    onDragStart={(e) => onDragStart(e, task, 'completed')}
+                    onDragEnd={onDragEnd}
+                  >
                     <div className="task-header">
                       <h4>{task.title}</h4>
                       <span className={`priority-badge ${getPriorityColor(task.priority)}`}>
@@ -607,6 +768,12 @@ const DashboardPage = () => {
         onClose={() => setIsTaskModalOpen(false)}
         onTaskCreated={handleTaskCreated}
       />
+      
+      {isUpdating && (
+        <div className="updating-overlay">
+          <div className="updating-spinner"></div>
+        </div>
+      )}
     </div>
   );
 };

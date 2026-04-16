@@ -1,111 +1,221 @@
-const API_URL = 'http://localhost:8000/api/v1';
+// api/taskService.js
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('accessToken');
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  };
-};
+// В Vite используем import.meta.env вместо process.env
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
-export const taskService = {
-  // Получить все задачи
+class TaskService {
+  constructor() {
+    this.baseURL = API_URL;
+  }
+
+  getHeaders() {
+    const token = localStorage.getItem('accessToken');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+  }
+
   async getTasks(params = {}) {
-    const queryParams = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_URL}/tasks/?${queryParams}`, {
-      headers: getAuthHeaders()
-    });
-    if (!response.ok) throw new Error('Ошибка загрузки задач');
-    const data = await response.json();
-    // Возвращаем весь ответ (с пагинацией), чтобы фронтенд мог взять results
-    return data;
-  },
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const url = `${this.baseURL}/tasks/${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await fetch(url, {
+        headers: this.getHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      throw error;
+    }
+  }
 
-  // Получить статистику
-  async getStats() {
-    const response = await fetch(`${API_URL}/tasks/stats/`, {
-      headers: getAuthHeaders()
-    });
-    if (!response.ok) throw new Error('Ошибка загрузки статистики');
-    return response.json();
-  },
-
-  // Получить мои задачи
-  async getMyTasks() {
-    const response = await fetch(`${API_URL}/tasks/my_tasks/`, {
-      headers: getAuthHeaders()
-    });
-    if (!response.ok) throw new Error('Ошибка загрузки моих задач');
-    const data = await response.json();
-    return data.results || data;
-  },
-
-  // Получить просроченные задачи
-  async getOverdueTasks() {
-    const response = await fetch(`${API_URL}/tasks/overdue/`, {
-      headers: getAuthHeaders()
-    });
-    if (!response.ok) throw new Error('Ошибка загрузки просроченных задач');
-    const data = await response.json();
-    return data.results || data;
-  },
-
-  async getTaskById(id) {
-    const response = await fetch(`${API_URL}/tasks/${id}/`, {
-      headers: getAuthHeaders()
-    });
-    if (!response.ok) throw new Error('Ошибка загрузки задачи');
-    return response.json();
-  },
+  async getTask(id) {
+    try {
+      const response = await fetch(`${this.baseURL}/tasks/${id}/`, {
+        headers: this.getHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching task:', error);
+      throw error;
+    }
+  }
 
   async createTask(taskData) {
-    const response = await fetch(`${API_URL}/tasks/`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(taskData)
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Ошибка создания задачи');
+    try {
+      const response = await fetch(`${this.baseURL}/tasks/`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(taskData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create task');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating task:', error);
+      throw error;
     }
-    return response.json();
-  },
+  }
 
   async updateTask(id, taskData) {
-    const response = await fetch(`${API_URL}/tasks/${id}/`, {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(taskData)
-    });
-    if (!response.ok) throw new Error('Ошибка обновления задачи');
-    return response.json();
-  },
+    try {
+      const response = await fetch(`${this.baseURL}/tasks/${id}/`, {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify(taskData)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating task:', error);
+      throw error;
+    }
+  }
+
+  async updateTaskStatus(id, status) {
+    try {
+      const response = await fetch(`${this.baseURL}/tasks/${id}/change_status/`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify({ status })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update task status');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      throw error;
+    }
+  }
+
+  async partialUpdateTask(id, taskData) {
+    try {
+      const response = await fetch(`${this.baseURL}/tasks/${id}/`, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+        body: JSON.stringify(taskData)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error partially updating task:', error);
+      throw error;
+    }
+  }
 
   async deleteTask(id) {
-    const response = await fetch(`${API_URL}/tasks/${id}/`, {
-      method: 'DELETE',
-      headers: getAuthHeaders()
-    });
-    if (!response.ok) throw new Error('Ошибка удаления задачи');
-    return true;
-  },
+    try {
+      const response = await fetch(`${this.baseURL}/tasks/${id}/`, {
+        method: 'DELETE',
+        headers: this.getHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      throw error;
+    }
+  }
 
-  async changeStatus(id, status) {
-    const response = await fetch(`${API_URL}/tasks/${id}/change_status/`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ status })
-    });
-    if (!response.ok) throw new Error('Ошибка изменения статуса');
-    return response.json();
-  },
+  async getStats() {
+    try {
+      const response = await fetch(`${this.baseURL}/tasks/stats/`, {
+        headers: this.getHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      throw error;
+    }
+  }
 
   async getUsers() {
-    const response = await fetch(`${API_URL}/users/`, {
-      headers: getAuthHeaders()
-    });
-    if (!response.ok) throw new Error('Ошибка загрузки пользователей');
-    const data = await response.json();
-    return data.results || data;
+    try {
+      const response = await fetch(`${this.baseURL}/users/`, {
+        headers: this.getHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      throw error;
+    }
   }
-};
+
+  async getMyTasks() {
+    try {
+      const response = await fetch(`${this.baseURL}/tasks/my_tasks/`, {
+        headers: this.getHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching my tasks:', error);
+      throw error;
+    }
+  }
+
+  async getOverdueTasks() {
+    try {
+      const response = await fetch(`${this.baseURL}/tasks/overdue/`, {
+        headers: this.getHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching overdue tasks:', error);
+      throw error;
+    }
+  }
+}
+
+export const taskService = new TaskService();
