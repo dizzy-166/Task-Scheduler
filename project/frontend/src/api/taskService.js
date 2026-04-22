@@ -198,6 +198,23 @@ class TaskService {
     }
   }
 
+  async getCreatedByMe() {
+    try {
+      const response = await fetch(`${this.baseURL}/tasks/created_by_me/`, {
+        headers: this.getHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching created-by-me tasks:', error);
+      throw error;
+    }
+  }
+
   async getOverdueTasks() {
     try {
       const response = await fetch(`${this.baseURL}/tasks/overdue/`, {

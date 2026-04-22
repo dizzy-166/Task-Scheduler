@@ -10,6 +10,7 @@ const DashboardPage = () => {
   const { theme, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState('kanban');
+  const [taskScope, setTaskScope] = useState('all');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [tasks, setTasks] = useState({
     todo: [],
@@ -31,14 +32,33 @@ const DashboardPage = () => {
     loadAllData();
   }, []);
 
+  const computeStatsFromTasks = (tasksList) => {
+    const counts = {
+      total: tasksList.length,
+      inProgress: 0,
+      onReview: 0,
+      completed: 0,
+    };
+
+    tasksList.forEach(task => {
+      if (task.status === 'in_progress') counts.inProgress += 1;
+      if (task.status === 'review') counts.onReview += 1;
+      if (task.status === 'done') counts.completed += 1;
+    });
+
+    setStats(counts);
+  };
+
   const loadAllData = async () => {
     setLoading(true);
     setError(null);
     try {
-      await Promise.all([
-        loadTasks(),
-        loadStats()
-      ]);
+      const tasksList = await loadTasks(taskScope);
+      if (taskScope === 'all') {
+        await loadStats();
+      } else {
+        computeStatsFromTasks(tasksList);
+      }
     } catch (err) {
       console.error('Ошибка загрузки данных:', err);
       setError('Не удалось загрузить данные. Проверьте подключение к серверу.');
@@ -47,24 +67,47 @@ const DashboardPage = () => {
     }
   };
 
-  const loadTasks = async () => {
-    try {
-      const data = await taskService.getTasks();
-      console.log('Загружены задачи (сырые данные):', data);
-      
-      let tasksList = [];
-      if (data && data.results && Array.isArray(data.results)) {
-        tasksList = data.results;
-        console.log('Используем results, найдено задач:', tasksList.length);
-      } else if (Array.isArray(data)) {
-        tasksList = data;
-        console.log('Прямой массив, найдено задач:', tasksList.length);
-      } else {
-        console.error('Неизвестный формат ответа:', data);
-        tasksList = [];
+  const normalizeTaskResponse = (data) => {
+    if (data && data.results && Array.isArray(data.results)) {
+      return data.results;
+    }
+    if (Array.isArray(data)) {
+      return data;
+    }
+    console.error('Неизвестный формат ответа:', data);
+    return [];
+  };
+
+  const mergeTaskLists = (primary = [], secondary = []) => {
+    const mergedMap = new Map();
+    [...primary, ...secondary].forEach(task => {
+      if (!mergedMap.has(task.id)) {
+        mergedMap.set(task.id, task);
       }
-      
+    });
+    return Array.from(mergedMap.values());
+  };
+
+  const loadTasks = async (scope = taskScope) => {
+    try {
+      let tasksList = [];
+
+      if (scope === 'mine') {
+        const [assignedData, createdData] = await Promise.all([
+          taskService.getMyTasks(),
+          taskService.getCreatedByMe(),
+        ]);
+        const assignedTasks = normalizeTaskResponse(assignedData);
+        const createdTasks = normalizeTaskResponse(createdData);
+        tasksList = mergeTaskLists(assignedTasks, createdTasks);
+      } else {
+        const data = await taskService.getTasks();
+        tasksList = normalizeTaskResponse(data);
+      }
+
+      console.log(`Загружены задачи (${scope}):`, tasksList);
       organizeTasks(tasksList);
+      return tasksList;
     } catch (err) {
       console.error('Ошибка загрузки задач:', err);
       setTasks({
@@ -73,6 +116,28 @@ const DashboardPage = () => {
         onReview: [],
         completed: []
       });
+      throw err;
+    }
+  };
+
+  const handleScopeChange = async (scope) => {
+    if (scope === taskScope) return;
+    setTaskScope(scope);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const tasksList = await loadTasks(scope);
+      if (scope === 'all') {
+        await loadStats();
+      } else {
+        computeStatsFromTasks(tasksList);
+      }
+    } catch (err) {
+      console.error('Ошибка загрузки задач:', err);
+      setError('Не удалось загрузить задачи. Попробуйте снова.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -390,13 +455,27 @@ const DashboardPage = () => {
         </div>
         
         <nav className="sidebar-nav">
-          <a href="#" className="nav-item active">
+          <a
+            href="#"
+            className={`nav-item ${taskScope === 'all' ? 'active' : ''}`}
+            onClick={(e) => {
+              e.preventDefault();
+              handleScopeChange('all');
+            }}
+          >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z" fill="currentColor"/>
             </svg>
             <span>Главная</span>
           </a>
-          <a href="#" className="nav-item">
+          <a
+            href="#"
+            className={`nav-item ${taskScope === 'mine' ? 'active' : ''}`}
+            onClick={(e) => {
+              e.preventDefault();
+              handleScopeChange('mine');
+            }}
+          >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path d="M16 2h-4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM6 2H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z" fill="currentColor"/>
             </svg>
@@ -432,8 +511,8 @@ const DashboardPage = () => {
       <main className="main-content">
         <header className="main-header">
           <div className="header-title">
-            <h2>Дашборд</h2>
-            <p>Управление задачами и проектами</p>
+            <h2>{taskScope === 'all' ? 'Дашборд' : 'Мои задачи'}</h2>
+            <p>{taskScope === 'all' ? 'Управление задачами и проектами' : 'Список задач, назначенных вам'}</p>
           </div>
           <div className="header-actions">
             <button className="theme-toggle-btn" onClick={toggleTheme} title={`Переключить на ${theme === 'light' ? 'тёмную' : 'светлую'} тему`}>
@@ -484,6 +563,21 @@ const DashboardPage = () => {
             </div>
             <div className="stat-value">{stats.completed}</div>
           </div>
+        </div>
+
+        <div className="view-tabs scope-tabs">
+          <button
+            className={`tab-btn ${taskScope === 'all' ? 'active' : ''}`}
+            onClick={() => handleScopeChange('all')}
+          >
+            Все задачи
+          </button>
+          <button
+            className={`tab-btn ${taskScope === 'mine' ? 'active' : ''}`}
+            onClick={() => handleScopeChange('mine')}
+          >
+            Мои задачи
+          </button>
         </div>
 
         <div className="view-tabs">

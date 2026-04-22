@@ -56,7 +56,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             return TaskCreateSerializer
         elif self.action in ['update', 'partial_update']:
             return TaskUpdateSerializer
-        elif self.action == 'list':
+        elif self.action in ['list', 'my_tasks', 'created_by_me', 'overdue']:
             return TaskListSerializer
         return TaskDetailSerializer
     
@@ -192,7 +192,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], url_path='my_tasks')
     def my_tasks(self, request):
         """Мои задачи (где я исполнитель)"""
         tasks = self.get_queryset().filter(assignee=request.user)
@@ -203,7 +203,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(tasks, many=True)
         return Response(serializer.data)
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], url_path='created_by_me')
     def created_by_me(self, request):
         """Задачи, созданные мной"""
         tasks = self.get_queryset().filter(creator=request.user)

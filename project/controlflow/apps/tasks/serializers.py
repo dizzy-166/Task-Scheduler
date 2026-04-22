@@ -7,9 +7,9 @@ from apps.users.serializers import UserSerializer
 class TaskListSerializer(serializers.ModelSerializer):
     """Упрощённый сериализатор для списка задач"""
     
-    assignee_name = serializers.CharField(source='assignee.full_name', read_only=True)
-    creator_name = serializers.CharField(source='creator.full_name', read_only=True)
-    project_name = serializers.CharField(source='project.name', read_only=True)
+    assignee_name = serializers.SerializerMethodField()
+    creator_name = serializers.SerializerMethodField()
+    project_name = serializers.SerializerMethodField()
     priority_display = serializers.CharField(source='get_priority_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     
@@ -22,21 +22,30 @@ class TaskListSerializer(serializers.ModelSerializer):
             'due_date', 'estimated_hours', 'actual_hours', 'created_at'
         ]
 
+    def get_assignee_name(self, obj):
+        return obj.assignee.full_name if obj.assignee else 'Не назначен'
+
+    def get_creator_name(self, obj):
+        return obj.creator.full_name if obj.creator else ''
+
+    def get_project_name(self, obj):
+        return obj.project.name if obj.project else ''
+
 
 class TaskDetailSerializer(serializers.ModelSerializer):
     """Детальный сериализатор для задачи"""
     
     assignee_detail = UserSerializer(source='assignee', read_only=True)
     creator_detail = UserSerializer(source='creator', read_only=True)
-    assignee_name = serializers.CharField(source='assignee.full_name', read_only=True)
-    creator_name = serializers.CharField(source='creator.full_name', read_only=True)
-    project_name = serializers.CharField(source='project.name', read_only=True)
-    parent_task_title = serializers.CharField(source='parent_task.title', read_only=True)
+    assignee_name = serializers.SerializerMethodField()
+    creator_name = serializers.SerializerMethodField()
+    project_name = serializers.SerializerMethodField()
+    parent_task_title = serializers.SerializerMethodField()
     priority_display = serializers.CharField(source='get_priority_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     time_left = serializers.CharField(read_only=True)
     is_overdue = serializers.BooleanField(read_only=True)
-    
+
     class Meta:
         model = Task
         fields = [
@@ -51,6 +60,18 @@ class TaskDetailSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at', 'deleted_at'
         ]
         read_only_fields = ['id', 'creator', 'created_at', 'updated_at', 'completed_at']
+
+    def get_assignee_name(self, obj):
+        return obj.assignee.full_name if obj.assignee else 'Не назначен'
+
+    def get_creator_name(self, obj):
+        return obj.creator.full_name if obj.creator else ''
+
+    def get_project_name(self, obj):
+        return obj.project.name if obj.project else ''
+
+    def get_parent_task_title(self, obj):
+        return obj.parent_task.title if obj.parent_task else ''
 
 
 class TaskCreateSerializer(serializers.ModelSerializer):
