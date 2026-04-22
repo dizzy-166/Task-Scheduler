@@ -1,7 +1,5 @@
-// api/taskService.js
-
-// В Vite используем import.meta.env вместо process.env
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// Исправлено: используем /api/v1 как в auth.js
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 class TaskService {
   constructor() {

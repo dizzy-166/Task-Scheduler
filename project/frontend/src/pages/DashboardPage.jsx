@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import useAuthStore from '../store/authStore';
+import useThemeStore from '../store/themeStore';
 import { useNavigate } from 'react-router-dom';
 import TaskModal from '../components/TaskModal';
 import { taskService } from '../api/taskService';
 
 const DashboardPage = () => {
   const { user, logout } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState('kanban');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -434,6 +436,17 @@ const DashboardPage = () => {
             <p>Управление задачами и проектами</p>
           </div>
           <div className="header-actions">
+            <button className="theme-toggle-btn" onClick={toggleTheme} title={`Переключить на ${theme === 'light' ? 'тёмную' : 'светлую'} тему`}>
+              {theme === 'light' ? (
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM10 1v2m0 14v2M3.05 3.05l1.41 1.41m9.9 9.9l1.41 1.41M1 10h2m14 0h2M3.05 16.95l1.41-1.41m9.9-9.9l1.41-1.41" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M10 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM10 1a1 1 0 0 1 1 1v1a1 1 0 0 1-2 0V2a1 1 0 0 1 1-1zM10 17a1 1 0 0 1 1 1v1a1 1 0 0 1-2 0v-1a1 1 0 0 1 1-1zM3.05 3.05a1 1 0 0 1 1.41 0l.71.71a1 1 0 0 1-1.41 1.41l-.71-.71a1 1 0 0 1 0-1.41zM15.54 15.54a1 1 0 0 1 0 1.41l-.71.71a1 1 0 0 1-1.41-1.41l.71-.71a1 1 0 0 1 1.41 0zM1 10a1 1 0 0 1 1-1h1a1 1 0 0 1 0 2H2a1 1 0 0 1-1-1zM17 10a1 1 0 0 1 1-1h1a1 1 0 0 1 0 2h-1a1 1 0 0 1-1-1zM3.05 16.95a1 1 0 0 1 0-1.41l.71-.71a1 1 0 0 1 1.41 1.41l-.71.71a1 1 0 0 1-1.41 0zM15.54 3.05a1 1 0 0 1 1.41 1.41l-.71.71a1 1 0 0 1-1.41-1.41l.71-.71a1 1 0 0 1 0-1.41z" fill="currentColor"/>
+                </svg>
+              )}
+            </button>
             <button className="btn-new-task" onClick={() => setIsTaskModalOpen(true)}>
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="1.5"/>

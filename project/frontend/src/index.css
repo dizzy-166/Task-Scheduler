@@ -4,11 +4,64 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* Light theme variables */
+  --bg-primary: #f5f5f5;
+  --bg-secondary: #ffffff;
+  --text-primary: #1a1a1a;
+  --text-secondary: #666666;
+  --text-accent: #0066ff;
+  --border-color: #e0e0e0;
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --error-color: #ff3b30;
+  --input-bg: #ffffff;
+  --kanban-column-bg: #fafafa;
+  --kanban-header-bg: #ffffff;
+  --kanban-drag-over-bg: #e8f0fe;
+  --task-card-bg: #ffffff;
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e0e0e0;
+  --sidebar-hover-bg: #f5f5f5;
+  --sidebar-active-bg: #0066ff;
+  --sidebar-active-text: #ffffff;
+  --sidebar-avatar-bg: #0066ff;
+  --sidebar-logout-hover-bg: #fee;
+  --sidebar-logout-hover-text: #ff3b30;
+  --btn-new-task-hover-bg: #0052cc;
+}
+
+[data-theme="dark"] {
+  /* Dark theme variables */
+  --bg-primary: #0b1220;
+  --bg-secondary: #151f30;
+  --text-primary: #eef4ff;
+  --text-secondary: #9fb2cc;
+  --text-accent: #5a9dff;
+  --border-color: #25314d;
+  --shadow-color: rgba(0, 0, 0, 0.55);
+  --error-color: #ff7a7a;
+  --input-bg: #172037;
+  --kanban-column-bg: #161f30;
+  --kanban-header-bg: #1f304d;
+  --kanban-drag-over-bg: #15355e;
+  --task-card-bg: #1d2a40;
+  --sidebar-bg: #0d1425;
+  --sidebar-border: #203049;
+  --sidebar-hover-bg: #18273f;
+  --sidebar-active-bg: #3b82f6;
+  --sidebar-active-text: #ffffff;
+  --sidebar-avatar-bg: #3b82f6;
+  --sidebar-logout-hover-bg: #5a1e23;
+  --sidebar-logout-hover-text: #ffffff;
+  --btn-new-task-hover-bg: #2563eb;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  background: #f5f5f5;
+  background: var(--bg-primary);
   min-height: 100vh;
-  color: #1a1a1a;
+  color: var(--text-primary);
+  transition: background-color 0.3s, color 0.3s;
 }
 
 #root {
@@ -25,7 +78,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: #f5f5f5;
+  background: var(--bg-primary);
 }
 
 /* Карточка авторизации */
@@ -33,28 +86,29 @@ body {
   width: 100%;
   max-width: 400px;
   padding: 40px;
-  background: #ffffff;
+  background: var(--bg-secondary);
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px var(--shadow-color);
+  transition: background-color 0.3s, box-shadow 0.3s;
 }
 
 .auth-title {
   font-size: 28px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
   text-align: center;
   margin-bottom: 8px;
 }
 
 .auth-subtitle {
   font-size: 14px;
-  color: #666666;
+  color: var(--text-secondary);
   text-align: center;
   margin-bottom: 32px;
 }
 
 .auth-subtitle a {
-  color: #0066ff;
+  color: var(--text-accent);
   text-decoration: none;
 }
 
@@ -71,7 +125,7 @@ body {
   display: block;
   font-size: 14px;
   font-weight: 500;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
@@ -79,25 +133,26 @@ body {
   width: 100%;
   padding: 10px 12px;
   font-size: 14px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   outline: none;
   transition: all 0.2s;
-  background: #ffffff;
+  background: var(--input-bg);
+  color: var(--text-primary);
 }
 
 .form-group input:focus {
-  border-color: #0066ff;
-  box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.1);
+  border-color: var(--text-accent);
+  box-shadow: 0 0 0 2px rgba(77, 166, 255, 0.1);
 }
 
 .form-group input.error {
-  border-color: #ff3b30;
+  border-color: var(--error-color);
 }
 
 .error-message {
   font-size: 12px;
-  color: #ff3b30;
+  color: var(--error-color);
   margin-top: 4px;
 }
 
@@ -167,14 +222,214 @@ body {
 .dashboard {
   display: flex;
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.sidebar {
+  width: 280px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.sidebar-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.2s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  background: var(--text-accent);
+  color: #ffffff;
+}
+
+.nav-item svg {
+  flex-shrink: 0;
+}
+
+.nav-item span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  padding: 24px;
+  border-top: 1px solid var(--border-color);
+}
+
+.user-info-sidebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--text-accent);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.user-details-sidebar {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.user-role {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+
+.logout-btn:hover {
+  background: var(--error-color);
+  border-color: var(--error-color);
+  color: #ffffff;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-header {
+  padding: 24px 32px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-title h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.header-title p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--text-accent);
+  color: #ffffff;
+  border-color: var(--text-accent);
+}
+
+.btn-new-task {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--text-accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-new-task:hover {
+  background: #0052cc;
+}
+
+.btn-new-task svg {
+  flex-shrink: 0;
 }
 
 /* Sidebar */
 .sidebar {
   width: 260px;
-  background: #ffffff;
-  border-right: 1px solid #e0e0e0;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -185,13 +440,13 @@ body {
 
 .sidebar-header {
   padding: 24px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--sidebar-border);
 }
 
 .logo {
   font-size: 20px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -208,20 +463,20 @@ body {
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  color: #666;
+  color: var(--text-secondary);
   text-decoration: none;
   border-radius: 8px;
   transition: all 0.2s;
 }
 
 .nav-item:hover {
-  background: #f5f5f5;
-  color: #1a1a1a;
+  background: var(--sidebar-hover-bg);
+  color: var(--text-primary);
 }
 
 .nav-item.active {
-  background: #0066ff;
-  color: #ffffff;
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
 }
 
 .nav-item svg {
@@ -231,7 +486,7 @@ body {
 
 .sidebar-footer {
   padding: 20px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--sidebar-border);
 }
 
 .user-info-sidebar {
@@ -244,7 +499,7 @@ body {
 .user-avatar {
   width: 40px;
   height: 40px;
-  background: #0066ff;
+  background: var(--sidebar-avatar-bg);
   color: #ffffff;
   border-radius: 10px;
   display: flex;
@@ -261,12 +516,12 @@ body {
 .user-name {
   font-size: 14px;
   font-weight: 500;
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 .user-role {
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .logout-btn {
@@ -277,17 +532,17 @@ body {
   gap: 8px;
   padding: 10px;
   background: transparent;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--sidebar-border);
   border-radius: 8px;
-  color: #666;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .logout-btn:hover {
-  background: #fee;
-  border-color: #ff3b30;
-  color: #ff3b30;
+  background: var(--sidebar-logout-hover-bg);
+  border-color: var(--sidebar-logout-hover-bg);
+  color: var(--sidebar-logout-hover-text);
 }
 
 /* Main Content */
@@ -307,13 +562,13 @@ body {
 .header-title h2 {
   font-size: 28px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
-.header-title p {
+..header-title p {
   font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .btn-new-task {
@@ -321,7 +576,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: #0066ff;
+  background: var(--text-accent);
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -332,7 +587,7 @@ body {
 }
 
 .btn-new-task:hover {
-  background: #0052cc;
+  background: var(--btn-new-task-hover-bg);
 }
 
 /* Stats Grid */
@@ -344,10 +599,10 @@ body {
 }
 
 .stat-card {
-  background: #ffffff;
+  background: var(--bg-secondary);
   padding: 20px;
   border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   transition: all 0.2s;
 }
 
@@ -364,7 +619,7 @@ body {
 
 .stat-label {
   font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .stat-change {
@@ -382,7 +637,7 @@ body {
 .stat-value {
   font-size: 32px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 /* View Tabs */
@@ -390,11 +645,11 @@ body {
   display: flex;
   gap: 8px;
   margin-bottom: 24px;
-  background: #ffffff;
+  background: var(--bg-secondary);
   padding: 4px;
   border-radius: 12px;
   width: fit-content;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
 }
 
 .tab-btn {
@@ -404,7 +659,7 @@ body {
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #666;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -423,7 +678,7 @@ body {
 }
 
 .kanban-column {
-  background: #fafafa;
+  background: var(--kanban-column-bg);
   border-radius: 12px;
   min-width: 280px;
 }
@@ -433,24 +688,24 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: #ffffff;
+  background: var(--kanban-header-bg);
   border-radius: 12px 12px 0 0;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid var(--border-color);
 }
 
 .column-header h3 {
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 .task-count {
-  background: #e0e0e0;
+  background: var(--border-color);
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 12px;
   font-weight: 500;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .column-tasks {
@@ -463,10 +718,10 @@ body {
 }
 
 .task-card {
-  background: #ffffff;
+  background: var(--task-card-bg);
   padding: 16px;
   border-radius: 10px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   transition: all 0.2s;
 }
 
@@ -490,7 +745,7 @@ body {
 .task-header h4 {
   font-size: 15px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
   margin: 0;
   flex: 1;
 }
@@ -519,7 +774,7 @@ body {
 
 .task-description {
   font-size: 13px;
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 16px;
   line-height: 1.4;
 }
@@ -535,20 +790,20 @@ body {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .assignee-avatar {
   width: 24px;
   height: 24px;
-  background: #e0e0e0;
+  background: var(--border-color);
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 500;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .task-time {
@@ -565,9 +820,9 @@ body {
 
 /* List View */
 .list-view {
-  background: #ffffff;
+  background: var(--bg-secondary);
   border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   overflow: hidden;
 }
 
@@ -608,13 +863,13 @@ body {
 .list-item-title h4 {
   font-size: 15px;
   font-weight: 500;
-  color: #1a1a1a;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .list-item-desc {
   font-size: 13px;
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 8px;
 }
 
@@ -622,14 +877,14 @@ body {
   display: flex;
   gap: 16px;
   font-size: 12px;
-  color: #999;
+  color: var(--text-secondary);
 }
 
 /* Calendar View */
 .calendar-view {
-  background: #ffffff;
+  background: var(--bg-secondary);
   border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   padding: 20px;
 }
 
@@ -643,20 +898,20 @@ body {
 .calendar-header h3 {
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 .calendar-nav {
   padding: 8px 16px;
-  background: #f5f5f5;
-  border: 1px solid #e0e0e0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .calendar-nav:hover {
-  background: #e0e0e0;
+  background: var(--sidebar-hover-bg);
 }
 
 .calendar-grid {
@@ -669,14 +924,14 @@ body {
   padding: 12px;
   text-align: center;
   font-weight: 500;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 13px;
 }
 
 .calendar-day {
   min-height: 100px;
   padding: 8px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   position: relative;
 }
@@ -684,7 +939,7 @@ body {
 .day-number {
   font-size: 13px;
   font-weight: 500;
-  color: #666;
+  color: var(--text-secondary);
   position: absolute;
   top: 6px;
   right: 8px;
@@ -791,7 +1046,7 @@ body {
 }
 
 .modal-content {
-  background: #ffffff;
+  background: var(--bg-secondary);
   border-radius: 16px;
   width: 90%;
   max-width: 600px;
@@ -805,13 +1060,13 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .modal-header h3 {
   font-size: 20px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -820,7 +1075,7 @@ body {
   border: none;
   font-size: 28px;
   cursor: pointer;
-  color: #666;
+  color: var(--text-secondary);
   transition: color 0.2s;
   line-height: 1;
   padding: 0;
@@ -833,8 +1088,8 @@ body {
 }
 
 .modal-close:hover {
-  color: #1a1a1a;
-  background: #f5f5f5;
+  color: var(--text-primary);
+  background: var(--sidebar-hover-bg);
 }
 
 .modal-content form {
@@ -851,7 +1106,7 @@ body {
   width: 100%;
   padding: 10px 12px;
   font-size: 14px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-family: inherit;
   resize: vertical;
@@ -861,9 +1116,10 @@ body {
   width: 100%;
   padding: 10px 12px;
   font-size: 14px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   cursor: pointer;
 }
 
@@ -906,9 +1162,9 @@ body {
 
 .btn-secondary {
   padding: 10px 20px;
-  background: #ffffff;
-  color: #666;
-  border: 1px solid #e0e0e0;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
@@ -917,8 +1173,8 @@ body {
 }
 
 .btn-secondary:hover {
-  background: #f5f5f5;
-  border-color: #ccc;
+  background: var(--sidebar-hover-bg);
+  border-color: var(--border-color);
 }
 
 .priority-critical {
@@ -984,14 +1240,14 @@ body {
 .empty-column {
   text-align: center;
   padding: 40px 20px;
-  color: #999;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  color: #999;
+  color: var(--text-secondary);
   font-size: 16px;
 }
 
@@ -1011,7 +1267,7 @@ body {
 }
 
 .error-container p {
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 20px;
 }
 
@@ -1039,8 +1295,8 @@ body {
 }
 
 .kanban-column.drag-over {
-  background-color: #e8f0fe;
-  border: 2px dashed #0066ff;
+  background-color: var(--kanban-drag-over-bg);
+  border: 2px dashed var(--text-accent);
 }
 
 .column-tasks {
@@ -1141,8 +1397,8 @@ body {
 /* Контекстное меню */
 .task-context-menu {
   position: fixed;
-  background: white;
-  border: 1px solid #e0e0e0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
@@ -1152,14 +1408,14 @@ body {
 
 .context-menu-header {
   padding: 10px 12px;
-  background: #f5f5f5;
+  background: var(--bg-secondary);
   font-size: 13px;
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 .context-menu-divider {
   height: 1px;
-  background: #e0e0e0;
+  background: var(--border-color);
   margin: 4px 0;
 }
 
@@ -1169,20 +1425,21 @@ body {
   padding: 10px 12px;
   text-align: left;
   border: none;
-  background: white;
+  background: var(--bg-secondary);
   cursor: pointer;
   font-size: 14px;
   transition: background 0.2s;
+  color: var(--text-primary);
 }
 
 .context-menu-item:hover:not(:disabled) {
-  background: #f5f5f5;
+  background: var(--sidebar-hover-bg);
 }
 
 .context-menu-item:disabled {
-  color: #999;
+  color: var(--text-secondary);
   cursor: default;
-  background: #fafafa;
+  background: var(--bg-primary);
 }
 
 /* Добавьте в конец файла index.css */
@@ -1204,9 +1461,9 @@ body {
 }
 
 .kanban-column.drag-over {
-  background-color: #e8f0fe;
-  border: 2px dashed #0066ff;
-  box-shadow: inset 0 0 0 2px rgba(0, 102, 255, 0.1);
+  background-color: var(--kanban-drag-over-bg);
+  border: 2px dashed var(--text-accent);
+  box-shadow: inset 0 0 0 2px rgba(77, 166, 255, 0.1);
 }
 
 .column-tasks {
