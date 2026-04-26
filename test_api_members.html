@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API</title>
+</head>
+<body>
+    <h1>Test Company Members API</h1>
+    <button onclick="testMembers()">Get Members</button>
+    <button onclick="testPending()">Get Pending</button>
+    <div id="result"></div>
+
+    <script>
+        const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc3MjQzNTY4LCJpYXQiOjE3NzcyNDE3NjgsImp0aSI6IjdiNjM2NDNlZjBjZjRlY2U4NWY3N2NkNTZhMTEwYTdlIiwidXNlcl9pZCI6ImVjMGM5ZjBkLTRhZGUtNDU4Zi05NjYyLTBiOWUxNmNkYmQ0NiJ9.rX0IguKgH-SDnStuj7DMxL4Xeoc5bAZflnfwnG9gckc';
+        const companyId = '88c135b3-3ea4-457e-8da7-85205a9a632b';
+
+        async function testMembers() {
+            try {
+                const response = await fetch(`http://localhost:8000/api/v1/companies/${companyId}/members/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-Company-Id': companyId,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<pre>Error: ${error.message}</pre>`;
+            }
+        }
+
+        async function testPending() {
+            try {
+                const response = await fetch(`http://localhost:8000/api/v1/companies/${companyId}/pending/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-Company-Id': companyId,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<pre>Error: ${error.message}</pre>`;
+            }
+        }
+    </script>
+</body>
+</html>

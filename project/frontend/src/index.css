@@ -2523,3 +2523,160 @@ body {
     gap: 0;
   }
 }
+
+/* Company Management */
+.company-management {
+  padding: 24px;
+}
+
+.company-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.company-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.company-info {
+  margin-bottom: 32px;
+}
+
+.info-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.info-card h3 {
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+}
+
+.info-card p {
+  margin: 0 0 16px 0;
+  color: var(--text-secondary);
+}
+
+.company-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.members-section,
+.invited-section {
+  margin-bottom: 32px;
+}
+
+.members-section h3,
+.invited-section h3 {
+  margin: 0 0 16px 0;
+  color: var(--text-primary);
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.member-item.invited {
+  opacity: 0.8;
+  border-style: dashed;
+}
+
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.member-details h4 {
+  margin: 0 0 4px 0;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.member-details p {
+  margin: 0 0 4px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.member-role {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.member-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-select {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.status-badge {
+  background: #ff9800;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.member-status {
+  display: flex;
+  align-items: center;
+}
+
+/* Dark theme for company management */
+[data-theme="dark"] .company-management {
+  --card-bg: #1f304d;
+  --border-color: #2a3b5a;
+  --text-primary: #ffffff;
+  --text-secondary: #b0c4de;
+  --text-muted: #7a8fa8;
+  --bg-secondary: #2a3b5a;
+  --input-bg: #1f304d;
+  --primary-color: #4a90e2;
+}

@@ -21,6 +21,7 @@ const CompanySwitcher = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('CompanySwitcher: fetching companies and invites');
     fetchCompanies();
     fetchInvites();
   }, []);
@@ -36,8 +37,10 @@ const CompanySwitcher = () => {
       return;
     }
     const company = companies.find(c => String(c.id) === selectedId);
+    console.log('Selected company:', company);
     if (company) {
       setActiveCompany(company);
+      console.log('Active company set to:', company);
       navigate('/dashboard');
     }
   };

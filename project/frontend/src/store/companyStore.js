@@ -13,15 +13,18 @@ const useCompanyStore = create(
 
       // Загрузить компании пользователя
       fetchCompanies: async () => {
+        console.log('Fetching companies...');
         set({ isLoading: true, error: null });
         try {
           const response = await companyAPI.getMyCompanies();
           const companies = response.data.results || response.data;
+          console.log('Fetched companies:', companies);
           set({ companies, isLoading: false });
           
           // Если нет активной компании, выбираем первую
           const { activeCompany } = get();
           if (!activeCompany && companies.length > 0) {
+            console.log('Setting first company as active:', companies[0]);
             set({ activeCompany: companies[0] });
           }
         } catch (error) {
@@ -81,10 +84,13 @@ const useCompanyStore = create(
 
       // Пригласить участника
       inviteMember: async (companyId, data) => {
+        console.log('Inviting member to company:', companyId, 'with data:', data);
         try {
           const response = await companyAPI.inviteMember(companyId, data);
+          console.log('Invite response:', response);
           return { success: true, data: response.data };
         } catch (error) {
+          console.error('Invite error:', error);
           const message = error.response?.data?.error || 'Ошибка приглашения';
           return { success: false, error: message };
         }

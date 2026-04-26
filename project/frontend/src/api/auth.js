@@ -15,6 +15,8 @@ api.interceptors.request.use(
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.log('No access token found');
     }
 
     // Добавляем ID активной компании
@@ -24,12 +26,18 @@ api.interceptors.request.use(
         const companyState = JSON.parse(companyStorage);
         if (companyState?.state?.activeCompany?.id) {
           config.headers['X-Company-Id'] = companyState.state.activeCompany.id;
+          console.log('Auth interceptor: Adding X-Company-Id:', companyState.state.activeCompany.id);
+        } else {
+          console.log('Auth interceptor: No active company in localStorage');
         }
+      } else {
+        console.log('Auth interceptor: No company-storage in localStorage');
       }
     } catch (e) {
-      console.error('Failed to parse company-storage', e);
+      console.error('Auth interceptor: Failed to parse company-storage', e);
     }
 
+    console.log('Auth interceptor: Final headers for', config.url, ':', config.headers);
     return config;
   },
   (error) => Promise.reject(error)

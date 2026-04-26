@@ -24,11 +24,19 @@ class CompanyViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Получение компаний, где пользователь активный участник"""
         user = self.request.user
-        return Company.objects.filter(
+        print(f"DEBUG: get_queryset called for user {user.email} (ID: {user.id})")
+        
+        queryset = Company.objects.filter(
             memberships__user=user,
             memberships__status='active',
             deleted_at__isnull=True
         ).distinct().select_related('owner').prefetch_related('memberships')
+        
+        print(f"DEBUG: found {len(queryset)} companies for user")
+        for company in queryset:
+            print(f"DEBUG: company {company.name} (ID: {company.id})")
+        
+        return queryset
     
     def get_serializer_class(self):
         """Выбор сериализатора в зависимости от действия"""
@@ -191,33 +199,63 @@ class CompanyViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_path='members')
     def list_members(self, request, pk=None):
         """Получение списка активных участников компании"""
-        company = self.get_object()
+        print(f"DEBUG: list_members called for company {pk}")
+        print(f"DEBUG: user {request.user.email} (ID: {request.user.id})")
+        
+        # Проверяем, что пользователь имеет доступ к компании
+        membership = CompanyMember.objects.filter(
+            company_id=pk,
+            user=request.user,
+            status='active'
+        ).first()
+        
+        if not membership:
+            print(f"DEBUG: user has no access to company {pk}")
+            return Response(
+                {'error': 'У вас нет доступа к этой компании'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            company = Company.objects.get(id=pk, deleted_at__isnull=True)
+            print(f"DEBUG: company found: {company.name} (ID: {company.id})")
+        except Company.DoesNotExist:
+            print(f"DEBUG: company {pk} not found")
+            return Response({'error': 'Компания не найдена'}, status=status.HTTP_404_NOT_FOUND)
         
         members = CompanyMember.objects.filter(
             company=company,
             status='active'
         ).select_related('user', 'invited_by')
         
+        print(f"DEBUG: found {len(members)} active members")
         serializer = CompanyMemberSerializer(members, many=True)
         return Response(serializer.data)
     
     @action(detail=True, methods=['get'], url_path='pending')
     def list_pending(self, request, pk=None):
         """Получение списка приглашенных участников"""
-        company = self.get_object()
+        print(f"DEBUG: list_pending called for company {pk}")
         
+        # Проверяем права доступа (только owner и admin могут видеть приглашенных)
         membership = CompanyMember.objects.filter(
-            company=company,
+            company_id=pk,
             user=request.user,
             status='active',
             role__in=['owner', 'admin']
         ).first()
         
         if not membership:
+            print(f"DEBUG: user has no admin access to company {pk}")
             return Response(
                 {'error': 'У вас нет прав для просмотра приглашенных'},
                 status=status.HTTP_403_FORBIDDEN
             )
+        
+        try:
+            company = Company.objects.get(id=pk, deleted_at__isnull=True)
+        except Company.DoesNotExist:
+            return Response({'error': 'Компания не найдена'}, status=status.HTTP_404_NOT_FOUND)
         
         members = CompanyMember.objects.filter(
             company=company,

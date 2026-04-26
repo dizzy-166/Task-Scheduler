@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import TaskModal from '../components/TaskModal';
 import CompanySwitcher from '../components/CompanySwitcher';
 import { taskService } from '../api/taskService';
+import companyAPI from '../api/companyService';
 
 const DashboardPage = () => {
   const { user, logout } = useAuthStore();
@@ -32,11 +33,22 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  
+  // Состояние для управления компанией
+  const [companyMembers, setCompanyMembers] = useState([]);
+  const [invitedMembers, setInvitedMembers] = useState([]);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('member');
+  const [inviteError, setInviteError] = useState('');
 
   useEffect(() => {
     if (activeCompany) {
+      console.log('Active company changed:', activeCompany);
       loadAllData();
+      loadCompanyMembers();
     } else {
+      console.log('No active company');
       setLoading(false);
     }
   }, [activeCompany]);
@@ -353,6 +365,137 @@ const DashboardPage = () => {
     setSelectedTask(null);
   };
 
+  // ==========================================
+  // Функции для управления компанией (ИСПРАВЛЕНО)
+  // ==========================================
+  
+  // Безопасное извлечение массива из ответа API
+  const safeExtractArray = (response, label = 'data') => {
+    console.log(`Extracting ${label}:`, response);
+    
+    // Если ответ от axios - данные в response.data
+    const data = response?.data || response;
+    
+    // Если это массив - возвращаем его
+    if (Array.isArray(data)) {
+      console.log(`${label} is array:`, data.length);
+      return data;
+    }
+    
+    // Если есть поле results
+    if (data?.results && Array.isArray(data.results)) {
+      console.log(`${label} has results:`, data.results.length);
+      return data.results;
+    }
+    
+    // Если это объект с ключами (возможно пагинация)
+    if (typeof data === 'object' && data !== null) {
+      // Пробуем найти первый массив в объекте
+      for (const key of Object.keys(data)) {
+        if (Array.isArray(data[key]) && data[key].length > 0) {
+          console.log(`${label} found array in key "${key}":`, data[key].length);
+          return data[key];
+        }
+      }
+    }
+    
+    console.warn(`${label} is not an array, returning []`);
+    return [];
+  };
+
+  const loadCompanyMembers = async () => {
+    if (!activeCompany?.id) {
+      console.log('No active company ID');
+      return;
+    }
+    
+    console.log('Loading members for company:', activeCompany.id);
+    
+    try {
+      // Загружаем участников
+      const membersResponse = await companyAPI.getMembers(activeCompany.id);
+      const membersList = safeExtractArray(membersResponse, 'members');
+      console.log('Members list:', membersList);
+      setCompanyMembers(membersList);
+      
+      // Загружаем приглашенных
+      try {
+        const invitedResponse = await companyAPI.getInvitedMembers(activeCompany.id);
+        const invitedList = safeExtractArray(invitedResponse, 'invited');
+        console.log('Invited list:', invitedList);
+        setInvitedMembers(invitedList);
+      } catch (err) {
+        console.error('Ошибка загрузки приглашенных:', err);
+        setInvitedMembers([]);
+      }
+    } catch (err) {
+      console.error('Ошибка загрузки участников:', err);
+      setCompanyMembers([]);
+      setInvitedMembers([]);
+    }
+  };
+
+  const handleInviteMember = async () => {
+    if (!inviteEmail.trim()) {
+      setInviteError('Введите email');
+      return;
+    }
+    
+    if (!activeCompany?.id) {
+      setInviteError('Компания не выбрана');
+      return;
+    }
+    
+    console.log('Active company:', activeCompany);
+    console.log('Invite data:', { email: inviteEmail, role: inviteRole });
+    
+    try {
+      const { inviteMember } = useCompanyStore.getState();
+      const result = await inviteMember(activeCompany.id, {
+        email: inviteEmail,
+        role: inviteRole
+      });
+      
+      if (result.success) {
+        setIsInviteModalOpen(false);
+        setInviteEmail('');
+        setInviteRole('member');
+        setInviteError('');
+        await loadCompanyMembers();
+      } else {
+        setInviteError(result.error || 'Ошибка приглашения');
+      }
+    } catch (err) {
+      console.error('Ошибка приглашения:', err);
+      setInviteError('Ошибка приглашения: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleChangeMemberRole = async (userId, newRole) => {
+    if (!activeCompany?.id) return;
+    
+    try {
+      await companyAPI.changeMemberRole(activeCompany.id, userId, newRole);
+      await loadCompanyMembers();
+    } catch (err) {
+      console.error('Ошибка изменения роли:', err);
+      alert('Не удалось изменить роль');
+    }
+  };
+
+  const handleRemoveMember = async (userId) => {
+    if (!activeCompany?.id) return;
+    if (!confirm('Вы уверены, что хотите удалить этого участника?')) return;
+    
+    try {
+      await companyAPI.removeMember(activeCompany.id, userId);
+      await loadCompanyMembers();
+    } catch (err) {
+      console.error('Ошибка удаления участника:', err);
+      alert('Не удалось удалить участника');
+    }
+  };
+
   const formatTimeLeft = (dueDate, estimatedHours) => {
     if (!dueDate && !estimatedHours) return '—';
     
@@ -567,6 +710,12 @@ const DashboardPage = () => {
           >
             Список
           </button>
+          <button 
+            className={`tab-btn ${activeView === 'company' ? 'active' : ''}`}
+            onClick={() => setActiveView('company')}
+          >
+            Компания
+          </button>
         </div>
 
         {activeView === 'kanban' && (
@@ -656,6 +805,103 @@ const DashboardPage = () => {
             )}
           </div>
         )}
+
+        {activeView === 'company' && (
+          <div className="company-management">
+            <div className="company-header">
+              <h2>Управление компанией</h2>
+              {activeCompany && (
+                <button 
+                  className="btn-primary"
+                  onClick={() => setIsInviteModalOpen(true)}
+                >
+                  + Пригласить участника
+                </button>
+              )}
+            </div>
+
+            <div className="company-info">
+              <div className="info-card">
+                <h3>{activeCompany?.name || 'Компания не выбрана'}</h3>
+                <p>{activeCompany?.description || 'Выберите компанию в переключателе выше'}</p>
+                {activeCompany && (
+                  <div className="company-stats">
+                    <span>👥 {Array.isArray(companyMembers) ? companyMembers.length : 0} участников</span>
+                    <span>📨 {Array.isArray(invitedMembers) ? invitedMembers.length : 0} приглашений</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="members-section">
+              <h3>Активные участники</h3>
+              <div className="members-list">
+                {Array.isArray(companyMembers) && companyMembers.map(member => (
+                  <div key={member.id} className="member-item">
+                    <div className="member-info">
+                      <div className="member-avatar">
+                        {member.user_name?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                      <div className="member-details">
+                        <h4>{member.user_name || member.user_email}</h4>
+                        <p>{member.user_email}</p>
+                        <span className="member-role">{member.role_display || member.role}</span>
+                      </div>
+                    </div>
+                    <div className="member-actions">
+                      {member.role !== 'owner' && (
+                        <>
+                          <select
+                            value={member.role}
+                            onChange={(e) => handleChangeMemberRole(member.user, e.target.value)}
+                            className="role-select"
+                          >
+                            <option value="member">Участник</option>
+                            <option value="admin">Администратор</option>
+                          </select>
+                          <button 
+                            className="btn-danger btn-small"
+                            onClick={() => handleRemoveMember(member.user)}
+                          >
+                            Удалить
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {(!Array.isArray(companyMembers) || companyMembers.length === 0) && (
+                  <div className="empty-state">
+                    <p>Нет активных участников</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {Array.isArray(invitedMembers) && invitedMembers.length > 0 && (
+              <div className="invited-section">
+                <h3>Ожидают подтверждения</h3>
+                <div className="members-list">
+                  {invitedMembers.map(member => (
+                    <div key={member.id} className="member-item invited">
+                      <div className="member-info">
+                        <div className="member-avatar">?</div>
+                        <div className="member-details">
+                          <h4>{member.user_email || member.user_name}</h4>
+                          <p>Приглашение отправлено</p>
+                          <span className="member-role">{member.role_display || member.role}</span>
+                        </div>
+                      </div>
+                      <div className="member-status">
+                        <span className="status-badge">Ожидает</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </main>
 
       <TaskModal 
@@ -665,6 +911,54 @@ const DashboardPage = () => {
         task={selectedTask}
         mode={selectedTask ? 'view' : 'create'}
       />
+
+      {/* Модальное окно приглашения участника */}
+      {isInviteModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsInviteModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Пригласить участника</h3>
+              <button className="modal-close" onClick={() => setIsInviteModalOpen(false)}>×</button>
+            </div>
+            
+            <form onSubmit={(e) => { e.preventDefault(); handleInviteMember(); }}>
+              <div className="form-group">
+                <label>Email участника *</label>
+                <input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="user@example.com"
+                  required
+                  autoFocus
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Роль</label>
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value)}
+                >
+                  <option value="member">Участник</option>
+                  <option value="admin">Администратор</option>
+                </select>
+              </div>
+              
+              {inviteError && <div className="error-message">{inviteError}</div>}
+              
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={() => setIsInviteModalOpen(false)}>
+                  Отмена
+                </button>
+                <button type="submit" className="btn-primary">
+                  Отправить приглашение
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       
       {isUpdating && (
         <div className="updating-overlay">

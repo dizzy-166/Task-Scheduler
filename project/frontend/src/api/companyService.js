@@ -23,7 +23,7 @@ const companyAPI = {
   getMembers: (companyId) => api.get(`/companies/${companyId}/members/`),
   
   // Получить приглашенных участников
-  getInvitedMembers: (companyId) => api.get(`/companies/${companyId}/invited/`),
+  getInvitedMembers: (companyId) => api.get(`/companies/${companyId}/pending/`),
   
   // Изменить роль участника
   changeMemberRole: (companyId, userId, role) => 

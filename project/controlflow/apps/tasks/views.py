@@ -31,10 +31,14 @@ class TaskViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Task.objects.filter(deleted_at__isnull=True)
         
-        # Фильтрация по компании (если указана в заголовке)
-        company_id = self.request.headers.get('X-Company-Id')
-        if company_id:
-            queryset = queryset.filter(company_id=company_id)
+        # Для определенных actions не фильтруем по компании
+        if self.action in ['my_tasks', 'created_by_me']:
+            pass  # Не фильтруем по компании для этих методов
+        else:
+            # Фильтрация по компании (если указана в заголовке)
+            company_id = self.request.headers.get('X-Company-Id')
+            if company_id:
+                queryset = queryset.filter(company_id=company_id)
         
         # Админ видит все задачи
         if user.is_admin:
@@ -206,7 +210,14 @@ class TaskViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='my_tasks')
     def my_tasks(self, request):
         """Мои задачи (где я исполнитель)"""
-        tasks = self.get_queryset().filter(assignee=request.user)
+        # Получаем компании пользователя
+        user_companies = request.user.company_memberships.filter(
+            status='active'
+        ).values_list('company_id', flat=True)
+        tasks = self.get_queryset().filter(
+            assignee=request.user,
+            company_id__in=user_companies
+        )
         page = self.paginate_queryset(tasks)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -217,7 +228,14 @@ class TaskViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='created_by_me')
     def created_by_me(self, request):
         """Задачи, созданные мной"""
-        tasks = self.get_queryset().filter(creator=request.user)
+        # Получаем компании пользователя
+        user_companies = request.user.company_memberships.filter(
+            status='active'
+        ).values_list('company_id', flat=True)
+        tasks = self.get_queryset().filter(
+            creator=request.user,
+            company_id__in=user_companies
+        )
         page = self.paginate_queryset(tasks)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

@@ -19,12 +19,18 @@ class TaskService {
         const companyState = JSON.parse(companyStorage);
         if (companyState?.state?.activeCompany?.id) {
           headers['X-Company-Id'] = companyState.state.activeCompany.id;
+          console.log('Adding X-Company-Id header:', companyState.state.activeCompany.id);
+        } else {
+          console.log('No active company found in localStorage');
         }
+      } else {
+        console.log('No company-storage in localStorage');
       }
     } catch (e) {
       console.error('Failed to parse company-storage', e);
     }
 
+    console.log('Final headers:', headers);
     return headers;
   }
 

@@ -37,12 +37,12 @@ class Migration(migrations.Migration):
             name='CompanyMember',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('role', models.CharField(choices=[('owner', 'Владелец'), ('admin', 'Администратор'), ('member', 'Участник')], db_index=True, default='member', max_length=20, verbose_name='Роль в компании')),
-                ('status', models.CharField(choices=[('invited', 'Приглашён'), ('active', 'Активен'), ('declined', 'Отклонён')], db_index=True, default='invited', max_length=20, verbose_name='Статус')),
+                ('role', models.CharField(choices=[('owner', 'Владелец'), ('admin', 'Администратор'), ('member', 'Участник')], default='member', max_length=20, verbose_name='Роль в компании')),
+                ('status', models.CharField(choices=[('invited', 'Приглашён'), ('active', 'Активен'), ('declined', 'Отклонён')], default='invited', max_length=20, verbose_name='Статус')),
                 ('joined_at', models.DateTimeField(blank=True, null=True, verbose_name='Присоединился')),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Создан')),
                 ('company', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='memberships', to='companies.company', verbose_name='Компания')),
-                ('invited_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='sent_invites', to=settings.AUTH_USER_MODEL, verbose_name='Пригласил')),
+                ('invited_by', models.ForeignKey(blank=True, db_column='invited_by', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='sent_invites', to=settings.AUTH_USER_MODEL, verbose_name='Пригласил')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='company_memberships', to=settings.AUTH_USER_MODEL, verbose_name='Пользователь')),
             ],
             options={
