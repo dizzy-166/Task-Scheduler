@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { taskService } from '../api/taskService';
 
-const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
+const TaskModal = ({ isOpen, onClose, onTaskCreated, task, mode = 'create' }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -18,8 +18,22 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
   useEffect(() => {
     if (isOpen) {
       loadUsers();
+      if (mode === 'view' && task) {
+        // Заполняем форму данными задачи для просмотра
+        setFormData({
+          title: task.title || '',
+          description: task.description || '',
+          assignee_id: task.assignee?.id || task.assignee_id || '',
+          priority: task.priority || 'medium',
+          status: task.status || 'new',
+          due_date: task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
+          estimated_hours: task.estimated_hours || ''
+        });
+      } else if (mode === 'create') {
+        resetForm();
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, mode, task]);
 
   const loadUsers = async () => {
     try {
@@ -108,7 +122,9 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>Создание новой задачи</h3>
+          <h3>
+            {mode === 'view' ? 'Просмотр задачи' : 'Создание новой задачи'}
+          </h3>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
 
@@ -122,6 +138,7 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
               onChange={handleChange}
               placeholder="Введите название задачи"
               autoFocus
+              disabled={mode === 'view'}
             />
           </div>
 
@@ -133,13 +150,14 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
               onChange={handleChange}
               rows="4"
               placeholder="Опишите задачу подробнее..."
+              disabled={mode === 'view'}
             />
           </div>
 
           <div className="form-row">
             <div className="form-group">
               <label>Приоритет</label>
-              <select name="priority" value={formData.priority} onChange={handleChange}>
+              <select name="priority" value={formData.priority} onChange={handleChange} disabled={mode === 'view'}>
                 <option value="low">Низкий</option>
                 <option value="medium">Средний</option>
                 <option value="high">Высокий</option>
@@ -149,7 +167,7 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
 
             <div className="form-group">
               <label>Статус</label>
-              <select name="status" value={formData.status} onChange={handleChange}>
+              <select name="status" value={formData.status} onChange={handleChange} disabled={mode === 'view'}>
                 <option value="new">Новая</option>
                 <option value="in_progress">В работе</option>
                 <option value="review">На проверке</option>
@@ -161,7 +179,7 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
 
           <div className="form-group">
             <label>Исполнитель</label>
-            <select name="assignee_id" value={formData.assignee_id} onChange={handleChange}>
+            <select name="assignee_id" value={formData.assignee_id} onChange={handleChange} disabled={mode === 'view'}>
               <option value="">Не назначен</option>
               {users.map(user => (
                 <option key={user.id} value={user.id}>
@@ -171,6 +189,27 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
             </select>
           </div>
 
+          {mode === 'view' && task && (
+            <div className="form-row">
+              <div className="form-group">
+                <label>Создатель</label>
+                <input
+                  type="text"
+                  value={task.creator?.full_name || task.creator_name || 'Неизвестен'}
+                  readOnly
+                />
+              </div>
+              <div className="form-group">
+                <label>Дата создания</label>
+                <input
+                  type="text"
+                  value={task.created_at ? new Date(task.created_at).toLocaleString() : 'Неизвестна'}
+                  readOnly
+                />
+              </div>
+            </div>
+          )}
+
           <div className="form-row">
             <div className="form-group">
               <label>Дедлайн</label>
@@ -179,6 +218,7 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                 name="due_date"
                 value={formData.due_date}
                 onChange={handleChange}
+                disabled={mode === 'view'}
               />
             </div>
 
@@ -192,6 +232,7 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                 step="0.5"
                 min="0"
                 placeholder="Например: 4.5"
+                disabled={mode === 'view'}
               />
             </div>
           </div>
@@ -200,11 +241,13 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated }) => {
 
           <div className="modal-footer">
             <button type="button" className="btn-secondary" onClick={onClose}>
-              Отмена
+              {mode === 'view' ? 'Закрыть' : 'Отмена'}
             </button>
-            <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? <span className="spinner"></span> : 'Создать задачу'}
-            </button>
+            {mode !== 'view' && (
+              <button type="submit" className="btn-primary" disabled={loading}>
+                {loading ? <span className="spinner"></span> : 'Создать задачу'}
+              </button>
+            )}
           </div>
         </form>
       </div>

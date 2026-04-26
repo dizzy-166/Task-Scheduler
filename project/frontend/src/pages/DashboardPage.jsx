@@ -12,6 +12,7 @@ const DashboardPage = () => {
   const [activeView, setActiveView] = useState('kanban');
   const [taskScope, setTaskScope] = useState('all');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
   const [tasks, setTasks] = useState({
     todo: [],
     inProgress: [],
@@ -375,10 +376,29 @@ const DashboardPage = () => {
     return roles[role] || role;
   };
 
+  const handleTaskClick = async (task) => {
+    try {
+      const fullTask = await taskService.getTask(task.id);
+      setSelectedTask(fullTask);
+      setIsTaskModalOpen(true);
+    } catch (error) {
+      console.error('Ошибка загрузки задачи:', error);
+      // Если не удалось загрузить полную задачу, используем имеющиеся данные
+      setSelectedTask(task);
+      setIsTaskModalOpen(true);
+    }
+  };
+
+  const handleTaskModalClose = () => {
+    setIsTaskModalOpen(false);
+    setSelectedTask(null);
+  };
+
   const handleTaskCreated = async (newTask) => {
     console.log('Создана новая задача:', newTask);
     await loadAllData();
     setIsTaskModalOpen(false);
+    setSelectedTask(null);
   };
 
   const formatTimeLeft = (dueDate, estimatedHours) => {
@@ -623,6 +643,7 @@ const DashboardPage = () => {
                     draggable={!isUpdating}
                     onDragStart={(e) => onDragStart(e, task, 'todo')}
                     onDragEnd={onDragEnd}
+                    onClick={() => handleTaskClick(task)}
                   >
                     <div className="task-header">
                       <h4>{task.title}</h4>
@@ -676,6 +697,7 @@ const DashboardPage = () => {
                     draggable={!isUpdating}
                     onDragStart={(e) => onDragStart(e, task, 'inProgress')}
                     onDragEnd={onDragEnd}
+                    onClick={() => handleTaskClick(task)}
                   >
                     <div className="task-header">
                       <h4>{task.title}</h4>
@@ -729,6 +751,7 @@ const DashboardPage = () => {
                     draggable={!isUpdating}
                     onDragStart={(e) => onDragStart(e, task, 'onReview')}
                     onDragEnd={onDragEnd}
+                    onClick={() => handleTaskClick(task)}
                   >
                     <div className="task-header">
                       <h4>{task.title}</h4>
@@ -782,6 +805,7 @@ const DashboardPage = () => {
                     draggable={!isUpdating}
                     onDragStart={(e) => onDragStart(e, task, 'completed')}
                     onDragEnd={onDragEnd}
+                    onClick={() => handleTaskClick(task)}
                   >
                     <div className="task-header">
                       <h4>{task.title}</h4>
@@ -872,8 +896,10 @@ const DashboardPage = () => {
 
       <TaskModal 
         isOpen={isTaskModalOpen}
-        onClose={() => setIsTaskModalOpen(false)}
+        onClose={handleTaskModalClose}
         onTaskCreated={handleTaskCreated}
+        task={selectedTask}
+        mode={selectedTask ? 'view' : 'create'}
       />
       
       {isUpdating && (
