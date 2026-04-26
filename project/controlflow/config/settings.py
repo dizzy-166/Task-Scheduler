@@ -48,10 +48,12 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_spectacular',
     
+    # Local apps
     'apps.users',
     'apps.core',
     'apps.activity',
     'apps.tasks',
+    'apps.companies',  # Добавлено новое приложение
 ]
 
 MIDDLEWARE = [
@@ -238,4 +240,3 @@ LOGGING = {
         },
     },
 }
-

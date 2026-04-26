@@ -1,3 +1,4 @@
+# apps/core/models.py
 import uuid
 from django.db import models
 from django.utils import timezone
@@ -18,6 +19,16 @@ class Project(models.Model):
     description = models.TextField('Описание', blank=True, null=True)
     code = models.CharField('Код проекта', max_length=50, unique=True, blank=True, null=True)
     status = models.CharField('Статус', max_length=20, choices=STATUS_CHOICES, default='active')
+    
+    # Связи с компанией
+    company = models.ForeignKey(
+        'companies.Company',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='projects',
+        verbose_name='Компания'
+    )
     
     # Связи с пользователями
     owner = models.ForeignKey(
@@ -58,6 +69,7 @@ class Project(models.Model):
             models.Index(fields=['manager']),
             models.Index(fields=['deadline']),
             models.Index(fields=['deleted_at']),
+            models.Index(fields=['company']),
         ]
     
     def __str__(self):

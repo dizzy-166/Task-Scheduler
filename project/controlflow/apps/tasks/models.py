@@ -1,3 +1,4 @@
+# apps/tasks/models.py
 import uuid
 from django.db import models
 from django.utils import timezone
@@ -26,6 +27,14 @@ class Task(models.Model):
     description = models.TextField('Описание', blank=True, null=True)
     
     # Связи
+    company = models.ForeignKey(
+        'companies.Company',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='tasks',
+        verbose_name='Компания'
+    )
     project = models.ForeignKey(
         'core.Project',
         on_delete=models.CASCADE,
@@ -112,6 +121,7 @@ class Task(models.Model):
             models.Index(fields=['assignee']),
             models.Index(fields=['creator']),
             models.Index(fields=['project']),
+            models.Index(fields=['company']),
             models.Index(fields=['due_date']),
             models.Index(fields=['deleted_at']),
             models.Index(fields=['parent_task']),

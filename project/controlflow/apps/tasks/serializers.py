@@ -1,3 +1,4 @@
+# apps/tasks/serializers.py (обновленная версия)
 from rest_framework import serializers
 from django.utils import timezone
 from .models import Task
@@ -10,6 +11,7 @@ class TaskListSerializer(serializers.ModelSerializer):
     assignee_name = serializers.SerializerMethodField()
     creator_name = serializers.SerializerMethodField()
     project_name = serializers.SerializerMethodField()
+    company_name = serializers.SerializerMethodField()
     priority_display = serializers.CharField(source='get_priority_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     
@@ -17,6 +19,7 @@ class TaskListSerializer(serializers.ModelSerializer):
         model = Task
         fields = [
             'id', 'title', 'description', 'project_name', 'project',
+            'company_name', 'company',
             'assignee_name', 'assignee', 'creator_name', 'creator',
             'status', 'status_display', 'priority', 'priority_display',
             'due_date', 'estimated_hours', 'actual_hours', 'created_at'
@@ -30,6 +33,9 @@ class TaskListSerializer(serializers.ModelSerializer):
 
     def get_project_name(self, obj):
         return obj.project.name if obj.project else ''
+    
+    def get_company_name(self, obj):
+        return obj.company.name if obj.company else ''
 
 
 class TaskDetailSerializer(serializers.ModelSerializer):
@@ -40,6 +46,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
     assignee_name = serializers.SerializerMethodField()
     creator_name = serializers.SerializerMethodField()
     project_name = serializers.SerializerMethodField()
+    company_name = serializers.SerializerMethodField()
     parent_task_title = serializers.SerializerMethodField()
     priority_display = serializers.CharField(source='get_priority_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -50,6 +57,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         model = Task
         fields = [
             'id', 'title', 'description', 'project', 'project_name',
+            'company', 'company_name',
             'creator', 'creator_name', 'creator_detail',
             'assignee', 'assignee_name', 'assignee_detail',
             'parent_task', 'parent_task_title',
@@ -69,6 +77,9 @@ class TaskDetailSerializer(serializers.ModelSerializer):
 
     def get_project_name(self, obj):
         return obj.project.name if obj.project else ''
+    
+    def get_company_name(self, obj):
+        return obj.company.name if obj.company else ''
 
     def get_parent_task_title(self, obj):
         return obj.parent_task.title if obj.parent_task else ''
@@ -96,11 +107,6 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         if value and value <= 0:
             raise serializers.ValidationError('Оценка времени должна быть положительной')
         return value
-    
-    def create(self, validated_data):
-        """Создание задачи с автоматической установкой создателя"""
-        validated_data['creator'] = self.context['request'].user
-        return super().create(validated_data)
 
 
 class TaskUpdateSerializer(serializers.ModelSerializer):
@@ -119,7 +125,6 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
         old_status = instance.status
         new_status = validated_data.get('status', old_status)
         
-        # Если задача завершается, устанавливаем дату завершения
         if new_status == 'done' and old_status != 'done':
             validated_data['completed_at'] = timezone.now()
         elif new_status != 'done' and old_status == 'done':

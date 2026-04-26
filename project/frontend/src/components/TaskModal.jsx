@@ -19,7 +19,6 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, task, mode = 'create' }) =>
     if (isOpen) {
       loadUsers();
       if (mode === 'view' && task) {
-        // Заполняем форму данными задачи для просмотра
         setFormData({
           title: task.title || '',
           description: task.description || '',
@@ -38,11 +37,9 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, task, mode = 'create' }) =>
   const loadUsers = async () => {
     try {
       const data = await taskService.getUsers();
-      // Проверяем, что data - это массив
       if (Array.isArray(data)) {
         setUsers(data);
       } else if (data.results && Array.isArray(data.results)) {
-        // Если API возвращает пагинированный ответ
         setUsers(data.results);
       } else {
         setUsers([]);
@@ -115,7 +112,6 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, task, mode = 'create' }) =>
     setError('');
   };
 
-  // Если модальное окно закрыто - не рендерим ничего
   if (!isOpen) return null;
 
   return (

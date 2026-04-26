@@ -1,3 +1,4 @@
+# apps/tasks/views.py (обновленная версия)
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -26,13 +27,18 @@ class TaskViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     
     def get_queryset(self):
-        """Получение задач с учётом прав пользователя"""
+        """Получение задач с учётом прав пользователя и компании"""
         user = self.request.user
         queryset = Task.objects.filter(deleted_at__isnull=True)
         
+        # Фильтрация по компании (если указана в заголовке)
+        company_id = self.request.headers.get('X-Company-Id')
+        if company_id:
+            queryset = queryset.filter(company_id=company_id)
+        
         # Админ видит все задачи
         if user.is_admin:
-            return queryset.select_related('project', 'assignee', 'creator')
+            return queryset.select_related('project', 'assignee', 'creator', 'company')
         
         # Менеджер видит задачи своего отдела и подчинённых
         if user.is_manager:
@@ -42,13 +48,13 @@ class TaskViewSet(viewsets.ModelViewSet):
                 django_models.Q(creator_id=user.id) |
                 django_models.Q(assignee_id__in=subordinates_ids) |
                 django_models.Q(project__manager_id=user.id)
-            ).select_related('project', 'assignee', 'creator')
+            ).select_related('project', 'assignee', 'creator', 'company')
         
         # Исполнитель и наблюдатель видят только свои задачи
         return queryset.filter(
             django_models.Q(assignee_id=user.id) |
             django_models.Q(creator_id=user.id)
-        ).select_related('project', 'assignee', 'creator')
+        ).select_related('project', 'assignee', 'creator', 'company')
     
     def get_serializer_class(self):
         """Выбор сериализатора в зависимости от действия"""
@@ -61,21 +67,27 @@ class TaskViewSet(viewsets.ModelViewSet):
         return TaskDetailSerializer
     
     def perform_create(self, serializer):
-        """Создание задачи с логированием"""
+        """Создание задачи с логированием и привязкой к компании"""
         from apps.activity.utils import log_activity
         
-        # СОХРАНЯЕМ задачу сначала
-        task = serializer.save()
+        # Получаем company_id из заголовка
+        company_id = self.request.headers.get('X-Company-Id')
+        extra_fields = {'creator': self.request.user}
         
-        # Теперь у task есть id
+        if company_id:
+            extra_fields['company_id'] = company_id
+        
+        task = serializer.save(**extra_fields)
+        
         log_activity(
             user=self.request.user,
             action='task_created',
             entity_type='task',
-            entity_id=str(task.id),  # Теперь работает
+            entity_id=str(task.id),
             details={
                 'title': task.title,
-                'assignee': str(task.assignee_id) if task.assignee else None
+                'assignee': str(task.assignee_id) if task.assignee else None,
+                'company_id': str(company_id) if company_id else None
             }
         )
     
@@ -135,7 +147,6 @@ class TaskViewSet(viewsets.ModelViewSet):
         old_status = task.status
         task.status = new_status
         
-        # Если задача завершается
         if new_status == 'done' and old_status != 'done':
             task.completed_at = timezone.now()
         elif new_status != 'done' and old_status == 'done':

@@ -9,13 +9,27 @@ const api = axios.create({
   },
 });
 
-// Добавляем токен к запросам
+// Добавляем токен и ID компании к запросам
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Добавляем ID активной компании
+    try {
+      const companyStorage = localStorage.getItem('company-storage');
+      if (companyStorage) {
+        const companyState = JSON.parse(companyStorage);
+        if (companyState?.state?.activeCompany?.id) {
+          config.headers['X-Company-Id'] = companyState.state.activeCompany.id;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse company-storage', e);
+    }
+
     return config;
   },
   (error) => Promise.reject(error)

@@ -1,4 +1,3 @@
-// Исправлено: используем /api/v1 как в auth.js
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 class TaskService {
@@ -8,10 +7,25 @@ class TaskService {
 
   getHeaders() {
     const token = localStorage.getItem('accessToken');
-    return {
+    const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     };
+
+    // Добавляем ID компании
+    try {
+      const companyStorage = localStorage.getItem('company-storage');
+      if (companyStorage) {
+        const companyState = JSON.parse(companyStorage);
+        if (companyState?.state?.activeCompany?.id) {
+          headers['X-Company-Id'] = companyState.state.activeCompany.id;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse company-storage', e);
+    }
+
+    return headers;
   }
 
   async getTasks(params = {}) {

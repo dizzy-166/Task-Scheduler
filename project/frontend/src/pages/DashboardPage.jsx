@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
 import useAuthStore from '../store/authStore';
 import useThemeStore from '../store/themeStore';
+import useCompanyStore from '../store/companyStore';
 import { useNavigate } from 'react-router-dom';
 import TaskModal from '../components/TaskModal';
+import CompanySwitcher from '../components/CompanySwitcher';
 import { taskService } from '../api/taskService';
 
 const DashboardPage = () => {
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
+  const { activeCompany } = useCompanyStore();
   const navigate = useNavigate();
+  
   const [activeView, setActiveView] = useState('kanban');
   const [taskScope, setTaskScope] = useState('all');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -30,8 +34,12 @@ const DashboardPage = () => {
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
-    loadAllData();
-  }, []);
+    if (activeCompany) {
+      loadAllData();
+    } else {
+      setLoading(false);
+    }
+  }, [activeCompany]);
 
   const computeStatsFromTasks = (tasksList) => {
     const counts = {
@@ -145,7 +153,6 @@ const DashboardPage = () => {
   const loadStats = async () => {
     try {
       const data = await taskService.getStats();
-      console.log('Статистика:', data);
       setStats({
         total: data.total || 0,
         inProgress: data.by_status?.in_progress || 0,
@@ -158,8 +165,6 @@ const DashboardPage = () => {
   };
 
   const organizeTasks = (tasksList) => {
-    console.log('organizeTasks получил массив задач:', tasksList);
-    
     const organized = {
       todo: [],
       inProgress: [],
@@ -168,14 +173,11 @@ const DashboardPage = () => {
     };
 
     if (!tasksList || !Array.isArray(tasksList)) {
-      console.error('tasksList не является массивом!');
       setTasks(organized);
       return;
     }
 
     tasksList.forEach(task => {
-      console.log(`Обработка задачи: ${task.title}, статус: "${task.status}"`);
-      
       const taskItem = {
         id: task.id,
         title: task.title,
@@ -240,121 +242,73 @@ const DashboardPage = () => {
     return statusMap[columnId];
   };
 
-  const getColumnByStatus = (status) => {
-    const columnMap = {
-      'new': 'todo',
-      'in_progress': 'inProgress',
-      'review': 'onReview',
-      'done': 'completed'
-    };
-    return columnMap[status];
-  };
-
-  // Обработчики drag & drop
   const onDragStart = (e, task, sourceColumn) => {
-    // Сохраняем данные о перетаскиваемой задаче
     e.dataTransfer.setData('taskId', task.id);
     e.dataTransfer.setData('sourceColumn', sourceColumn);
     e.dataTransfer.effectAllowed = 'move';
-    
-    // Сохраняем в состояние для быстрого доступа
     const dragData = { task, sourceColumn };
     e.dataTransfer.setData('application/json', JSON.stringify(dragData));
-    
-    // Устанавливаем стиль при перетаскивании
     e.currentTarget.style.opacity = '0.5';
-    
-    console.log('Начато перетаскивание задачи:', task.title, 'из колонки:', sourceColumn);
   };
 
   const onDragEnd = (e) => {
-    // Восстанавливаем прозрачность
     e.currentTarget.style.opacity = '1';
-    // Убираем классы drag-over со всех колонок
     document.querySelectorAll('.kanban-column').forEach(col => {
       col.classList.remove('drag-over');
     });
-    console.log('Перетаскивание завершено');
   };
 
   const onDragOver = (e) => {
-    e.preventDefault(); // Обязательно для разрешения drop
+    e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const onDragEnter = (e, columnId) => {
+  const onDragEnter = (e) => {
     e.preventDefault();
-    const column = e.currentTarget;
-    column.classList.add('drag-over');
+    e.currentTarget.classList.add('drag-over');
   };
 
   const onDragLeave = (e) => {
-    const column = e.currentTarget;
-    column.classList.remove('drag-over');
+    e.currentTarget.classList.remove('drag-over');
   };
 
   const onDrop = async (e, targetColumn) => {
     e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
     
-    // Убираем подсветку с колонки
-    const column = e.currentTarget;
-    column.classList.remove('drag-over');
-    
-    // Получаем данные о перетаскиваемой задаче
     const taskId = e.dataTransfer.getData('taskId');
     const sourceColumn = e.dataTransfer.getData('sourceColumn');
     
-    if (!taskId || !sourceColumn) {
-      console.error('Нет данных о перетаскиваемой задаче');
+    if (!taskId || !sourceColumn || sourceColumn === targetColumn) {
       return;
     }
     
-    // Проверяем, что задача перемещается в другую колонку
-    if (sourceColumn === targetColumn) {
-      console.log('Задача перемещена в ту же колонку, ничего не делаем');
-      return;
-    }
-    
-    console.log(`Перемещение задачи ${taskId} из ${sourceColumn} в ${targetColumn}`);
-    
-    // Находим задачу в текущем состоянии
-    let taskToMove = null;
     const sourceTasks = [...tasks[sourceColumn]];
-    taskToMove = sourceTasks.find(t => t.id === taskId);
+    const taskToMove = sourceTasks.find(t => t.id === taskId);
     
     if (!taskToMove) {
-      console.error('Задача не найдена в исходной колонке');
       return;
     }
     
     const newStatus = getStatusByColumn(targetColumn);
     if (!newStatus) {
-      console.error('Неизвестная целевая колонка:', targetColumn);
       return;
     }
     
-    // Оптимистичное обновление UI
     const updatedTasks = { ...tasks };
-    // Удаляем из исходной колонки
     updatedTasks[sourceColumn] = updatedTasks[sourceColumn].filter(t => t.id !== taskId);
-    // Добавляем в целевую колонку
     const updatedTask = { ...taskToMove, status: newStatus };
     updatedTasks[targetColumn] = [...updatedTasks[targetColumn], updatedTask];
     
-    // Обновляем состояние мгновенно для плавного UI
     setTasks(updatedTasks);
     
-    // Отправляем запрос на сервер
     setIsUpdating(true);
     try {
       await taskService.updateTaskStatus(taskId, newStatus);
-      console.log('Статус задачи успешно обновлен');
-      // Обновляем статистику
       await loadStats();
     } catch (error) {
       console.error('Ошибка при обновлении статуса:', error);
-      // Откатываем изменения при ошибке
-      await loadTasks(); // Перезагружаем задачи для синхронизации
+      await loadTasks();
       alert('Не удалось переместить задачу. Попробуйте еще раз.');
     } finally {
       setIsUpdating(false);
@@ -383,7 +337,6 @@ const DashboardPage = () => {
       setIsTaskModalOpen(true);
     } catch (error) {
       console.error('Ошибка загрузки задачи:', error);
-      // Если не удалось загрузить полную задачу, используем имеющиеся данные
       setSelectedTask(task);
       setIsTaskModalOpen(true);
     }
@@ -395,7 +348,6 @@ const DashboardPage = () => {
   };
 
   const handleTaskCreated = async (newTask) => {
-    console.log('Создана новая задача:', newTask);
     await loadAllData();
     setIsTaskModalOpen(false);
     setSelectedTask(null);
@@ -429,13 +381,52 @@ const DashboardPage = () => {
     return '—';
   };
 
+  if (!activeCompany) {
+    return (
+      <div className="dashboard">
+        <aside className="sidebar">
+          <div className="sidebar-header">
+            <h1 className="logo">ControlFlow</h1>
+          </div>
+          <nav className="sidebar-nav">
+            <CompanySwitcher />
+          </nav>
+          <div className="sidebar-footer">
+            <div className="user-info-sidebar">
+              <div className="user-avatar">
+                {user?.first_name?.[0]}{user?.last_name?.[0]}
+              </div>
+              <div className="user-details-sidebar">
+                <div className="user-name">{user?.full_name || user?.email}</div>
+                <div className="user-role">{getRoleName(user?.role)}</div>
+              </div>
+            </div>
+            <button onClick={handleLogout} className="logout-btn">
+              <span>Выйти</span>
+            </button>
+          </div>
+        </aside>
+        <main className="main-content">
+          <div className="empty-state">
+            <div className="empty-icon">🏢</div>
+            <h2>Выберите или создайте компанию</h2>
+            <p>Для начала работы создайте компанию или примите приглашение</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="dashboard">
         <aside className="sidebar">
           <div className="sidebar-header">
-            <h1 className="logo">TaskFlow Pro</h1>
+            <h1 className="logo">ControlFlow</h1>
           </div>
+          <nav className="sidebar-nav">
+            <CompanySwitcher />
+          </nav>
         </aside>
         <main className="main-content">
           <div className="loading-container">
@@ -452,8 +443,11 @@ const DashboardPage = () => {
       <div className="dashboard">
         <aside className="sidebar">
           <div className="sidebar-header">
-            <h1 className="logo">TaskFlow Pro</h1>
+            <h1 className="logo">ControlFlow</h1>
           </div>
+          <nav className="sidebar-nav">
+            <CompanySwitcher />
+          </nav>
         </aside>
         <main className="main-content">
           <div className="error-container">
@@ -471,41 +465,32 @@ const DashboardPage = () => {
     <div className="dashboard">
       <aside className="sidebar">
         <div className="sidebar-header">
-          <h1 className="logo">TaskFlow Pro</h1>
+          <h1 className="logo">ControlFlow</h1>
         </div>
         
         <nav className="sidebar-nav">
+          <CompanySwitcher />
+          
           <a
             href="#"
             className={`nav-item ${taskScope === 'all' ? 'active' : ''}`}
-            onClick={(e) => {
-              e.preventDefault();
-              handleScopeChange('all');
-            }}
+            onClick={(e) => { e.preventDefault(); handleScopeChange('all'); }}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z" fill="currentColor"/>
             </svg>
-            <span>Главная</span>
+            <span>Все задачи</span>
           </a>
+          
           <a
             href="#"
             className={`nav-item ${taskScope === 'mine' ? 'active' : ''}`}
-            onClick={(e) => {
-              e.preventDefault();
-              handleScopeChange('mine');
-            }}
+            onClick={(e) => { e.preventDefault(); handleScopeChange('mine'); }}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M16 2h-4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM6 2H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z" fill="currentColor"/>
+              <path d="M10 2a4 4 0 100 8 4 4 0 000-8zM3 18v-2a4 4 0 014-4h6a4 4 0 014 4v2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
             </svg>
             <span>Мои задачи</span>
-          </a>
-          <a href="#" className="nav-item">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M2 4h16v12H2V4zm2 2v2h12V6H4zm0 4v2h12v-2H4z" fill="currentColor"/>
-            </svg>
-            <span>Проекты</span>
           </a>
         </nav>
 
@@ -531,20 +516,12 @@ const DashboardPage = () => {
       <main className="main-content">
         <header className="main-header">
           <div className="header-title">
-            <h2>{taskScope === 'all' ? 'Дашборд' : 'Мои задачи'}</h2>
-            <p>{taskScope === 'all' ? 'Управление задачами и проектами' : 'Список задач, назначенных вам'}</p>
+            <h2>{activeCompany?.name} - {taskScope === 'all' ? 'Дашборд' : 'Мои задачи'}</h2>
+            <p>Управление задачами и проектами</p>
           </div>
           <div className="header-actions">
             <button className="theme-toggle-btn" onClick={toggleTheme} title={`Переключить на ${theme === 'light' ? 'тёмную' : 'светлую'} тему`}>
-              {theme === 'light' ? (
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM10 1v2m0 14v2M3.05 3.05l1.41 1.41m9.9 9.9l1.41 1.41M1 10h2m14 0h2M3.05 16.95l1.41-1.41m9.9-9.9l1.41-1.41" stroke="currentColor" strokeWidth="1.5"/>
-                </svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M10 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM10 1a1 1 0 0 1 1 1v1a1 1 0 0 1-2 0V2a1 1 0 0 1 1-1zM10 17a1 1 0 0 1 1 1v1a1 1 0 0 1-2 0v-1a1 1 0 0 1 1-1zM3.05 3.05a1 1 0 0 1 1.41 0l.71.71a1 1 0 0 1-1.41 1.41l-.71-.71a1 1 0 0 1 0-1.41zM15.54 15.54a1 1 0 0 1 0 1.41l-.71.71a1 1 0 0 1-1.41-1.41l.71-.71a1 1 0 0 1 1.41 0zM1 10a1 1 0 0 1 1-1h1a1 1 0 0 1 0 2H2a1 1 0 0 1-1-1zM17 10a1 1 0 0 1 1-1h1a1 1 0 0 1 0 2h-1a1 1 0 0 1-1-1zM3.05 16.95a1 1 0 0 1 0-1.41l.71-.71a1 1 0 0 1 1.41 1.41l-.71.71a1 1 0 0 1-1.41 0zM15.54 3.05a1 1 0 0 1 1.41 1.41l-.71.71a1 1 0 0 1-1.41-1.41l.71-.71a1 1 0 0 1 0-1.41z" fill="currentColor"/>
-                </svg>
-              )}
+              {theme === 'light' ? '🌙' : '☀️'}
             </button>
             <button className="btn-new-task" onClick={() => setIsTaskModalOpen(true)}>
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -557,56 +534,27 @@ const DashboardPage = () => {
 
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-header">
-              <span className="stat-label">Всего задач</span>
-            </div>
+            <div className="stat-label">Всего задач</div>
             <div className="stat-value">{stats.total}</div>
           </div>
           
           <div className="stat-card">
-            <div className="stat-header">
-              <span className="stat-label">В работе</span>
-            </div>
-            <div className="stat-value">{stats.inProgress}</div>
+            <div className="stat-label">В работе</div>
+            <div className="stat-value" style={{ color: '#2196F3' }}>{stats.inProgress}</div>
           </div>
           
           <div className="stat-card">
-            <div className="stat-header">
-              <span className="stat-label">На проверке</span>
-            </div>
-            <div className="stat-value">{stats.onReview}</div>
+            <div className="stat-label">На проверке</div>
+            <div className="stat-value" style={{ color: '#FF9800' }}>{stats.onReview}</div>
           </div>
           
           <div className="stat-card">
-            <div className="stat-header">
-              <span className="stat-label">Завершено</span>
-            </div>
-            <div className="stat-value">{stats.completed}</div>
+            <div className="stat-label">Завершено</div>
+            <div className="stat-value" style={{ color: '#4CAF50' }}>{stats.completed}</div>
           </div>
-        </div>
-
-        <div className="view-tabs scope-tabs">
-          <button
-            className={`tab-btn ${taskScope === 'all' ? 'active' : ''}`}
-            onClick={() => handleScopeChange('all')}
-          >
-            Все задачи
-          </button>
-          <button
-            className={`tab-btn ${taskScope === 'mine' ? 'active' : ''}`}
-            onClick={() => handleScopeChange('mine')}
-          >
-            Мои задачи
-          </button>
         </div>
 
         <div className="view-tabs">
-          <button 
-            className={`tab-btn ${activeView === 'list' ? 'active' : ''}`}
-            onClick={() => setActiveView('list')}
-          >
-            Список
-          </button>
           <button 
             className={`tab-btn ${activeView === 'kanban' ? 'active' : ''}`}
             onClick={() => setActiveView('kanban')}
@@ -614,236 +562,78 @@ const DashboardPage = () => {
             Канбан
           </button>
           <button 
-            className={`tab-btn ${activeView === 'calendar' ? 'active' : ''}`}
-            onClick={() => setActiveView('calendar')}
+            className={`tab-btn ${activeView === 'list' ? 'active' : ''}`}
+            onClick={() => setActiveView('list')}
           >
-            Календарь
+            Список
           </button>
         </div>
 
         {activeView === 'kanban' && (
           <div className="kanban-board">
-            {/* Колонка "К выполнению" */}
-            <div 
-              className="kanban-column"
-              onDragOver={onDragOver}
-              onDragEnter={(e) => onDragEnter(e, 'todo')}
-              onDragLeave={onDragLeave}
-              onDrop={(e) => onDrop(e, 'todo')}
-            >
-              <div className="column-header">
-                <h3>К выполнению</h3>
-                <span className="task-count">{tasks.todo.length}</span>
-              </div>
-              <div className="column-tasks">
-                {tasks.todo.map(task => (
-                  <div
-                    key={task.id}
-                    className="task-card"
-                    draggable={!isUpdating}
-                    onDragStart={(e) => onDragStart(e, task, 'todo')}
-                    onDragEnd={onDragEnd}
-                    onClick={() => handleTaskClick(task)}
-                  >
-                    <div className="task-header">
-                      <h4>{task.title}</h4>
-                      <span className={`priority-badge ${getPriorityColor(task.priority)}`}>
-                        {task.priority}
-                      </span>
-                    </div>
-                    <p className="task-description">{task.description}</p>
-                    <div className="task-footer">
-                      <div className="task-assignee">
-                        <div className="assignee-avatar">
-                          {task.assignee && task.assignee[0] ? task.assignee[0] : '?'}
+            {[
+              { id: 'todo', title: 'К выполнению', tasks: tasks.todo },
+              { id: 'inProgress', title: 'В работе', tasks: tasks.inProgress },
+              { id: 'onReview', title: 'На проверке', tasks: tasks.onReview },
+              { id: 'completed', title: 'Завершено', tasks: tasks.completed }
+            ].map(column => (
+              <div 
+                key={column.id}
+                className="kanban-column"
+                onDragOver={onDragOver}
+                onDragEnter={onDragEnter}
+                onDragLeave={onDragLeave}
+                onDrop={(e) => onDrop(e, column.id)}
+              >
+                <div className="column-header">
+                  <h3>{column.title}</h3>
+                  <span className="task-count">{column.tasks.length}</span>
+                </div>
+                <div className="column-tasks">
+                  {column.tasks.map(task => (
+                    <div
+                      key={task.id}
+                      className={`task-card ${column.id === 'completed' ? 'completed' : ''}`}
+                      draggable={!isUpdating}
+                      onDragStart={(e) => onDragStart(e, task, column.id)}
+                      onDragEnd={onDragEnd}
+                      onClick={() => handleTaskClick(task)}
+                    >
+                      <div className="task-header">
+                        <h4>{task.title}</h4>
+                        <span className={`priority-badge ${getPriorityColor(task.priority)}`}>
+                          {task.priority}
+                        </span>
+                      </div>
+                      <p className="task-description">{task.description}</p>
+                      <div className="task-footer">
+                        <div className="task-assignee">
+                          <div className="assignee-avatar">
+                            {task.assignee && task.assignee[0] ? task.assignee[0] : '?'}
+                          </div>
+                          <span>{task.assignee}</span>
                         </div>
-                        <span>{task.assignee}</span>
-                      </div>
-                      <div className="task-time">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1"/>
-                          <path d="M7 3v4l2 2" stroke="currentColor" strokeWidth="1"/>
-                        </svg>
-                        <span>{formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {tasks.todo.length === 0 && (
-                  <div className="empty-column">
-                    <p>Нет задач</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Колонка "В работе" */}
-            <div 
-              className="kanban-column"
-              onDragOver={onDragOver}
-              onDragEnter={(e) => onDragEnter(e, 'inProgress')}
-              onDragLeave={onDragLeave}
-              onDrop={(e) => onDrop(e, 'inProgress')}
-            >
-              <div className="column-header">
-                <h3>В работе</h3>
-                <span className="task-count">{tasks.inProgress.length}</span>
-              </div>
-              <div className="column-tasks">
-                {tasks.inProgress.map(task => (
-                  <div
-                    key={task.id}
-                    className="task-card"
-                    draggable={!isUpdating}
-                    onDragStart={(e) => onDragStart(e, task, 'inProgress')}
-                    onDragEnd={onDragEnd}
-                    onClick={() => handleTaskClick(task)}
-                  >
-                    <div className="task-header">
-                      <h4>{task.title}</h4>
-                      <span className={`priority-badge ${getPriorityColor(task.priority)}`}>
-                        {task.priority}
-                      </span>
-                    </div>
-                    <p className="task-description">{task.description}</p>
-                    <div className="task-footer">
-                      <div className="task-assignee">
-                        <div className="assignee-avatar">
-                          {task.assignee && task.assignee[0] ? task.assignee[0] : '?'}
+                        <div className="task-time">
+                          <span>{formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
                         </div>
-                        <span>{task.assignee}</span>
-                      </div>
-                      <div className="task-time">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1"/>
-                          <path d="M7 3v4l2 2" stroke="currentColor" strokeWidth="1"/>
-                        </svg>
-                        <span>{formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
                       </div>
                     </div>
-                  </div>
-                ))}
-                {tasks.inProgress.length === 0 && (
-                  <div className="empty-column">
-                    <p>Нет задач</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Колонка "На проверке" */}
-            <div 
-              className="kanban-column"
-              onDragOver={onDragOver}
-              onDragEnter={(e) => onDragEnter(e, 'onReview')}
-              onDragLeave={onDragLeave}
-              onDrop={(e) => onDrop(e, 'onReview')}
-            >
-              <div className="column-header">
-                <h3>На проверке</h3>
-                <span className="task-count">{tasks.onReview.length}</span>
-              </div>
-              <div className="column-tasks">
-                {tasks.onReview.map(task => (
-                  <div
-                    key={task.id}
-                    className="task-card"
-                    draggable={!isUpdating}
-                    onDragStart={(e) => onDragStart(e, task, 'onReview')}
-                    onDragEnd={onDragEnd}
-                    onClick={() => handleTaskClick(task)}
-                  >
-                    <div className="task-header">
-                      <h4>{task.title}</h4>
-                      <span className={`priority-badge ${getPriorityColor(task.priority)}`}>
-                        {task.priority}
-                      </span>
+                  ))}
+                  {column.tasks.length === 0 && (
+                    <div className="empty-column">
+                      <p>Нет задач</p>
                     </div>
-                    <p className="task-description">{task.description}</p>
-                    <div className="task-footer">
-                      <div className="task-assignee">
-                        <div className="assignee-avatar">
-                          {task.assignee && task.assignee[0] ? task.assignee[0] : '?'}
-                        </div>
-                        <span>{task.assignee}</span>
-                      </div>
-                      <div className="task-time">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1"/>
-                          <path d="M7 3v4l2 2" stroke="currentColor" strokeWidth="1"/>
-                        </svg>
-                        <span>{formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {tasks.onReview.length === 0 && (
-                  <div className="empty-column">
-                    <p>Нет задач</p>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-
-            {/* Колонка "Завершено" */}
-            <div 
-              className="kanban-column"
-              onDragOver={onDragOver}
-              onDragEnter={(e) => onDragEnter(e, 'completed')}
-              onDragLeave={onDragLeave}
-              onDrop={(e) => onDrop(e, 'completed')}
-            >
-              <div className="column-header">
-                <h3>Завершено</h3>
-                <span className="task-count">{tasks.completed.length}</span>
-              </div>
-              <div className="column-tasks">
-                {tasks.completed.map(task => (
-                  <div
-                    key={task.id}
-                    className="task-card completed"
-                    draggable={!isUpdating}
-                    onDragStart={(e) => onDragStart(e, task, 'completed')}
-                    onDragEnd={onDragEnd}
-                    onClick={() => handleTaskClick(task)}
-                  >
-                    <div className="task-header">
-                      <h4>{task.title}</h4>
-                      <span className={`priority-badge ${getPriorityColor(task.priority)}`}>
-                        {task.priority}
-                      </span>
-                    </div>
-                    <p className="task-description">{task.description}</p>
-                    <div className="task-footer">
-                      <div className="task-assignee">
-                        <div className="assignee-avatar">
-                          {task.assignee && task.assignee[0] ? task.assignee[0] : '?'}
-                        </div>
-                        <span>{task.assignee}</span>
-                      </div>
-                      <div className="task-time completed">
-                        <span>✓ Завершено</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {tasks.completed.length === 0 && (
-                  <div className="empty-column">
-                    <p>Нет задач</p>
-                  </div>
-                )}
-              </div>
-            </div>
+            ))}
           </div>
         )}
 
         {activeView === 'list' && (
           <div className="list-view">
             {[...tasks.todo, ...tasks.inProgress, ...tasks.onReview, ...tasks.completed].map(task => (
-              <div key={task.id} className="list-item">
-                <div className="list-item-checkbox">
-                  <input type="checkbox" />
-                </div>
+              <div key={task.id} className="list-item" onClick={() => handleTaskClick(task)}>
                 <div className="list-item-content">
                   <div className="list-item-title">
                     <h4>{task.title}</h4>
@@ -853,8 +643,8 @@ const DashboardPage = () => {
                   </div>
                   <p className="list-item-desc">{task.description}</p>
                   <div className="list-item-meta">
-                    <span className="meta-assignee">👤 {task.assignee}</span>
-                    <span className="meta-time">⏱ {formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
+                    <span>👤 {task.assignee}</span>
+                    <span>⏱ {formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
                   </div>
                 </div>
               </div>
@@ -864,32 +654,6 @@ const DashboardPage = () => {
                 <p>Нет задач. Создайте первую задачу!</p>
               </div>
             )}
-          </div>
-        )}
-
-        {activeView === 'calendar' && (
-          <div className="calendar-view">
-            <div className="calendar-header">
-              <button className="calendar-nav">←</button>
-              <h3>Апрель 2026</h3>
-              <button className="calendar-nav">→</button>
-            </div>
-            <div className="calendar-grid">
-              {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
-                <div key={day} className="calendar-weekday">{day}</div>
-              ))}
-              {Array.from({ length: 30 }, (_, i) => i + 1).map(day => {
-                const hasTask = [...tasks.todo, ...tasks.inProgress, ...tasks.onReview].some(
-                  t => t.dueDate && new Date(t.dueDate).getDate() === day
-                );
-                return (
-                  <div key={day} className="calendar-day">
-                    <span className="day-number">{day}</span>
-                    {hasTask && <div className="calendar-event">📋 Задача</div>}
-                  </div>
-                );
-              })}
-            </div>
           </div>
         )}
       </main>

@@ -6,8 +6,12 @@ import App from './App.jsx'
 // Initialize theme from localStorage
 const savedTheme = localStorage.getItem('theme-storage');
 if (savedTheme) {
-  const theme = JSON.parse(savedTheme).state.theme;
-  document.documentElement.setAttribute('data-theme', theme);
+  try {
+    const theme = JSON.parse(savedTheme).state.theme;
+    document.documentElement.setAttribute('data-theme', theme);
+  } catch (e) {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
 } else {
   document.documentElement.setAttribute('data-theme', 'light');
 }
