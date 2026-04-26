@@ -1,4 +1,4 @@
-# apps/tasks/views.py (обновленная версия)
+# apps/tasks/views.py
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -31,34 +31,48 @@ class TaskViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Task.objects.filter(deleted_at__isnull=True)
         
-        # Для определенных actions не фильтруем по компании
-        if self.action in ['my_tasks', 'created_by_me']:
-            pass  # Не фильтруем по компании для этих методов
-        else:
-            # Фильтрация по компании (если указана в заголовке)
-            company_id = self.request.headers.get('X-Company-Id')
-            if company_id:
-                queryset = queryset.filter(company_id=company_id)
+        # Всегда загружаем связанные объекты для производительности
+        queryset = queryset.select_related(
+            'project', 'assignee', 'creator', 'company', 'parent_task'
+        )
         
-        # Админ видит все задачи
-        if user.is_admin:
-            return queryset.select_related('project', 'assignee', 'creator', 'company')
+        # Фильтрация по компании
+        company_id = self.request.headers.get('X-Company-Id')
+        
+        # Для my_tasks и created_by_me ищем по всем компаниям пользователя
+        if self.action in ['my_tasks', 'created_by_me']:
+            user_companies = user.company_memberships.filter(
+                status='active'
+            ).values_list('company_id', flat=True)
+            queryset = queryset.filter(company_id__in=user_companies)
+        elif company_id:
+            # Если указана компания - фильтруем по ней
+            queryset = queryset.filter(company_id=company_id)
+        
+        # Админ видит все задачи в компании
+        if user.role == 'admin':
+            return queryset
         
         # Менеджер видит задачи своего отдела и подчинённых
-        if user.is_manager:
+        if user.role == 'manager':
             subordinates_ids = [u.id for u in user.get_subordinates_tree()]
             return queryset.filter(
                 django_models.Q(assignee_id=user.id) |
                 django_models.Q(creator_id=user.id) |
                 django_models.Q(assignee_id__in=subordinates_ids) |
                 django_models.Q(project__manager_id=user.id)
-            ).select_related('project', 'assignee', 'creator', 'company')
+            )
         
-        # Исполнитель и наблюдатель видят только свои задачи
+        # Исполнитель и наблюдатель:
+        # Если указана компания - показываем ВСЕ задачи компании (они участники)
+        if company_id:
+            return queryset
+        
+        # Если компания не указана - только свои задачи
         return queryset.filter(
             django_models.Q(assignee_id=user.id) |
             django_models.Q(creator_id=user.id)
-        ).select_related('project', 'assignee', 'creator', 'company')
+        )
     
     def get_serializer_class(self):
         """Выбор сериализатора в зависимости от действия"""
@@ -74,14 +88,15 @@ class TaskViewSet(viewsets.ModelViewSet):
         """Создание задачи с логированием и привязкой к компании"""
         from apps.activity.utils import log_activity
         
-        # Получаем company_id из заголовка
         company_id = self.request.headers.get('X-Company-Id')
-        extra_fields = {'creator': self.request.user}
         
+        # Создаем задачу
+        task = serializer.save(creator=self.request.user)
+        
+        # Привязываем к компании
         if company_id:
-            extra_fields['company_id'] = company_id
-        
-        task = serializer.save(**extra_fields)
+            task.company_id = company_id
+            task.save(update_fields=['company_id'])
         
         log_activity(
             user=self.request.user,
@@ -102,7 +117,6 @@ class TaskViewSet(viewsets.ModelViewSet):
         old_task = self.get_object()
         task = serializer.save()
         
-        # Логируем изменения
         changes = {}
         for field in ['title', 'description', 'status', 'priority', 'assignee_id']:
             old_value = getattr(old_task, field, None)
@@ -210,37 +224,59 @@ class TaskViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='my_tasks')
     def my_tasks(self, request):
         """Мои задачи (где я исполнитель)"""
-        # Получаем компании пользователя
-        user_companies = request.user.company_memberships.filter(
-            status='active'
-        ).values_list('company_id', flat=True)
-        tasks = self.get_queryset().filter(
-            assignee=request.user,
-            company_id__in=user_companies
-        )
-        page = self.paginate_queryset(tasks)
+        # Создаем отдельный queryset для "моих задач"
+        user = request.user
+        queryset = Task.objects.filter(
+            deleted_at__isnull=True,
+            assignee=user
+        ).select_related('project', 'assignee', 'creator', 'company')
+        
+        # Фильтруем по компании из заголовка
+        company_id = request.headers.get('X-Company-Id')
+        if company_id:
+            queryset = queryset.filter(company_id=company_id)
+        else:
+            # Если компания не указана, ищем по всем компаниям пользователя
+            user_companies = user.company_memberships.filter(
+                status='active'
+            ).values_list('company_id', flat=True)
+            queryset = queryset.filter(company_id__in=user_companies)
+        
+        # Применяем фильтры (поиск, сортировку)
+        queryset = self.filter_queryset(queryset)
+        
+        page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(tasks, many=True)
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'], url_path='created_by_me')
     def created_by_me(self, request):
         """Задачи, созданные мной"""
-        # Получаем компании пользователя
-        user_companies = request.user.company_memberships.filter(
-            status='active'
-        ).values_list('company_id', flat=True)
-        tasks = self.get_queryset().filter(
-            creator=request.user,
-            company_id__in=user_companies
-        )
-        page = self.paginate_queryset(tasks)
+        user = request.user
+        queryset = Task.objects.filter(
+            deleted_at__isnull=True,
+            creator=user
+        ).select_related('project', 'assignee', 'creator', 'company')
+        
+        company_id = request.headers.get('X-Company-Id')
+        if company_id:
+            queryset = queryset.filter(company_id=company_id)
+        else:
+            user_companies = user.company_memberships.filter(
+                status='active'
+            ).values_list('company_id', flat=True)
+            queryset = queryset.filter(company_id__in=user_companies)
+        
+        queryset = self.filter_queryset(queryset)
+        
+        page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(tasks, many=True)
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])

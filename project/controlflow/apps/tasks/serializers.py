@@ -93,7 +93,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         fields = [
             'title', 'description', 'project', 'assignee',
             'parent_task', 'priority', 'status',
-            'start_date', 'due_date', 'estimated_hours'
+            'start_date', 'due_date', 'estimated_hours', 'company'
         ]
     
     def validate_due_date(self, value):
