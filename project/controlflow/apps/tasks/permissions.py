@@ -12,7 +12,7 @@ class CanManageTask(permissions.BasePermission):
         """Проверка на уровне объекта"""
         user = request.user
         
-        # Админ может всё
+        # Админ может всё (включая удаление)
         if user.role == 'admin':
             return True
         
@@ -30,7 +30,7 @@ class CanManageTask(permissions.BasePermission):
         if is_company_member and request.method in permissions.SAFE_METHODS:
             return True
         
-        # Менеджер может управлять задачами своего отдела
+        # Менеджер может управлять задачами своего отдела (включая удаление)
         if user.role == 'manager':
             if obj.project and obj.project.manager_id == user.id:
                 return True
@@ -44,7 +44,7 @@ class CanManageTask(permissions.BasePermission):
             if request.method in permissions.SAFE_METHODS or request.method in ['PUT', 'PATCH']:
                 return True
         
-        # Создатель задачи может всё
+        # Создатель задачи может всё (включая удаление)
         if obj.creator_id == user.id:
             return True
         

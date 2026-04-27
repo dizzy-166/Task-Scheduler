@@ -365,6 +365,26 @@ const DashboardPage = () => {
     setSelectedTask(null);
   };
 
+  // Новая функция для удаления задачи
+  const handleDeleteTask = async (taskId) => {
+    if (!confirm('Вы уверены, что хотите удалить эту задачу? Это действие нельзя отменить.')) {
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      await taskService.deleteTask(taskId);
+      await loadAllData();
+      setIsTaskModalOpen(false);
+      setSelectedTask(null);
+    } catch (error) {
+      console.error('Ошибка при удалении задачи:', error);
+      alert('Не удалось удалить задачу. Попробуйте еще раз.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   // ==========================================
   // Функции для управления компанией (ИСПРАВЛЕНО)
   // ==========================================
@@ -908,6 +928,7 @@ const DashboardPage = () => {
         isOpen={isTaskModalOpen}
         onClose={handleTaskModalClose}
         onTaskCreated={handleTaskCreated}
+        onTaskDelete={handleDeleteTask}
         task={selectedTask}
         mode={selectedTask ? 'view' : 'create'}
       />

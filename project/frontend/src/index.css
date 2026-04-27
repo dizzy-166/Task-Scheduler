@@ -2680,3 +2680,19 @@ body {
   --input-bg: #1f304d;
   --primary-color: #4a90e2;
 }
+
+.btn-danger {
+  padding: 10px 20px;
+  background: #ff3b30;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-danger:hover {
+  background: #cc0000;
+}

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { taskService } from '../api/taskService';
 import companyAPI from '../api/companyService';
 
-const TaskModal = ({ isOpen, onClose, onTaskCreated, task, mode = 'create' }) => {
+const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskDelete, task, mode = 'create' }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -132,6 +132,12 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, task, mode = 'create' }) =>
     }
   };
 
+  const handleDelete = () => {
+    if (onTaskDelete && task) {
+      onTaskDelete(task.id);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       title: '',
@@ -158,12 +164,27 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, task, mode = 'create' }) =>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Название задачи *</label>
-            <input type="text" name="title" value={formData.title} onChange={handleChange} placeholder="Введите название задачи" autoFocus disabled={mode === 'view'} />
+            <input 
+              type="text" 
+              name="title" 
+              value={formData.title} 
+              onChange={handleChange} 
+              placeholder="Введите название задачи" 
+              autoFocus 
+              disabled={mode === 'view'} 
+            />
           </div>
 
           <div className="form-group">
             <label>Описание</label>
-            <textarea name="description" value={formData.description} onChange={handleChange} rows="4" placeholder="Опишите задачу подробнее..." disabled={mode === 'view'} />
+            <textarea 
+              name="description" 
+              value={formData.description} 
+              onChange={handleChange} 
+              rows="4" 
+              placeholder="Опишите задачу подробнее..." 
+              disabled={mode === 'view'} 
+            />
           </div>
 
           <div className="form-row">
@@ -201,21 +222,48 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, task, mode = 'create' }) =>
 
           {mode === 'view' && task && (
             <div className="form-row">
-              <div className="form-group"><label>Создатель</label><input type="text" value={task.creator?.full_name || task.creator_name || 'Неизвестен'} readOnly /></div>
-              <div className="form-group"><label>Дата создания</label><input type="text" value={task.created_at ? new Date(task.created_at).toLocaleString() : 'Неизвестна'} readOnly /></div>
+              <div className="form-group">
+                <label>Создатель</label>
+                <input type="text" value={task.creator?.full_name || task.creator_name || 'Неизвестен'} readOnly />
+              </div>
+              <div className="form-group">
+                <label>Дата создания</label>
+                <input type="text" value={task.created_at ? new Date(task.created_at).toLocaleString() : 'Неизвестна'} readOnly />
+              </div>
             </div>
           )}
 
           <div className="form-row">
-            <div className="form-group"><label>Дедлайн</label><input type="datetime-local" name="due_date" value={formData.due_date} onChange={handleChange} disabled={mode === 'view'} /></div>
-            <div className="form-group"><label>Оценка времени (часы)</label><input type="number" name="estimated_hours" value={formData.estimated_hours} onChange={handleChange} step="0.5" min="0" placeholder="Например: 4.5" disabled={mode === 'view'} /></div>
+            <div className="form-group">
+              <label>Дедлайн</label>
+              <input type="datetime-local" name="due_date" value={formData.due_date} onChange={handleChange} disabled={mode === 'view'} />
+            </div>
+            <div className="form-group">
+              <label>Оценка времени (часы)</label>
+              <input type="number" name="estimated_hours" value={formData.estimated_hours} onChange={handleChange} step="0.5" min="0" placeholder="Например: 4.5" disabled={mode === 'view'} />
+            </div>
           </div>
 
           {error && <div className="error-message global-error">{error}</div>}
 
           <div className="modal-footer">
-            <button type="button" className="btn-secondary" onClick={onClose}>{mode === 'view' ? 'Закрыть' : 'Отмена'}</button>
-            {mode !== 'view' && <button type="submit" className="btn-primary" disabled={loading}>{loading ? <span className="spinner"></span> : 'Создать задачу'}</button>}
+            {mode === 'view' && onTaskDelete && (
+              <button 
+                type="button" 
+                className="btn-danger" 
+                onClick={handleDelete}
+              >
+                🗑️ Удалить задачу
+              </button>
+            )}
+            <button type="button" className="btn-secondary" onClick={onClose}>
+              {mode === 'view' ? 'Закрыть' : 'Отмена'}
+            </button>
+            {mode !== 'view' && (
+              <button type="submit" className="btn-primary" disabled={loading}>
+                {loading ? <span className="spinner"></span> : 'Создать задачу'}
+              </button>
+            )}
           </div>
         </form>
       </div>
