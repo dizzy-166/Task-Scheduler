@@ -35,40 +35,127 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
   const [activeTab, setActiveTab] = useState('permissions');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMemberRoles, setLoadingMemberRoles] = useState(false);
 
-  // Проверка прав на управление ролями
   const canManage = ['owner', 'admin'].includes(currentUserRole);
-  
-  // Дополнительная проверка через API (если пользователь имеет право roles.manage)
-  const [hasRoleManagePermission, setHasRoleManagePermission] = useState(false);
-  
+
   useEffect(() => {
-    checkPermissions();
     load();
   }, [companyId]);
 
-  const checkPermissions = async () => {
-    try {
-      // Проверяем, есть ли у пользователя право управлять ролями
-      const perms = await rolesService.getPermissions();
-      // Здесь можно добавить проверку конкретного права
-      setHasRoleManagePermission(canManage);
-    } catch (err) {
-      console.error('Ошибка проверки прав:', err);
+  useEffect(() => {
+    if (selected) {
+      // Извлекаем permissions из role
+      const perms = selected.permissions || [];
+      setPendingPerms(new Set(perms));
     }
-  };
+  }, [selected?.id]);
+
+  // Загружаем роли для всех участников при открытии панели
+  useEffect(() => {
+    if (members.length > 0 && canManage) {
+      loadAllMembersRoles();
+    }
+  }, [members, canManage]);
+
+  async function loadAllMembersRoles() {
+    setLoadingMemberRoles(true);
+    const rolesMap = {};
+    
+    console.log('Loading roles for members:', members);
+    
+    for (const member of members) {
+      try {
+        const response = await rolesService.getMemberRoles(companyId, member.user);
+        console.log(`Raw response for user ${member.user}:`, response);
+        
+        // Нормализуем данные - извлекаем массив ролей
+        let userRoles = [];
+        
+        if (Array.isArray(response)) {
+          userRoles = response;
+        } else if (response && Array.isArray(response.results)) {
+          userRoles = response.results;
+        } else if (response && response.roles && Array.isArray(response.roles)) {
+          userRoles = response.roles;
+        } else if (response && typeof response === 'object') {
+          // Пробуем найти массив в объекте
+          for (const key of Object.keys(response)) {
+            if (Array.isArray(response[key])) {
+              userRoles = response[key];
+              break;
+            }
+          }
+        }
+        
+        // Извлекаем role объекты из UserRole
+        const normalizedRoles = userRoles.map(item => {
+          if (item.role) return item.role;
+          if (item.id && item.name) return item;
+          return item;
+        });
+        
+        console.log(`Normalized roles for user ${member.user}:`, normalizedRoles);
+        rolesMap[member.user] = normalizedRoles;
+      } catch (err) {
+        console.error(`Ошибка загрузки ролей для ${member.user}:`, err);
+        rolesMap[member.user] = [];
+      }
+    }
+    
+    console.log('Final member roles map:', rolesMap);
+    setMemberRoles(rolesMap);
+    setLoadingMemberRoles(false);
+  }
 
   async function load() {
     setLoading(true);
     setError(null);
     try {
-      const [r, p] = await Promise.all([
+      const [rolesData, permissionsData] = await Promise.all([
         rolesService.getRoles(companyId),
         rolesService.getPermissions(),
       ]);
-      setRoles(r);
-      setAllPerms(p);
-      if (r.length > 0) setSelected(r[0]);
+      
+      console.log('Raw roles data:', rolesData);
+      console.log('Raw permissions data:', permissionsData);
+      
+      // Нормализуем роли
+      let rolesList = [];
+      if (Array.isArray(rolesData)) {
+        rolesList = rolesData;
+      } else if (rolesData && Array.isArray(rolesData.results)) {
+        rolesList = rolesData.results;
+      } else if (rolesData && typeof rolesData === 'object') {
+        for (const key of Object.keys(rolesData)) {
+          if (Array.isArray(rolesData[key])) {
+            rolesList = rolesData[key];
+            break;
+          }
+        }
+      }
+      
+      // Нормализуем разрешения
+      let permsList = [];
+      if (Array.isArray(permissionsData)) {
+        permsList = permissionsData;
+      } else if (permissionsData && Array.isArray(permissionsData.results)) {
+        permsList = permissionsData.results;
+      } else if (permissionsData && typeof permissionsData === 'object') {
+        for (const key of Object.keys(permissionsData)) {
+          if (Array.isArray(permissionsData[key])) {
+            permsList = permissionsData[key];
+            break;
+          }
+        }
+      }
+      
+      console.log('Normalized roles:', rolesList);
+      console.log('Normalized permissions:', permsList);
+      
+      setRoles(rolesList);
+      setAllPerms(permsList);
+      if (rolesList.length > 0) setSelected(rolesList[0]);
     } catch (err) {
       console.error('Ошибка загрузки ролей:', err);
       setError('Не удалось загрузить роли');
@@ -99,7 +186,10 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
     try {
       await rolesService.deleteRole(companyId, role.id);
       setRoles(prev => prev.filter(r => r.id !== role.id));
-      setSelected(roles.find(r => r.id !== role.id) || null);
+      await loadAllMembersRoles();
+      if (selected?.id === role.id) {
+        setSelected(roles.find(r => r.id !== role.id) || null);
+      }
     } catch (err) {
       console.error('Ошибка удаления роли:', err);
       setError('Не удалось удалить роль');
@@ -130,30 +220,37 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
     });
   }
 
-  async function loadMemberRoles(userId) {
-    if (memberRoles[userId]) return;
-    try {
-      const data = await rolesService.getMemberRoles(companyId, userId);
-      setMemberRoles(prev => ({ ...prev, [userId]: data.map(ur => ur.role) }));
-    } catch (err) {
-      console.error('Ошибка загрузки ролей участника:', err);
-    }
-  }
-
-  async function toggleMemberRole(userId, roleId, hasRole) {
-    if (!canManage && !hasRoleManagePermission) {
+  async function toggleMemberRole(userId, roleId, currentlyHasRole) {
+    if (!canManage) {
       setError('У вас нет прав на управление ролями');
       return;
     }
     
+    console.log('Toggling role:', { userId, roleId, currentlyHasRole });
+    
     try {
-      if (hasRole) {
+      if (currentlyHasRole) {
         await rolesService.removeRole(companyId, userId, roleId);
       } else {
         await rolesService.assignRole(companyId, userId, roleId);
       }
-      const data = await rolesService.getMemberRoles(companyId, userId);
-      setMemberRoles(prev => ({ ...prev, [userId]: data.map(ur => ur.role) }));
+      
+      // Обновляем роли конкретного участника
+      const response = await rolesService.getMemberRoles(companyId, userId);
+      console.log('Updated roles response:', response);
+      
+      let userRoles = [];
+      if (Array.isArray(response)) {
+        userRoles = response;
+      } else if (response && Array.isArray(response.results)) {
+        userRoles = response.results;
+      }
+      
+      const normalizedRoles = userRoles.map(item => item.role || item);
+      setMemberRoles(prev => ({
+        ...prev,
+        [userId]: normalizedRoles
+      }));
       setError(null);
     } catch (err) {
       console.error('Ошибка изменения роли участника:', err);
@@ -161,16 +258,33 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
     }
   }
 
+  const userHasRole = (userId, roleId) => {
+    const userRoles = memberRoles[userId] || [];
+    const hasRole = userRoles.some(role => {
+      if (!role) return false;
+      // Сравниваем по id
+      if (typeof role === 'object' && role.id) {
+        return role.id === roleId;
+      }
+      // Если пришел просто id
+      if (typeof role === 'string' || typeof role === 'number') {
+        return role == roleId;
+      }
+      return false;
+    });
+    return hasRole;
+  };
+
   // Группируем permissions по ресурсу
   const grouped = allPerms.reduce((acc, p) => {
-    (acc[p.resource] = acc[p.resource] || []).push(p);
+    const resource = p.resource || p.code?.split('.')[0] || 'other';
+    (acc[resource] = acc[resource] || []).push(p);
     return acc;
   }, {});
 
   const isDirty = selected && JSON.stringify([...pendingPerms].sort()) !== JSON.stringify([...(selected.permissions || [])].sort());
 
-  // Если нет прав на управление ролями
-  if (!canManage && !hasRoleManagePermission) {
+  if (!canManage) {
     return (
       <div className="roles-overlay" onClick={onClose}>
         <div className="roles-panel roles-no-access" onClick={e => e.stopPropagation()}>
@@ -211,7 +325,6 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
     <div className="roles-overlay" onClick={onClose}>
       <div className="roles-panel" onClick={e => e.stopPropagation()}>
 
-        {/* Sidebar */}
         <div className="roles-sidebar">
           <div className="roles-sidebar-header">
             <h3>Роли</h3>
@@ -235,7 +348,7 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
                 <span className="role-dot" />
                 <span className="role-name">{role.name}</span>
                 <span className="role-count">{role.members_count || 0}</span>
-                {canManage && !role.is_system && (
+                {!role.is_system && (
                   <button
                     className="role-delete-btn"
                     onClick={e => { e.stopPropagation(); handleDelete(role); }}
@@ -246,26 +359,17 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
             ))}
           </ul>
 
-          {canManage && (
-            <form className="roles-create-form" onSubmit={handleCreate}>
-              <input
-                value={newRoleName}
-                onChange={e => setNewRoleName(e.target.value)}
-                placeholder="Новая роль..."
-                maxLength={50}
-              />
-              <button type="submit" disabled={creating || !newRoleName.trim()}>+</button>
-            </form>
-          )}
-          
-          {!canManage && (
-            <div className="roles-readonly-notice">
-              <span>🔒 Только для просмотра</span>
-            </div>
-          )}
+          <form className="roles-create-form" onSubmit={handleCreate}>
+            <input
+              value={newRoleName}
+              onChange={e => setNewRoleName(e.target.value)}
+              placeholder="Новая роль..."
+              maxLength={50}
+            />
+            <button type="submit" disabled={creating || !newRoleName.trim()}>+</button>
+          </form>
         </div>
 
-        {/* Main */}
         <div className="roles-main">
           {!selected ? (
             <div className="roles-empty">Выберите роль</div>
@@ -291,31 +395,25 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
                     <div key={resource} className="perm-group">
                       <div className="perm-group-label">{RESOURCE_LABELS[resource] || resource}</div>
                       {perms.map(perm => (
-                        <label key={perm.code} className={`perm-row ${!canManage || selected.is_system ? 'disabled' : ''}`}>
+                        <label key={perm.code || perm.id} className={`perm-row ${selected.is_system ? 'disabled' : ''}`}>
                           <div className="perm-info">
-                            <span className="perm-name">{PERMISSION_LABELS[perm.code] || perm.code}</span>
+                            <span className="perm-name">{PERMISSION_LABELS[perm.code] || perm.code || perm.name}</span>
                           </div>
                           <input
                             type="checkbox"
                             checked={pendingPerms.has(perm.code)}
                             onChange={() => togglePerm(perm.code)}
-                            disabled={!canManage || selected.is_system}
+                            disabled={selected.is_system}
                           />
                         </label>
                       ))}
                     </div>
                   ))}
 
-                  {!canManage && (
-                    <div className="roles-readonly-message">
-                      <p>ⓘ Только владельцы и администраторы могут изменять разрешения</p>
-                    </div>
-                  )}
-
-                  {canManage && !selected.is_system && (
+                  {!selected.is_system && (
                     <div className="roles-save-bar">
                       {isDirty && (
-                        <button className="btn-secondary" onClick={() => setPendingPerms(new Set(selected.permissions))}>
+                        <button className="btn-secondary" onClick={() => setPendingPerms(new Set(selected.permissions || []))}>
                           Сбросить
                         </button>
                       )}
@@ -334,14 +432,19 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
               {activeTab === 'members' && (
                 <div className="roles-members-tab">
                   <p className="roles-members-hint">
-                    {canManage 
-                      ? 'Назначьте эту роль участникам компании'
-                      : 'Просмотр участников с этой ролью'}
+                    Назначьте эту роль участникам компании
                   </p>
+                  
+                  {loadingMemberRoles && (
+                    <div className="roles-loading-small">
+                      <div className="spinner-small"></div>
+                      <span>Загрузка ролей участников...</span>
+                    </div>
+                  )}
+                  
                   {members.map(m => {
-                    if (!memberRoles[m.user] && canManage) loadMemberRoles(m.user);
-                    const userRoles = memberRoles[m.user] || [];
-                    const hasThisRole = userRoles.some(r => r.id === selected.id);
+                    const hasThisRole = userHasRole(m.user, selected.id);
+                    
                     return (
                       <div key={m.user} className="roles-member-row">
                         <div className="roles-member-info">
@@ -351,23 +454,27 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
                           <div>
                             <div className="roles-member-name">{m.user_name || 'Пользователь'}</div>
                             <div className="roles-member-email">{m.user_email}</div>
+                            {hasThisRole && (
+                              <div className="roles-member-role-badge">✓ Имеет эту роль</div>
+                            )}
                           </div>
                         </div>
-                        {canManage ? (
-                          <button
-                            className={hasThisRole ? 'btn-danger-sm' : 'btn-primary-sm'}
-                            onClick={() => toggleMemberRole(m.user, selected.id, hasThisRole)}
-                          >
-                            {hasThisRole ? 'Снять' : 'Назначить'}
-                          </button>
-                        ) : (
-                          <span className="role-assigned-badge">
-                            {hasThisRole ? '✓ Назначена' : '—'}
-                          </span>
-                        )}
+                        <button
+                          className={hasThisRole ? 'btn-danger-sm' : 'btn-primary-sm'}
+                          onClick={() => toggleMemberRole(m.user, selected.id, hasThisRole)}
+                          disabled={selected.is_system}
+                        >
+                          {hasThisRole ? 'Снять роль' : 'Назначить роль'}
+                        </button>
                       </div>
                     );
                   })}
+                  
+                  {members.length === 0 && (
+                    <div className="roles-empty-members">
+                      <p>Нет участников в компании</p>
+                    </div>
+                  )}
                 </div>
               )}
             </>
