@@ -3602,3 +3602,138 @@ body {
   border-radius: 8px;
   color: var(--error-color);
 }
+
+/* Roles Panel - No Access Styles */
+.roles-no-access {
+  max-width: 450px;
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.roles-no-access-content {
+  padding: 48px 32px;
+  text-align: center;
+}
+
+.no-access-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.7;
+}
+
+.roles-no-access-content h3 {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.roles-no-access-content p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.roles-no-access-content .no-access-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  padding: 12px;
+  border-radius: 8px;
+  margin: 16px 0 24px;
+}
+
+.roles-no-access-content .btn-primary {
+  width: auto;
+  min-width: 120px;
+}
+
+/* Roles Error */
+.roles-error {
+  margin: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 59, 48, 0.1);
+  border: 1px solid var(--error-color);
+  border-radius: 8px;
+  color: var(--error-color);
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.roles-error button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--error-color);
+  padding: 0 4px;
+}
+
+/* Read-only notice */
+.roles-readonly-notice {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.roles-readonly-notice span {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.roles-readonly-message {
+  margin-top: 20px;
+  padding: 12px;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.roles-readonly-message p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.perm-row.disabled {
+  opacity: 0.6;
+}
+
+.role-assigned-badge {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 4px 12px;
+  background: var(--bg-primary);
+  border-radius: 20px;
+}
+
+.roles-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.roles-loading .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--text-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+.roles-loading p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
