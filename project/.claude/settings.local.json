@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python manage.py makemigrations tasks --name kanban_columns)",
+      "Bash(python manage.py check)",
+      "Bash(npm run *)"
+    ]
+  }
+}

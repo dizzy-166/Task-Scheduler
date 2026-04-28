@@ -97,6 +97,12 @@ const useAuthStore = create(
         }
       },
       
+      forceLogout: () => {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        set({ user: null, isAuthenticated: false });
+      },
+
       clearError: () => set({ error: null }),
     }),
     {

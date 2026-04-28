@@ -8,10 +8,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db import models as django_models
 from django.utils import timezone
 
-from .models import Task
+from .models import Task, KanbanColumn
 from .serializers import (
     TaskListSerializer, TaskDetailSerializer,
-    TaskCreateSerializer, TaskUpdateSerializer
+    TaskCreateSerializer, TaskUpdateSerializer,
+    KanbanColumnSerializer,
 )
 from .permissions import CanManageTask
 from .filters import TaskFilter
@@ -231,48 +232,58 @@ class TaskViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def change_status(self, request, pk=None):
-        """Изменение статуса задачи"""
+        """Изменение статуса / колонки задачи"""
         from apps.activity.utils import log_activity
-        
+
         task = self.get_object()
-        company_id = self.get_company_id()
         new_status = request.data.get('status')
-        
-        if new_status not in dict(Task.STATUS_CHOICES):
-            return Response(
-                {'error': 'Неверный статус'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Проверяем права на изменение статуса
+        column_id = request.data.get('column_id')
+
         has_edit_any = self._check_permission('tasks.edit_any')
         has_edit_own = self._check_permission('tasks.edit_own')
-        
         if not has_edit_any and not (has_edit_own and (task.creator == request.user or task.assignee == request.user)):
             raise PermissionDenied('У вас нет прав на изменение статуса этой задачи')
-        
+
         old_status = task.status
-        task.status = new_status
-        
-        if new_status == 'done' and old_status != 'done':
+
+        if column_id:
+            try:
+                column = KanbanColumn.objects.get(id=column_id)
+                task.kanban_column = column
+                if column.status_key:
+                    new_status = column.status_key
+                    task.status = new_status
+                elif not new_status:
+                    new_status = task.status
+            except KanbanColumn.DoesNotExist:
+                return Response({'error': 'Колонка не найдена'}, status=status.HTTP_400_BAD_REQUEST)
+        elif new_status:
+            if new_status not in dict(Task.STATUS_CHOICES):
+                return Response({'error': 'Неверный статус'}, status=status.HTTP_400_BAD_REQUEST)
+            task.status = new_status
+        else:
+            return Response({'error': 'Укажите status или column_id'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if task.status == 'done' and old_status != 'done':
             task.completed_at = timezone.now()
-        elif new_status != 'done' and old_status == 'done':
+        elif task.status != 'done' and old_status == 'done':
             task.completed_at = None
-        
+
         task.save()
-        
+
         log_activity(
             user=request.user,
             action='task_status_changed',
             entity_type='task',
             entity_id=str(task.id),
-            details={'old_status': old_status, 'new_status': new_status}
+            details={'old_status': old_status, 'new_status': task.status}
         )
-        
+
         return Response({
-            'status': new_status,
+            'status': task.status,
             'status_display': task.get_status_display(),
-            'message': 'Статус обновлён'
+            'kanban_column': str(task.kanban_column_id) if task.kanban_column_id else None,
+            'message': 'Статус обновлён',
         })
     
     @action(detail=True, methods=['post'])
@@ -419,3 +430,74 @@ class TaskViewSet(viewsets.ModelViewSet):
         }
         
         return Response(stats)
+
+
+class KanbanColumnViewSet(viewsets.ModelViewSet):
+    """CRUD для колонок канбан-доски"""
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = KanbanColumnSerializer
+
+    def get_company_id(self):
+        return self.request.headers.get('X-Company-Id')
+
+    def get_queryset(self):
+        company_id = self.get_company_id()
+        if not company_id:
+            return KanbanColumn.objects.none()
+
+        user = self.request.user
+        membership = user.company_memberships.filter(
+            company_id=company_id, status='active'
+        ).first()
+        if not membership:
+            return KanbanColumn.objects.none()
+
+        # Lazy-create defaults on first access
+        from apps.companies.models import Company
+        try:
+            company = Company.objects.get(id=company_id)
+            KanbanColumn.get_or_create_defaults(company)
+        except Company.DoesNotExist:
+            pass
+
+        return KanbanColumn.objects.filter(company_id=company_id).order_by('order')
+
+    def _require_admin(self):
+        company_id = self.get_company_id()
+        user = self.request.user
+        from apps.companies.models import CompanyMember
+        try:
+            m = CompanyMember.objects.get(company_id=company_id, user=user, status='active')
+        except CompanyMember.DoesNotExist:
+            raise PermissionDenied('Вы не участник компании')
+        if m.role not in ['owner', 'admin']:
+            raise PermissionDenied('Только владелец или администратор может управлять колонками')
+        return company_id
+
+    def perform_create(self, serializer):
+        company_id = self._require_admin()
+        from apps.companies.models import Company
+        company = Company.objects.get(id=company_id)
+        # Auto-set order to last
+        max_order = KanbanColumn.objects.filter(company_id=company_id).count()
+        serializer.save(company=company, order=max_order)
+
+    def perform_update(self, serializer):
+        self._require_admin()
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        self._require_admin()
+        # Move tasks in this column to None (keep their status)
+        instance.tasks.update(kanban_column=None)
+        instance.delete()
+
+    @action(detail=False, methods=['post'])
+    def reorder(self, request):
+        """Изменить порядок колонок. Принимает [{id, order}, ...]"""
+        self._require_admin()
+        items = request.data.get('orders', [])
+        for item in items:
+            KanbanColumn.objects.filter(id=item['id']).update(order=item['order'])
+        return Response({'message': 'Порядок обновлён'})

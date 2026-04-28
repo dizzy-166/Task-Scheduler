@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import useAuthStore from './store/authStore';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
@@ -15,21 +15,38 @@ const PublicRoute = ({ children }) => {
   return !isAuthenticated ? children : <Navigate to="/dashboard" />;
 };
 
-function App() {
-  const { fetchProfile } = useAuthStore();
+function AppContent() {
+  const { fetchProfile, forceLogout } = useAuthStore();
+  const navigate = useNavigate();
+  const [sessionExpiredBanner, setSessionExpiredBanner] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     if (token) {
       fetchProfile();
     }
+
+    const handleSessionExpired = () => {
+      forceLogout();
+      setSessionExpiredBanner(true);
+      navigate('/login');
+    };
+
+    window.addEventListener('auth:session_expired', handleSessionExpired);
+    return () => window.removeEventListener('auth:session_expired', handleSessionExpired);
   }, []);
 
   return (
-    <Router>
+    <>
+      {sessionExpiredBanner && (
+        <div className="session-expired-banner">
+          <span>Сессия истекла. Пожалуйста, войдите снова.</span>
+          <button onClick={() => setSessionExpiredBanner(false)}>×</button>
+        </div>
+      )}
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
-        
+
         <Route
           path="/login"
           element={
@@ -38,7 +55,7 @@ function App() {
             </PublicRoute>
           }
         />
-        
+
         <Route
           path="/register"
           element={
@@ -47,7 +64,7 @@ function App() {
             </PublicRoute>
           }
         />
-        
+
         <Route
           path="/dashboard"
           element={
@@ -57,6 +74,14 @@ function App() {
           }
         />
       </Routes>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

@@ -1,8 +1,20 @@
-# apps/tasks/serializers.py (обновленная версия)
+# apps/tasks/serializers.py
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Task
+from .models import Task, KanbanColumn
 from apps.users.serializers import UserSerializer
+
+
+class KanbanColumnSerializer(serializers.ModelSerializer):
+    tasks_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = KanbanColumn
+        fields = ['id', 'name', 'color', 'order', 'status_key', 'tasks_count', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+    def get_tasks_count(self, obj):
+        return obj.tasks.filter(deleted_at__isnull=True).count()
 
 
 class TaskListSerializer(serializers.ModelSerializer):
@@ -22,7 +34,8 @@ class TaskListSerializer(serializers.ModelSerializer):
             'company_name', 'company',
             'assignee_name', 'assignee', 'creator_name', 'creator',
             'status', 'status_display', 'priority', 'priority_display',
-            'due_date', 'estimated_hours', 'actual_hours', 'created_at'
+            'due_date', 'estimated_hours', 'actual_hours', 'created_at',
+            'kanban_column',
         ]
 
     def get_assignee_name(self, obj):

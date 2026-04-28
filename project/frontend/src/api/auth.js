@@ -15,64 +15,79 @@ api.interceptors.request.use(
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      console.log('No access token found');
     }
 
-    // Добавляем ID активной компании
     try {
       const companyStorage = localStorage.getItem('company-storage');
       if (companyStorage) {
         const companyState = JSON.parse(companyStorage);
         if (companyState?.state?.activeCompany?.id) {
           config.headers['X-Company-Id'] = companyState.state.activeCompany.id;
-          console.log('Auth interceptor: Adding X-Company-Id:', companyState.state.activeCompany.id);
-        } else {
-          console.log('Auth interceptor: No active company in localStorage');
         }
-      } else {
-        console.log('Auth interceptor: No company-storage in localStorage');
       }
     } catch (e) {
       console.error('Auth interceptor: Failed to parse company-storage', e);
     }
 
-    console.log('Auth interceptor: Final headers for', config.url, ':', config.headers);
+    try {
+      const projectStorage = localStorage.getItem('project-storage');
+      if (projectStorage) {
+        const projectState = JSON.parse(projectStorage);
+        if (projectState?.state?.activeProject?.id) {
+          config.headers['X-Project-Id'] = projectState.state.activeProject.id;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
+
+// Флаг чтобы не диспатчить событие несколько раз при пачке параллельных 401
+let _sessionExpiredDispatched = false;
+
+const _dispatchSessionExpired = () => {
+  if (_sessionExpiredDispatched) return;
+  _sessionExpiredDispatched = true;
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  sessionStorage.setItem('session_expired', '1');
+  window.dispatchEvent(new Event('auth:session_expired'));
+  // Сбрасываем флаг через секунду — на случай если пользователь снова залогинится
+  setTimeout(() => { _sessionExpiredDispatched = false; }, 1000);
+};
 
 // Обработка истечения токена
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         try {
           const response = await axios.post(`${API_URL}/auth/refresh/`, {
             refresh: refreshToken,
           });
-          
+
           localStorage.setItem('accessToken', response.data.access);
           originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
-          
+
           return api(originalRequest);
-        } catch (refreshError) {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          window.location.href = '/login';
+        } catch {
+          _dispatchSessionExpired();
         }
       } else {
-        window.location.href = '/login';
+        _dispatchSessionExpired();
       }
     }
-    
+
     return Promise.reject(error);
   }
 );

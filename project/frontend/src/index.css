@@ -566,7 +566,7 @@ body {
   margin-bottom: 4px;
 }
 
-..header-title p {
+.header-title p {
   font-size: 14px;
   color: var(--text-secondary);
 }
@@ -3786,4 +3786,427 @@ body {
 .roles-member-row button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Member Roles Styles */
+.member-roles-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.member-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.member-role-badge.member-role-default {
+  background: var(--text-accent);
+  color: white;
+  border: none;
+}
+
+.remove-role-badge {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0 2px;
+  margin-left: 4px;
+  border-radius: 10px;
+}
+
+.remove-role-badge:hover {
+  color: var(--error-color);
+  background: rgba(255, 59, 48, 0.1);
+}
+
+.add-role-select {
+  min-width: 130px;
+  font-size: 12px;
+}
+
+.member-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+/* ── Session expired banner ─────────────────────────────────────────────────── */
+.session-expired-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: #ff3b30;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+}
+.session-expired-banner button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* ── Company switcher v2 ─────────────────────────────────────────────────────── */
+.company-switcher-v2 {
+  position: relative;
+  width: 100%;
+}
+
+.company-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+.company-trigger:hover {
+  background: var(--sidebar-hover-bg);
+  border-color: var(--text-accent);
+}
+.company-trigger.open {
+  border-color: var(--text-accent);
+}
+.company-trigger-icon { font-size: 15px; flex-shrink: 0; }
+.company-trigger-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.company-trigger-caret { flex-shrink: 0; color: var(--text-secondary); }
+
+.company-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px var(--shadow-color);
+  padding: 4px;
+  min-width: 180px;
+}
+.company-dropdown-section-label {
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.company-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+  transition: background 0.12s;
+}
+.company-dropdown-item:hover { background: var(--sidebar-hover-bg); }
+.company-dropdown-item.active { color: var(--text-accent); font-weight: 600; }
+.company-dropdown-item.active .company-check { color: var(--text-accent); }
+.company-dropdown-item--accent { color: var(--text-accent); }
+.company-check { margin-left: auto; }
+.company-dropdown-icon { font-size: 14px; }
+.company-dropdown-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 6px;
+}
+
+/* ── Project switcher ────────────────────────────────────────────────────────── */
+.project-switcher {
+  position: relative;
+  width: 100%;
+}
+
+.project-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.project-trigger:hover {
+  background: var(--sidebar-hover-bg);
+  border-color: var(--text-accent);
+  color: var(--text-primary);
+}
+.project-trigger.open {
+  border-color: var(--text-accent);
+  color: var(--text-primary);
+}
+.project-trigger-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.project-trigger-caret { flex-shrink: 0; color: var(--text-secondary); }
+
+.project-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px var(--shadow-color);
+  padding: 4px;
+}
+.project-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+  transition: background 0.12s;
+}
+.project-dropdown-item:hover { background: var(--sidebar-hover-bg); }
+.project-dropdown-item.active { color: var(--text-accent); font-weight: 600; }
+.project-dropdown-item--add { color: var(--text-accent); }
+.project-dropdown-divider { height: 1px; background: var(--border-color); margin: 4px 6px; }
+.project-status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.project-dropdown-item-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.project-dropdown-item-wrapper .project-dropdown-item { flex: 1; }
+.project-delete-btn {
+  padding: 4px 6px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 4px;
+  line-height: 1;
+}
+.project-delete-btn:hover { background: var(--sidebar-logout-hover-bg); color: var(--error-color); }
+
+/* ── Sidebar nav sections ────────────────────────────────────────────────────── */
+.sidebar-nav-section {
+  padding: 8px 12px 4px;
+}
+.sidebar-nav-filters {
+  padding-top: 4px;
+}
+
+/* ── Header project badge ────────────────────────────────────────────────────── */
+.header-project-badge {
+  color: var(--text-secondary);
+  font-weight: 400;
+  font-size: 0.85em;
+}
+
+/* ── Kanban toolbar ──────────────────────────────────────────────────────────── */
+.kanban-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kanban-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+/* ── Column header enhancements ──────────────────────────────────────────────── */
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.column-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.column-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.column-header-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.kanban-column:hover .column-header-actions {
+  opacity: 1;
+}
+.column-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1;
+}
+.column-action-btn:hover { background: var(--sidebar-hover-bg); }
+
+/* ── Color picker ────────────────────────────────────────────────────────────── */
+.color-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.color-picker {
+  width: 44px;
+  height: 36px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 2px;
+  background: var(--input-bg);
+}
+.color-picker-value {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: monospace;
+}
+
+/* ── Member actions menu ─────────────────────────────────────────────────────── */
+.member-menu {
+  position: relative;
+}
+
+.member-menu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.member-menu-trigger:hover {
+  background: var(--sidebar-hover-bg);
+  border-color: var(--text-accent);
+}
+.member-menu-role-label {
+  font-size: 13px;
+}
+
+.member-menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 300;
+  min-width: 200px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px var(--shadow-color);
+  padding: 4px;
+}
+
+.member-menu-section-label {
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.member-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+  transition: background 0.12s;
+}
+.member-menu-item:hover { background: var(--sidebar-hover-bg); }
+.member-menu-item.active { color: var(--text-accent); font-weight: 600; }
+.member-menu-item.active svg { color: var(--text-accent); }
+.member-menu-item--role { color: var(--text-secondary); }
+.member-menu-item--role:hover { color: var(--text-primary); }
+.member-menu-item--role-assigned { color: var(--text-accent); }
+.member-menu-item--role-assigned:hover { background: rgba(255,59,48,0.06); color: var(--error-color); }
+.member-menu-item--role-assigned:hover .member-menu-remove-hint { display: inline; }
+.member-menu-item--danger { color: var(--error-color); }
+.member-menu-item--danger:hover { background: rgba(255,59,48,0.08); }
+
+.member-menu-plus {
+  font-size: 15px;
+  color: var(--text-accent);
+  line-height: 1;
+}
+
+.member-menu-remove-hint {
+  display: none;
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.member-menu-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 6px;
 }

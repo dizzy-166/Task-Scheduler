@@ -1,4 +1,3 @@
-// frontend/src/components/RolesPanel.jsx
 import { useState, useEffect } from 'react';
 import rolesService from '../api/rolesService';
 
@@ -23,7 +22,7 @@ const RESOURCE_LABELS = {
   roles:    'Роли',
 };
 
-export default function RolesPanel({ companyId, members, currentUserRole, onClose }) {
+export default function RolesPanel({ companyId, members, currentUserRole, onClose, onRolesUpdated }) {
   const [roles, setRoles] = useState([]);
   const [allPerms, setAllPerms] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -39,63 +38,15 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
 
   const canManage = ['owner', 'admin'].includes(currentUserRole);
 
-  useEffect(() => {
-    load();
-  }, [companyId]);
-
-  useEffect(() => {
-    if (selected) {
-      // Извлекаем permissions из role
-      const perms = selected.permissions || [];
-      setPendingPerms(new Set(perms));
-    }
-  }, [selected?.id]);
-
   // Загружаем роли для всех участников при открытии панели
-  useEffect(() => {
-    if (members.length > 0 && canManage) {
-      loadAllMembersRoles();
-    }
-  }, [members, canManage]);
-
-  async function loadAllMembersRoles() {
+  const loadAllMembersRoles = async () => {
     setLoadingMemberRoles(true);
     const rolesMap = {};
     
-    console.log('Loading roles for members:', members);
-    
     for (const member of members) {
       try {
-        const response = await rolesService.getMemberRoles(companyId, member.user);
-        console.log(`Raw response for user ${member.user}:`, response);
-        
-        // Нормализуем данные - извлекаем массив ролей
-        let userRoles = [];
-        
-        if (Array.isArray(response)) {
-          userRoles = response;
-        } else if (response && Array.isArray(response.results)) {
-          userRoles = response.results;
-        } else if (response && response.roles && Array.isArray(response.roles)) {
-          userRoles = response.roles;
-        } else if (response && typeof response === 'object') {
-          // Пробуем найти массив в объекте
-          for (const key of Object.keys(response)) {
-            if (Array.isArray(response[key])) {
-              userRoles = response[key];
-              break;
-            }
-          }
-        }
-        
-        // Извлекаем role объекты из UserRole
-        const normalizedRoles = userRoles.map(item => {
-          if (item.role) return item.role;
-          if (item.id && item.name) return item;
-          return item;
-        });
-        
-        console.log(`Normalized roles for user ${member.user}:`, normalizedRoles);
+        const data = await rolesService.getMemberRoles(companyId, member.user);
+        const normalizedRoles = data.map(item => item.role || item);
         rolesMap[member.user] = normalizedRoles;
       } catch (err) {
         console.error(`Ошибка загрузки ролей для ${member.user}:`, err);
@@ -103,59 +54,37 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
       }
     }
     
-    console.log('Final member roles map:', rolesMap);
     setMemberRoles(rolesMap);
     setLoadingMemberRoles(false);
-  }
+  };
+
+  useEffect(() => {
+    load();
+  }, [companyId]);
+
+  useEffect(() => {
+    if (selected) {
+      setPendingPerms(new Set(selected.permissions || []));
+    }
+  }, [selected?.id]);
+
+  useEffect(() => {
+    if (members.length > 0 && canManage) {
+      loadAllMembersRoles();
+    }
+  }, [members, canManage]);
 
   async function load() {
     setLoading(true);
     setError(null);
     try {
-      const [rolesData, permissionsData] = await Promise.all([
+      const [r, p] = await Promise.all([
         rolesService.getRoles(companyId),
         rolesService.getPermissions(),
       ]);
-      
-      console.log('Raw roles data:', rolesData);
-      console.log('Raw permissions data:', permissionsData);
-      
-      // Нормализуем роли
-      let rolesList = [];
-      if (Array.isArray(rolesData)) {
-        rolesList = rolesData;
-      } else if (rolesData && Array.isArray(rolesData.results)) {
-        rolesList = rolesData.results;
-      } else if (rolesData && typeof rolesData === 'object') {
-        for (const key of Object.keys(rolesData)) {
-          if (Array.isArray(rolesData[key])) {
-            rolesList = rolesData[key];
-            break;
-          }
-        }
-      }
-      
-      // Нормализуем разрешения
-      let permsList = [];
-      if (Array.isArray(permissionsData)) {
-        permsList = permissionsData;
-      } else if (permissionsData && Array.isArray(permissionsData.results)) {
-        permsList = permissionsData.results;
-      } else if (permissionsData && typeof permissionsData === 'object') {
-        for (const key of Object.keys(permissionsData)) {
-          if (Array.isArray(permissionsData[key])) {
-            permsList = permissionsData[key];
-            break;
-          }
-        }
-      }
-      
-      console.log('Normalized roles:', rolesList);
-      console.log('Normalized permissions:', permsList);
-      
-      setRoles(rolesList);
-      setAllPerms(permsList);
-      if (rolesList.length > 0) setSelected(rolesList[0]);
+      setRoles(r);
+      setAllPerms(p);
+      if (r.length > 0) setSelected(r[0]);
     } catch (err) {
       console.error('Ошибка загрузки ролей:', err);
       setError('Не удалось загрузить роли');
@@ -173,6 +102,11 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
       setRoles(prev => [...prev, role]);
       setSelected(role);
       setNewRoleName('');
+      
+      // Уведомляем об обновлении ролей
+      if (onRolesUpdated) {
+        await onRolesUpdated();
+      }
     } catch (err) {
       console.error('Ошибка создания роли:', err);
       setError('Не удалось создать роль');
@@ -187,8 +121,14 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
       await rolesService.deleteRole(companyId, role.id);
       setRoles(prev => prev.filter(r => r.id !== role.id));
       await loadAllMembersRoles();
+      
       if (selected?.id === role.id) {
         setSelected(roles.find(r => r.id !== role.id) || null);
+      }
+      
+      // Уведомляем об обновлении ролей
+      if (onRolesUpdated) {
+        await onRolesUpdated();
       }
     } catch (err) {
       console.error('Ошибка удаления роли:', err);
@@ -226,8 +166,6 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
       return;
     }
     
-    console.log('Toggling role:', { userId, roleId, currentlyHasRole });
-    
     try {
       if (currentlyHasRole) {
         await rolesService.removeRole(companyId, userId, roleId);
@@ -236,21 +174,18 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
       }
       
       // Обновляем роли конкретного участника
-      const response = await rolesService.getMemberRoles(companyId, userId);
-      console.log('Updated roles response:', response);
-      
-      let userRoles = [];
-      if (Array.isArray(response)) {
-        userRoles = response;
-      } else if (response && Array.isArray(response.results)) {
-        userRoles = response.results;
-      }
-      
-      const normalizedRoles = userRoles.map(item => item.role || item);
+      const data = await rolesService.getMemberRoles(companyId, userId);
+      const normalizedRoles = data.map(item => item.role || item);
       setMemberRoles(prev => ({
         ...prev,
         [userId]: normalizedRoles
       }));
+      
+      // Уведомляем родительский компонент об изменении
+      if (onRolesUpdated) {
+        await onRolesUpdated();
+      }
+      
       setError(null);
     } catch (err) {
       console.error('Ошибка изменения роли участника:', err);
@@ -260,19 +195,12 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
 
   const userHasRole = (userId, roleId) => {
     const userRoles = memberRoles[userId] || [];
-    const hasRole = userRoles.some(role => {
+    return userRoles.some(role => {
       if (!role) return false;
-      // Сравниваем по id
-      if (typeof role === 'object' && role.id) {
-        return role.id === roleId;
-      }
-      // Если пришел просто id
-      if (typeof role === 'string' || typeof role === 'number') {
-        return role == roleId;
-      }
+      if (typeof role === 'object' && role.id) return role.id === roleId;
+      if (typeof role === 'string' || typeof role === 'number') return role == roleId;
       return false;
     });
-    return hasRole;
   };
 
   // Группируем permissions по ресурсу
@@ -444,7 +372,6 @@ export default function RolesPanel({ companyId, members, currentUserRole, onClos
                   
                   {members.map(m => {
                     const hasThisRole = userHasRole(m.user, selected.id);
-                    
                     return (
                       <div key={m.user} className="roles-member-row">
                         <div className="roles-member-info">

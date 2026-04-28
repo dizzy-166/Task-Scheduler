@@ -4,6 +4,54 @@ from django.db import models
 from django.utils import timezone
 
 
+class KanbanColumn(models.Model):
+    """Колонка канбан-доски (кастомная, per-company)"""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company = models.ForeignKey(
+        'companies.Company',
+        on_delete=models.CASCADE,
+        related_name='kanban_columns',
+        verbose_name='Компания',
+    )
+    name = models.CharField('Название', max_length=100)
+    color = models.CharField('Цвет', max_length=7, default='#6B7280')
+    order = models.IntegerField('Порядок', default=0, db_index=True)
+    # Если задана — при перетаскивании в эту колонку статус задачи тоже меняется
+    status_key = models.CharField(
+        'Ключ статуса задачи',
+        max_length=20,
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'kanban_columns'
+        verbose_name = 'Колонка канбана'
+        verbose_name_plural = 'Колонки канбана'
+        ordering = ['order']
+
+    def __str__(self):
+        return f'{self.company.name} — {self.name}'
+
+    @classmethod
+    def get_or_create_defaults(cls, company):
+        """Создать 4 стандартные колонки для компании, если их нет."""
+        if cls.objects.filter(company=company).exists():
+            return
+        defaults = [
+            ('К выполнению', '#6B7280', 0, 'new'),
+            ('В работе',     '#2196F3', 1, 'in_progress'),
+            ('На проверке',  '#FF9800', 2, 'review'),
+            ('Завершено',    '#4CAF50', 3, 'done'),
+        ]
+        cls.objects.bulk_create([
+            cls(company=company, name=name, color=color, order=order, status_key=sk)
+            for name, color, order, sk in defaults
+        ])
+
+
 class Task(models.Model):
     """Модель задачи"""
     
@@ -65,7 +113,15 @@ class Task(models.Model):
         related_name='subtasks',
         verbose_name='Родительская задача'
     )
-    
+    kanban_column = models.ForeignKey(
+        'tasks.KanbanColumn',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tasks',
+        verbose_name='Колонка канбана',
+    )
+
     # Статусы и приоритеты
     status = models.CharField(
         'Статус',

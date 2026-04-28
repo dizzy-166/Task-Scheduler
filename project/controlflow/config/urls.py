@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/v1/', include('apps.users.urls')),
     path('api/v1/', include('apps.tasks.urls')),
     path('api/v1/', include('apps.companies.urls')),
+    path('api/v1/', include('apps.core.urls')),
 
     # API (без v1) - для обратной совместимости
     path('api/', include('apps.tasks.urls')),

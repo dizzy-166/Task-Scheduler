@@ -1,258 +1,53 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+import api from './auth';
 
 class TaskService {
-  constructor() {
-    this.baseURL = API_URL;
+  getTasks(params = {}) {
+    return api.get('/tasks/', { params }).then(r => r.data);
   }
 
-  getHeaders() {
-    const token = localStorage.getItem('accessToken');
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
-
-    // Добавляем ID компании
-    try {
-      const companyStorage = localStorage.getItem('company-storage');
-      if (companyStorage) {
-        const companyState = JSON.parse(companyStorage);
-        if (companyState?.state?.activeCompany?.id) {
-          headers['X-Company-Id'] = companyState.state.activeCompany.id;
-          console.log('Adding X-Company-Id header:', companyState.state.activeCompany.id);
-        } else {
-          console.log('No active company found in localStorage');
-        }
-      } else {
-        console.log('No company-storage in localStorage');
-      }
-    } catch (e) {
-      console.error('Failed to parse company-storage', e);
-    }
-
-    console.log('Final headers:', headers);
-    return headers;
+  getTask(id) {
+    return api.get(`/tasks/${id}/`).then(r => r.data);
   }
 
-  async getTasks(params = {}) {
-    try {
-      const queryString = new URLSearchParams(params).toString();
-      const url = `${this.baseURL}/tasks/${queryString ? `?${queryString}` : ''}`;
-      
-      const response = await fetch(url, {
-        headers: this.getHeaders()
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-      throw error;
-    }
+  createTask(data) {
+    return api.post('/tasks/', data).then(r => r.data);
   }
 
-  async getTask(id) {
-    try {
-      const response = await fetch(`${this.baseURL}/tasks/${id}/`, {
-        headers: this.getHeaders()
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching task:', error);
-      throw error;
-    }
+  updateTask(id, data) {
+    return api.put(`/tasks/${id}/`, data).then(r => r.data);
   }
 
-  async createTask(taskData) {
-    try {
-      const response = await fetch(`${this.baseURL}/tasks/`, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify(taskData)
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        const message = errorData.detail
-          || Object.entries(errorData).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join('; ')
-          || 'Failed to create task';
-        throw new Error(message);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error creating task:', error);
-      throw error;
-    }
+  partialUpdateTask(id, data) {
+    return api.patch(`/tasks/${id}/`, data).then(r => r.data);
   }
 
-  async updateTask(id, taskData) {
-    try {
-      const response = await fetch(`${this.baseURL}/tasks/${id}/`, {
-        method: 'PUT',
-        headers: this.getHeaders(),
-        body: JSON.stringify(taskData)
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating task:', error);
-      throw error;
-    }
+  updateTaskStatus(id, status, columnId = null) {
+    const body = columnId ? { status, column_id: columnId } : { status };
+    return api.post(`/tasks/${id}/change_status/`, body).then(r => r.data);
   }
 
-  async updateTaskStatus(id, status) {
-    try {
-      const response = await fetch(`${this.baseURL}/tasks/${id}/change_status/`, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify({ status })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update task status');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating task status:', error);
-      throw error;
-    }
+  deleteTask(id) {
+    return api.delete(`/tasks/${id}/`).then(() => true);
   }
 
-  async partialUpdateTask(id, taskData) {
-    try {
-      const response = await fetch(`${this.baseURL}/tasks/${id}/`, {
-        method: 'PATCH',
-        headers: this.getHeaders(),
-        body: JSON.stringify(taskData)
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error partially updating task:', error);
-      throw error;
-    }
+  getStats() {
+    return api.get('/tasks/stats/').then(r => r.data);
   }
 
-  async deleteTask(id) {
-    try {
-      const response = await fetch(`${this.baseURL}/tasks/${id}/`, {
-        method: 'DELETE',
-        headers: this.getHeaders()
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error deleting task:', error);
-      throw error;
-    }
+  getUsers() {
+    return api.get('/users/').then(r => r.data);
   }
 
-  async getStats() {
-    try {
-      const response = await fetch(`${this.baseURL}/tasks/stats/`, {
-        headers: this.getHeaders()
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-      throw error;
-    }
+  getMyTasks() {
+    return api.get('/tasks/my_tasks/').then(r => r.data);
   }
 
-  async getUsers() {
-    try {
-      const response = await fetch(`${this.baseURL}/users/`, {
-        headers: this.getHeaders()
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      throw error;
-    }
+  getCreatedByMe() {
+    return api.get('/tasks/created_by_me/').then(r => r.data);
   }
 
-  async getMyTasks() {
-    try {
-      const response = await fetch(`${this.baseURL}/tasks/my_tasks/`, {
-        headers: this.getHeaders()
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching my tasks:', error);
-      throw error;
-    }
-  }
-
-  async getCreatedByMe() {
-    try {
-      const response = await fetch(`${this.baseURL}/tasks/created_by_me/`, {
-        headers: this.getHeaders()
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching created-by-me tasks:', error);
-      throw error;
-    }
-  }
-
-  async getOverdueTasks() {
-    try {
-      const response = await fetch(`${this.baseURL}/tasks/overdue/`, {
-        headers: this.getHeaders()
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching overdue tasks:', error);
-      throw error;
-    }
+  getOverdueTasks() {
+    return api.get('/tasks/overdue/').then(r => r.data);
   }
 }
 
