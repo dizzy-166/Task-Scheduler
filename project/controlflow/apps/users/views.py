@@ -95,17 +95,22 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         queryset = super().get_queryset()
-        
-        if user.is_admin:
+
+        if user.is_superuser:
             return queryset
-        elif user.is_manager:
-            subordinates_ids = [u.id for u in user.get_subordinates_tree()]
-            subordinates_ids.append(user.id)
-            return queryset.filter(id__in=subordinates_ids)
-        else:
-            return queryset.filter(
-                django_models.Q(id=user.id) | django_models.Q(id=user.manager_id)
-            )
+
+        from apps.companies.models import CompanyMember
+        company_ids = list(CompanyMember.objects.filter(
+            user=user, status='active'
+        ).values_list('company_id', flat=True))
+
+        if company_ids:
+            member_ids = CompanyMember.objects.filter(
+                company_id__in=company_ids, status='active'
+            ).values_list('user_id', flat=True)
+            return queryset.filter(id__in=member_ids)
+
+        return queryset.filter(id=user.id)
     
     @action(detail=False, methods=['get'])
     def me(self, request):

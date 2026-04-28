@@ -54,26 +54,28 @@ class TaskViewSet(viewsets.ModelViewSet):
             # Если указана компания - фильтруем по ней
             queryset = queryset.filter(company_id=company_id)
         
-        # Админ видит все задачи в компании
-        if user.role == 'admin':
+        # Суперпользователь видит всё
+        if user.is_superuser:
             return queryset
-        
-        # Менеджер видит задачи своего отдела и подчинённых
-        if user.role == 'manager':
-            subordinates_ids = [u.id for u in user.get_subordinates_tree()]
-            return queryset.filter(
-                django_models.Q(assignee_id=user.id) |
-                django_models.Q(creator_id=user.id) |
-                django_models.Q(assignee_id__in=subordinates_ids) |
-                django_models.Q(project__manager_id=user.id)
-            )
-        
-        # Исполнитель и наблюдатель:
-        # Если указана компания - показываем ВСЕ задачи компании (они участники)
+
+        # Проверяем роль в компании
+        company_role = None
+        if company_id:
+            membership = user.company_memberships.filter(
+                company_id=company_id, status='active'
+            ).first()
+            if membership:
+                company_role = membership.role
+
+        # Владелец/админ компании видит все задачи
+        if company_role in ['owner', 'admin']:
+            return queryset
+
+        # Участник с указанной компанией видит все задачи компании
         if company_id:
             return queryset
-        
-        # Если компания не указана - только свои задачи
+
+        # Без компании — только свои задачи
         return queryset.filter(
             django_models.Q(assignee_id=user.id) |
             django_models.Q(creator_id=user.id)

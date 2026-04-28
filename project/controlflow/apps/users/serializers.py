@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from .models import User
+from .models import User, Permission, Role, RolePermission, UserRole
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'first_name', 'last_name', 'patronymic',
             'full_name', 'short_name', 'phone', 'avatar_url',
-            'role', 'manager', 'is_active', 'is_verified',
+            'manager', 'is_active', 'is_verified',
             'last_login', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'last_login', 'created_at', 'updated_at']
@@ -86,3 +86,50 @@ class ChangePasswordSerializer(serializers.Serializer):
         user.set_password(self.validated_data['new_password'])
         user.save()
         return user
+
+
+class PermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Permission
+        fields = ['id', 'code', 'resource', 'action', 'description']
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    permissions = serializers.SerializerMethodField()
+    members_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Role
+        fields = ['id', 'name', 'context_type', 'context_id', 'is_system',
+                  'permissions', 'members_count', 'created_at']
+        read_only_fields = ['id', 'is_system', 'created_at']
+
+    def get_permissions(self, obj):
+        codes = obj.permissions.filter(granted=True).values_list('permission__code', flat=True)
+        return list(codes)
+
+    def get_members_count(self, obj):
+        return obj.users.count()
+
+
+class RoleCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['name']
+
+    def validate_name(self, value):
+        context_id = self.context.get('company_id')
+        if Role.objects.filter(name=value, context_type='company', context_id=context_id).exists():
+            raise serializers.ValidationError('Роль с таким названием уже существует')
+        return value
+
+
+class UserRoleSerializer(serializers.ModelSerializer):
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    role_name = serializers.CharField(source='role.name', read_only=True)
+
+    class Meta:
+        model = UserRole
+        fields = ['id', 'user', 'user_email', 'user_name', 'role', 'role_name', 'granted_at']
+        read_only_fields = ['id', 'granted_at']

@@ -81,7 +81,10 @@ class TaskService {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create task');
+        const message = errorData.detail
+          || Object.entries(errorData).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join('; ')
+          || 'Failed to create task';
+        throw new Error(message);
       }
       
       return await response.json();

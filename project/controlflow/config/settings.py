@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.activity',
     'apps.tasks',
-    'apps.companies',  # Добавлено новое приложение
+    'apps.companies', 
 ]
 
 MIDDLEWARE = [
@@ -94,18 +94,17 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
+        'NAME': 'controlflow',
         'USER': 'postgres',
-        'PASSWORD': 123,
+        'PASSWORD': '123',
         'HOST': 'localhost',
         'PORT': '5432',
-        'OPTIONS': {
-            'options': '-c search_path="ControlFlow",public'
-        },
         'CONN_MAX_AGE': 0,
+        'OPTIONS': {
+            'options': '-c search_path=public'
+        },
     }
 }
-
 # Custom User Model
 AUTH_USER_MODEL = 'users.User'
 

@@ -5,6 +5,7 @@ import useCompanyStore from '../store/companyStore';
 import { useNavigate } from 'react-router-dom';
 import TaskModal from '../components/TaskModal';
 import CompanySwitcher from '../components/CompanySwitcher';
+import RolesPanel from '../components/RolesPanel';
 import { taskService } from '../api/taskService';
 import companyAPI from '../api/companyService';
 
@@ -44,6 +45,7 @@ const DashboardPage = () => {
   const [selectedInviteCompanyId, setSelectedInviteCompanyId] = useState(activeCompany?.id || '');
   const [showDeleteCompanyModal, setShowDeleteCompanyModal] = useState(false);
   const [deleteCompanyError, setDeleteCompanyError] = useState('');
+  const [showRolesPanel, setShowRolesPanel] = useState(false);
 
   useEffect(() => {
     if (activeCompany) {
@@ -854,7 +856,13 @@ const DashboardPage = () => {
               <div className="company-header-actions">
                 {companies.length > 0 && (
                   <>
-                    <button 
+                    <button
+                      className="btn-secondary"
+                      onClick={() => setShowRolesPanel(true)}
+                    >
+                      Роли
+                    </button>
+                    <button
                       className="btn-secondary"
                       onClick={() => {
                         setSelectedInviteCompanyId(activeCompany?.id || companies[0]?.id || '');
@@ -1033,6 +1041,15 @@ const DashboardPage = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {showRolesPanel && activeCompany && (
+        <RolesPanel
+          companyId={activeCompany.id}
+          members={companyMembers}
+          currentUserRole={companyMembers.find(m => m.user === user?.id)?.role || 'member'}
+          onClose={() => setShowRolesPanel(false)}
+        />
       )}
 
       {showDeleteCompanyModal && (

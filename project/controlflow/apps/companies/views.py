@@ -1,11 +1,14 @@
-from rest_framework import viewsets, status, permissions
+from rest_framework import viewsets, status, permissions, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from django.utils import timezone
 
 from apps.activity.utils import log_activity
-from apps.users.models import User
+from apps.users.models import User, Role, RolePermission, UserRole, Permission
+from apps.users.serializers import (
+    PermissionSerializer, RoleSerializer, RoleCreateSerializer, UserRoleSerializer
+)
 from .models import Company, CompanyMember
 from .permissions import IsCompanyOwnerOrAdmin
 from .serializers import (
@@ -16,6 +19,13 @@ from .serializers import (
     InviteMemberSerializer,
     RespondInviteSerializer,
 )
+
+
+class PermissionListView(generics.ListAPIView):
+    """Список всех доступных разрешений"""
+    serializer_class = PermissionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Permission.objects.all().order_by('resource', 'action')
 
 
 class CompanyViewSet(viewsets.ModelViewSet):
@@ -358,7 +368,155 @@ class CompanyViewSet(viewsets.ModelViewSet):
                 {'error': 'Нельзя удалить владельца компании'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         member.delete()
-        
+
         return Response({'message': 'Участник удален из компании'})
+
+    # ─── Role management ──────────────────────────────────────────────────────
+
+    def _require_role_manager(self, company_id, user):
+        """Проверяет, может ли пользователь управлять ролями в компании."""
+        membership = CompanyMember.objects.filter(
+            company_id=company_id, user=user, status='active'
+        ).first()
+        if not membership:
+            return None, Response({'error': 'Нет доступа к компании'}, status=status.HTTP_403_FORBIDDEN)
+        if membership.role not in ('owner', 'admin'):
+            # Проверяем кастомное разрешение roles.manage
+            has_perm = UserRole.objects.filter(
+                user=user,
+                role__context_type='company',
+                role__context_id=company_id,
+                role__permissions__permission__code='roles.manage',
+                role__permissions__granted=True,
+            ).exists()
+            if not has_perm:
+                return None, Response({'error': 'Нет прав для управления ролями'}, status=status.HTTP_403_FORBIDDEN)
+        return membership, None
+
+    @action(detail=True, methods=['get', 'post'], url_path='roles')
+    def roles(self, request, pk=None):
+        """GET: список ролей компании. POST: создать роль."""
+        _, err = self._require_role_manager(pk, request.user)
+        if err:
+            return err
+
+        if request.method == 'GET':
+            qs = Role.objects.filter(
+                context_type='company', context_id=pk
+            ).prefetch_related('permissions__permission')
+            return Response(RoleSerializer(qs, many=True).data)
+
+        # POST — создать роль
+        serializer = RoleCreateSerializer(
+            data=request.data,
+            context={'company_id': pk}
+        )
+        serializer.is_valid(raise_exception=True)
+        role = Role.objects.create(
+            name=serializer.validated_data['name'],
+            context_type='company',
+            context_id=pk,
+            created_by=request.user,
+        )
+        return Response(RoleSerializer(role).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['patch', 'delete'], url_path=r'roles/(?P<role_id>[^/.]+)')
+    def role_detail(self, request, pk=None, role_id=None):
+        """PATCH: переименовать роль. DELETE: удалить роль."""
+        _, err = self._require_role_manager(pk, request.user)
+        if err:
+            return err
+
+        try:
+            role = Role.objects.get(id=role_id, context_type='company', context_id=pk)
+        except Role.DoesNotExist:
+            return Response({'error': 'Роль не найдена'}, status=status.HTTP_404_NOT_FOUND)
+
+        if role.is_system:
+            return Response({'error': 'Системную роль нельзя изменить'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if request.method == 'DELETE':
+            role.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        # PATCH
+        name = request.data.get('name', '').strip()
+        if not name:
+            return Response({'error': 'Название обязательно'}, status=status.HTTP_400_BAD_REQUEST)
+        role.name = name
+        role.save(update_fields=['name', 'updated_at'])
+        return Response(RoleSerializer(role).data)
+
+    @action(detail=True, methods=['post'], url_path=r'roles/(?P<role_id>[^/.]+)/set_permissions')
+    def role_set_permissions(self, request, pk=None, role_id=None):
+        """Установить набор разрешений для роли (передаётся список кодов)."""
+        _, err = self._require_role_manager(pk, request.user)
+        if err:
+            return err
+
+        try:
+            role = Role.objects.get(id=role_id, context_type='company', context_id=pk)
+        except Role.DoesNotExist:
+            return Response({'error': 'Роль не найдена'}, status=status.HTTP_404_NOT_FOUND)
+
+        codes = request.data.get('permissions', [])
+        if not isinstance(codes, list):
+            return Response({'error': 'permissions должен быть списком кодов'}, status=status.HTTP_400_BAD_REQUEST)
+
+        valid_perms = Permission.objects.filter(code__in=codes)
+        valid_codes = set(valid_perms.values_list('code', flat=True))
+        invalid = set(codes) - valid_codes
+        if invalid:
+            return Response({'error': f'Неизвестные коды: {", ".join(invalid)}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Пересоздаём RolePermission
+        RolePermission.objects.filter(role=role).delete()
+        RolePermission.objects.bulk_create([
+            RolePermission(role=role, permission=p, granted=True)
+            for p in valid_perms
+        ])
+
+        return Response(RoleSerializer(role).data)
+
+    @action(detail=True, methods=['post', 'delete'], url_path=r'members/(?P<user_id>[^/.]+)/roles/(?P<role_id>[^/.]+)')
+    def member_role(self, request, pk=None, user_id=None, role_id=None):
+        """POST: назначить роль участнику. DELETE: снять роль."""
+        _, err = self._require_role_manager(pk, request.user)
+        if err:
+            return err
+
+        try:
+            member = CompanyMember.objects.get(company_id=pk, user_id=user_id, status='active')
+        except CompanyMember.DoesNotExist:
+            return Response({'error': 'Участник не найден'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            role = Role.objects.get(id=role_id, context_type='company', context_id=pk)
+        except Role.DoesNotExist:
+            return Response({'error': 'Роль не найдена'}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.method == 'POST':
+            ur, created = UserRole.objects.get_or_create(
+                user=member.user, role=role,
+                defaults={'granted_by': request.user}
+            )
+            return Response(UserRoleSerializer(ur).data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+        # DELETE
+        UserRole.objects.filter(user=member.user, role=role).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['get'], url_path=r'members/(?P<user_id>[^/.]+)/roles')
+    def member_roles(self, request, pk=None, user_id=None):
+        """Роли конкретного участника в компании."""
+        if not CompanyMember.objects.filter(company_id=pk, user=request.user, status='active').exists():
+            return Response({'error': 'Нет доступа'}, status=status.HTTP_403_FORBIDDEN)
+
+        urs = UserRole.objects.filter(
+            user_id=user_id,
+            role__context_type='company',
+            role__context_id=pk,
+        ).select_related('role', 'user', 'granted_by')
+        return Response(UserRoleSerializer(urs, many=True).data)
