@@ -3185,3 +3185,420 @@ body {
     max-height: 40%;
   }
 }
+
+/* ============================================
+   IMPROVED COMPANY MANAGEMENT STYLES
+   ============================================ */
+
+/* Company Header */
+.company-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.company-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.company-header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.company-header-actions .btn-secondary,
+.company-header-actions .btn-danger {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.company-header-actions .btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.company-header-actions .btn-secondary:hover {
+  background: var(--sidebar-hover-bg);
+  border-color: var(--text-accent);
+}
+
+.company-header-actions .btn-danger {
+  background: #dc3545;
+  color: white;
+  border: none;
+}
+
+.company-header-actions .btn-danger:hover {
+  background: #c82333;
+}
+
+/* Company Info Card */
+.company-info {
+  margin-bottom: 32px;
+}
+
+.info-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.2s;
+}
+
+.info-card h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.info-card p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 16px 0;
+}
+
+.company-stats {
+  display: flex;
+  gap: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.company-stats span {
+  font-size: 14px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Members Sections */
+.members-section,
+.invited-section {
+  margin-bottom: 32px;
+}
+
+.members-section h3,
+.invited-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 16px 0;
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s;
+}
+
+.member-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.member-item.invited {
+  opacity: 0.8;
+  border-style: dashed;
+}
+
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.member-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--text-accent), var(--sidebar-avatar-bg));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.member-details {
+  flex: 1;
+}
+
+.member-details h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.member-details p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 6px 0;
+}
+
+.member-role {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.member-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.role-select {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.role-select:hover {
+  border-color: var(--text-accent);
+}
+
+.role-select:focus {
+  outline: none;
+  border-color: var(--text-accent);
+  box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.1);
+}
+
+.btn-small {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.member-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-badge {
+  background: #ff9800;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Company Switcher */
+.company-switcher {
+  margin-bottom: 16px;
+  padding: 0 16px;
+}
+
+.company-switcher select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.company-switcher select:hover {
+  border-color: var(--text-accent);
+}
+
+.company-switcher select:focus {
+  border-color: var(--text-accent);
+  box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.1);
+}
+
+.current-company {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: var(--bg-primary);
+  border-radius: 8px;
+}
+
+.company-badge {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Invites List */
+.invites-list {
+  padding: 16px;
+}
+
+.invite-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: var(--bg-secondary);
+}
+
+.invite-info strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.invite-info p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 2px 0;
+}
+
+.invite-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.invite-actions button {
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+/* Create Company Form */
+.create-company-form {
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.create-company-form h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+}
+
+.create-company-input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.create-company-input-group input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.create-company-input-group input:focus {
+  outline: none;
+  border-color: var(--text-accent);
+}
+
+.create-company-input-group button {
+  padding: 8px 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .company-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .company-header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  
+  .company-header-actions button {
+    flex: 1;
+  }
+  
+  .member-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .member-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .member-info {
+    width: 100%;
+  }
+  
+  .company-stats {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+/* Delete Company Modal */
+.modal-delete {
+  max-width: 450px;
+}
+
+.modal-delete .modal-body {
+  padding: 20px 24px;
+}
+
+.modal-delete .modal-body p {
+  margin-bottom: 12px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.modal-delete .modal-body strong {
+  color: var(--error-color);
+}
+
+.modal-delete .error-message {
+  margin-top: 12px;
+  padding: 10px;
+  background: rgba(255, 59, 48, 0.1);
+  border-radius: 8px;
+  color: var(--error-color);
+}
