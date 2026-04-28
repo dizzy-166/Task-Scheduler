@@ -1770,6 +1770,44 @@ body {
   font-size: 12px;
 }
 
+.btn-delete-small {
+  padding: 6px 10px;
+  background: transparent;
+  color: #ff4444;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 8px;
+}
+
+.btn-delete-small:hover {
+  background: rgba(255, 68, 68, 0.1);
+  color: #cc0000;
+}
+
+.btn-danger {
+  padding: 10px 20px;
+  background: #dc3545;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.btn-danger:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
 /* Spinner */
 .spinner {
   display: inline-block;

@@ -11,7 +11,7 @@ import companyAPI from '../api/companyService';
 const DashboardPage = () => {
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
-  const { activeCompany } = useCompanyStore();
+  const { activeCompany, companies, deleteCompany } = useCompanyStore();
   const navigate = useNavigate();
   
   const [activeView, setActiveView] = useState('kanban');
@@ -41,17 +41,36 @@ const DashboardPage = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('member');
   const [inviteError, setInviteError] = useState('');
+  const [selectedInviteCompanyId, setSelectedInviteCompanyId] = useState(activeCompany?.id || '');
+  const [showDeleteCompanyModal, setShowDeleteCompanyModal] = useState(false);
+  const [deleteCompanyError, setDeleteCompanyError] = useState('');
 
   useEffect(() => {
     if (activeCompany) {
       console.log('Active company changed:', activeCompany);
       loadAllData();
       loadCompanyMembers();
+      setSelectedInviteCompanyId(activeCompany.id);
     } else {
       console.log('No active company');
       setLoading(false);
+      setSelectedInviteCompanyId(companies.length > 0 ? companies[0].id : '');
     }
-  }, [activeCompany]);
+  }, [activeCompany, companies]);
+
+  const handleDeleteCompany = async () => {
+    if (!activeCompany) return;
+    setDeleteCompanyError('');
+
+    const result = await deleteCompany(activeCompany.id);
+    if (result.success) {
+      setShowDeleteCompanyModal(false);
+      setDeleteCompanyError('');
+      navigate('/dashboard');
+    } else {
+      setDeleteCompanyError(result.error);
+    }
+  };
 
   const computeStatsFromTasks = (tasksList) => {
     const counts = {
@@ -461,17 +480,17 @@ const DashboardPage = () => {
       return;
     }
     
-    if (!activeCompany?.id) {
+    if (!selectedInviteCompanyId) {
       setInviteError('Компания не выбрана');
       return;
     }
     
-    console.log('Active company:', activeCompany);
+    console.log('Invite company ID:', selectedInviteCompanyId);
     console.log('Invite data:', { email: inviteEmail, role: inviteRole });
     
     try {
       const { inviteMember } = useCompanyStore.getState();
-      const result = await inviteMember(activeCompany.id, {
+      const result = await inviteMember(selectedInviteCompanyId, {
         email: inviteEmail,
         role: inviteRole
       });
@@ -481,7 +500,9 @@ const DashboardPage = () => {
         setInviteEmail('');
         setInviteRole('member');
         setInviteError('');
-        await loadCompanyMembers();
+        if (selectedInviteCompanyId === activeCompany?.id) {
+          await loadCompanyMembers();
+        }
       } else {
         setInviteError(result.error || 'Ошибка приглашения');
       }
@@ -830,14 +851,29 @@ const DashboardPage = () => {
           <div className="company-management">
             <div className="company-header">
               <h2>Управление компанией</h2>
-              {activeCompany && (
-                <button 
-                  className="btn-primary"
-                  onClick={() => setIsInviteModalOpen(true)}
-                >
-                  + Пригласить участника
-                </button>
-              )}
+              <div className="company-header-actions">
+                {companies.length > 0 && (
+                  <>
+                    <button 
+                      className="btn-secondary"
+                      onClick={() => {
+                        setSelectedInviteCompanyId(activeCompany?.id || companies[0]?.id || '');
+                        setIsInviteModalOpen(true);
+                      }}
+                    >
+                      + Пригласить участника
+                    </button>
+                    {activeCompany && (
+                      <button
+                        className="btn-danger"
+                        onClick={() => setShowDeleteCompanyModal(true)}
+                      >
+                        Удалить компанию
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
 
             <div className="company-info">
@@ -943,6 +979,24 @@ const DashboardPage = () => {
             </div>
             
             <form onSubmit={(e) => { e.preventDefault(); handleInviteMember(); }}>
+              {companies.length > 0 ? (
+                <div className="form-group">
+                  <label>Компания *</label>
+                  <select
+                    value={selectedInviteCompanyId}
+                    onChange={(e) => setSelectedInviteCompanyId(e.target.value)}
+                    required
+                  >
+                    <option value="" disabled>Выберите компанию</option>
+                    {companies.map(company => (
+                      <option key={company.id} value={company.id}>
+                        {company.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
+
               <div className="form-group">
                 <label>Email участника *</label>
                 <input
@@ -977,6 +1031,38 @@ const DashboardPage = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showDeleteCompanyModal && (
+        <div className="modal-overlay" onClick={() => setShowDeleteCompanyModal(false)}>
+          <div className="modal-content modal-delete" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>⚠️ Удалить компанию?</h3>
+              <button className="modal-close" onClick={() => setShowDeleteCompanyModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p>Вы собираетесь удалить компанию <strong>{activeCompany?.name}</strong>.</p>
+              <p>Это действие нельзя отменить. Все задачи и данные компании будут удалены.</p>
+              {deleteCompanyError && <div className="error-message">{deleteCompanyError}</div>}
+            </div>
+            <div className="modal-footer">
+              <button 
+                type="button" 
+                className="btn-secondary" 
+                onClick={() => setShowDeleteCompanyModal(false)}
+              >
+                Отмена
+              </button>
+              <button 
+                type="button" 
+                className="btn-danger"
+                onClick={handleDeleteCompany}
+              >
+                Удалить компанию
+              </button>
+            </div>
           </div>
         </div>
       )}

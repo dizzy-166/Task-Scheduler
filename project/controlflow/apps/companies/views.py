@@ -1,11 +1,13 @@
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 from django.utils import timezone
 
 from apps.activity.utils import log_activity
 from apps.users.models import User
 from .models import Company, CompanyMember
+from .permissions import IsCompanyOwnerOrAdmin
 from .serializers import (
     CompanySerializer,
     CompanyDetailSerializer,
@@ -59,7 +61,11 @@ class CompanyViewSet(viewsets.ModelViewSet):
         )
     
     def perform_destroy(self, instance):
-        """Мягкое удаление компании"""
+        """Мягкое удаление компании - только владелец может удалить"""
+        # Проверяем права - может удалить только владелец
+        if instance.owner != self.request.user:
+            raise PermissionDenied('Только владелец компании может её удалить')
+        
         instance.soft_delete()
         
         log_activity(

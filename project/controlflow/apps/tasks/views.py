@@ -36,6 +36,11 @@ class TaskViewSet(viewsets.ModelViewSet):
             'project', 'assignee', 'creator', 'company', 'parent_task'
         )
         
+        # Исключаем задачи из удалённых компаний (но не исключаем задачи без компании)
+        queryset = queryset.exclude(
+            django_models.Q(company__isnull=False) & django_models.Q(company__deleted_at__isnull=False)
+        )
+        
         # Фильтрация по компании
         company_id = self.request.headers.get('X-Company-Id')
         

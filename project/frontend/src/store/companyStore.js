@@ -19,14 +19,12 @@ const useCompanyStore = create(
           const response = await companyAPI.getMyCompanies();
           const companies = response.data.results || response.data;
           console.log('Fetched companies:', companies);
-          set({ companies, isLoading: false });
-          
-          // Если нет активной компании, выбираем первую
-          const { activeCompany } = get();
-          if (!activeCompany && companies.length > 0) {
-            console.log('Setting first company as active:', companies[0]);
-            set({ activeCompany: companies[0] });
-          }
+
+          const currentActive = get().activeCompany;
+          const activeExists = currentActive && companies.some(c => c.id === currentActive.id);
+          const activeCompany = activeExists ? currentActive : (companies[0] || null);
+
+          set({ companies, activeCompany, isLoading: false });
         } catch (error) {
           set({ error: 'Ошибка загрузки компаний', isLoading: false });
           console.error('Error fetching companies:', error);
@@ -47,6 +45,28 @@ const useCompanyStore = create(
           return { success: true, company: newCompany };
         } catch (error) {
           const message = error.response?.data?.detail || 'Ошибка создания компании';
+          set({ error: message, isLoading: false });
+          return { success: false, error: message };
+        }
+      },
+
+      // Удалить компанию
+      deleteCompany: async (companyId) => {
+        set({ isLoading: true, error: null });
+        try {
+          await companyAPI.deleteCompany(companyId);
+          set((state) => {
+            const updatedCompanies = state.companies.filter(c => c.id !== companyId);
+            const isDeletedActiveCompany = state.activeCompany?.id === companyId;
+            return {
+              companies: updatedCompanies,
+              activeCompany: isDeletedActiveCompany ? (updatedCompanies[0] || null) : state.activeCompany,
+              isLoading: false,
+            };
+          });
+          return { success: true };
+        } catch (error) {
+          const message = error.response?.data?.detail || 'Ошибка удаления компании';
           set({ error: message, isLoading: false });
           return { success: false, error: message };
         }
@@ -77,7 +97,21 @@ const useCompanyStore = create(
           await get().fetchInvites();
           return { success: true };
         } catch (error) {
-          const message = error.response?.data?.error || 'Ошибка';
+          const formatError = (error) => {
+            const data = error.response?.data;
+            if (!data) return error.message || 'Ошибка';
+            if (typeof data === 'string') return data;
+            if (data.error) return data.error;
+            if (data.detail) return data.detail;
+            return Object.entries(data).map(([key, value]) => {
+              if (Array.isArray(value)) {
+                return `${key}: ${value.join(' ')}`;
+              }
+              return `${key}: ${value}`;
+            }).join(' ');
+          };
+
+          const message = formatError(error);
           return { success: false, error: message };
         }
       },
@@ -91,7 +125,20 @@ const useCompanyStore = create(
           return { success: true, data: response.data };
         } catch (error) {
           console.error('Invite error:', error);
-          const message = error.response?.data?.error || 'Ошибка приглашения';
+          const formatError = (error) => {
+            const data = error.response?.data;
+            if (!data) return error.message || 'Ошибка приглашения';
+            if (typeof data === 'string') return data;
+            if (data.error) return data.error;
+            if (data.detail) return data.detail;
+            return Object.entries(data).map(([key, value]) => {
+              if (Array.isArray(value)) {
+                return `${key}: ${value.join(' ')}`;
+              }
+              return `${key}: ${value}`;
+            }).join(' ');
+          };
+          const message = formatError(error);
           return { success: false, error: message };
         }
       },

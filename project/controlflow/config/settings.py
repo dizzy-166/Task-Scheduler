@@ -94,15 +94,15 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'Sheronov',
-        'USER': '21P',
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': 'ngknn.ru',
-        'PORT': '5442',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 123,
+        'HOST': 'localhost',
+        'PORT': '5432',
         'OPTIONS': {
             'options': '-c search_path="ControlFlow",public'
         },
-        'CONN_MAX_AGE': 600,
+        'CONN_MAX_AGE': 0,
     }
 }
 
