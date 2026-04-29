@@ -4,7 +4,11 @@
       "Bash(python manage.py makemigrations tasks --name kanban_columns)",
       "Bash(python manage.py check)",
       "Bash(npm run *)",
-      "Bash(powershell -Command ' *)"
+      "Bash(powershell -Command ' *)",
+      "Bash(npm install *)",
+      "Bash(python -c \"import django; import os; os.environ.setdefault\\('DJANGO_SETTINGS_MODULE','config.settings'\\); django.setup\\(\\); from apps.tasks.views import AIAnalysisView; print\\('OK'\\)\")",
+      "Bash(python manage.py show_urls)",
+      "Bash(python -c ' *)"
     ]
   }
 }

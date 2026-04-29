@@ -49,6 +49,14 @@ class TaskService {
   getOverdueTasks() {
     return api.get('/tasks/overdue/').then(r => r.data);
   }
+
+  getReport(params = {}) {
+    return api.get('/tasks/report/', { params }).then(r => r.data);
+  }
+
+  getAIAnalysis(stats, companyName) {
+    return api.post('/ai/analyze/', { stats, company_name: companyName }).then(r => r.data);
+  }
 }
 
 export const taskService = new TaskService();

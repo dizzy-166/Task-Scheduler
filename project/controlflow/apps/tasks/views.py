@@ -4,9 +4,17 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import models as django_models
+from django.db.models import Count
+from django.db.models.functions import TruncWeek
 from django.utils import timezone
+from datetime import timedelta
+import json
+import urllib.request
+import urllib.error
+from django.conf import settings
 
 from .models import Task, KanbanColumn
 from .serializers import (
@@ -407,7 +415,66 @@ class TaskViewSet(viewsets.ModelViewSet):
     def stats(self, request):
         """Статистика по задачам"""
         queryset = self.get_queryset()
-        
+        now = timezone.now()
+
+        # by_assignee — топ-10
+        by_assignee_qs = (
+            queryset.filter(assignee__isnull=False)
+            .values('assignee__first_name', 'assignee__last_name', 'assignee__email')
+            .annotate(count=Count('id'))
+            .order_by('-count')[:10]
+        )
+        by_assignee = [
+            {
+                'name': (
+                    f"{a['assignee__first_name']} {a['assignee__last_name']}".strip()
+                    or a['assignee__email']
+                ),
+                'count': a['count'],
+            }
+            for a in by_assignee_qs
+        ]
+
+        # by_project — топ-10
+        by_project_qs = (
+            queryset.filter(project__isnull=False)
+            .values('project__name')
+            .annotate(count=Count('id'))
+            .order_by('-count')[:10]
+        )
+        by_project = [
+            {'name': p['project__name'], 'count': p['count']}
+            for p in by_project_qs
+        ]
+
+        # weekly trend — последние 8 недель (созданные задачи и выполненные)
+        eight_weeks_ago = now - timedelta(weeks=8)
+        created_trend = (
+            queryset.filter(created_at__gte=eight_weeks_ago)
+            .annotate(week=TruncWeek('created_at'))
+            .values('week')
+            .annotate(count=Count('id'))
+            .order_by('week')
+        )
+        done_trend = (
+            queryset.filter(status='done', updated_at__gte=eight_weeks_ago)
+            .annotate(week=TruncWeek('updated_at'))
+            .values('week')
+            .annotate(count=Count('id'))
+            .order_by('week')
+        )
+
+        def fmt_week(w):
+            return w['week'].strftime('%d.%m') if w['week'] else ''
+
+        created_map = {fmt_week(w): w['count'] for w in created_trend}
+        done_map = {fmt_week(w): w['count'] for w in done_trend}
+        all_weeks = sorted(set(list(created_map.keys()) + list(done_map.keys())))
+        weekly_trend = [
+            {'week': wk, 'created': created_map.get(wk, 0), 'done': done_map.get(wk, 0)}
+            for wk in all_weeks
+        ]
+
         stats = {
             'total': queryset.count(),
             'by_status': {
@@ -424,12 +491,156 @@ class TaskViewSet(viewsets.ModelViewSet):
                 'critical': queryset.filter(priority='critical').count(),
             },
             'overdue': queryset.filter(
-                due_date__lt=timezone.now(),
+                due_date__lt=now,
                 status__in=['new', 'in_progress', 'review']
             ).count(),
+            'by_assignee': by_assignee,
+            'by_project': by_project,
+            'weekly_trend': weekly_trend,
         }
-        
+
         return Response(stats)
+
+    @action(detail=False, methods=['get'])
+    def report(self, request):
+        """Детальный отчёт с фильтрами"""
+        from django.db.models import Q, Avg, ExpressionWrapper, DurationField, F
+        from django.db.models.functions import Coalesce
+
+        qs  = self.get_queryset()
+        now = timezone.now()
+
+        # ── Filters ──────────────────────────────────────────────────────────
+        date_from   = request.query_params.get('date_from')
+        date_to     = request.query_params.get('date_to')
+        project_id  = request.query_params.get('project')
+        assignee_id = request.query_params.get('assignee')
+        statuses    = [s.strip() for s in request.query_params.get('status', '').split(',') if s.strip()]
+        priorities  = [p.strip() for p in request.query_params.get('priority', '').split(',') if p.strip()]
+
+        if date_from:   qs = qs.filter(created_at__date__gte=date_from)
+        if date_to:     qs = qs.filter(created_at__date__lte=date_to)
+        if project_id:  qs = qs.filter(project_id=project_id)
+        if assignee_id: qs = qs.filter(assignee_id=assignee_id)
+        if statuses:    qs = qs.filter(status__in=statuses)
+        if priorities:  qs = qs.filter(priority__in=priorities)
+
+        # ── Helpers ───────────────────────────────────────────────────────────
+        def _avg_days(subqs):
+            if not subqs.exists():
+                return None
+            dur = ExpressionWrapper(
+                Coalesce(F('completed_at'), F('updated_at')) - F('created_at'),
+                output_field=DurationField(),
+            )
+            avg = subqs.annotate(dur=dur).aggregate(a=Avg('dur'))['a']
+            return round(avg.total_seconds() / 86400, 1) if avg else None
+
+        def _user_name(u):
+            return (f"{u.first_name} {u.last_name}".strip()) or u.email
+
+        # ── Summary ───────────────────────────────────────────────────────────
+        total  = qs.count()
+        done_n = qs.filter(status='done').count()
+
+        summary = {
+            'total':            total,
+            'done':             done_n,
+            'in_progress':      qs.filter(status='in_progress').count(),
+            'review':           qs.filter(status='review').count(),
+            'new':              qs.filter(status='new').count(),
+            'cancelled':        qs.filter(status='cancelled').count(),
+            'overdue':          qs.filter(due_date__lt=now, status__in=['new','in_progress','review']).count(),
+            'completion_rate':  round(done_n / total * 100) if total else 0,
+            'avg_completion_days': _avg_days(qs.filter(status='done')),
+        }
+
+        # ── By user ───────────────────────────────────────────────────────────
+        user_rows = (
+            qs.filter(assignee__isnull=False)
+            .values('assignee', 'assignee__first_name', 'assignee__last_name', 'assignee__email')
+            .annotate(
+                total      = Count('id'),
+                done       = Count('id', filter=Q(status='done')),
+                in_progress= Count('id', filter=Q(status='in_progress')),
+                review     = Count('id', filter=Q(status='review')),
+                new        = Count('id', filter=Q(status='new')),
+                overdue    = Count('id', filter=Q(due_date__lt=now, status__in=['new','in_progress','review'])),
+            )
+            .order_by('-total')
+        )
+
+        by_user = []
+        for u in user_rows:
+            t = u['total'];  d = u['done']
+            name = (f"{u['assignee__first_name']} {u['assignee__last_name']}".strip()
+                    or u['assignee__email'])
+            avg_d = _avg_days(qs.filter(status='done', assignee_id=u['assignee']))
+            by_user.append({
+                'name': name, 'email': u['assignee__email'],
+                'total': t, 'done': d,
+                'in_progress': u['in_progress'], 'review': u['review'], 'new': u['new'],
+                'overdue': u['overdue'],
+                'completion_rate': round(d / t * 100) if t else 0,
+                'avg_completion_days': avg_d,
+            })
+
+        # ── By project ────────────────────────────────────────────────────────
+        proj_rows = (
+            qs.filter(project__isnull=False)
+            .values('project', 'project__name', 'project__status', 'project__deadline')
+            .annotate(
+                total      = Count('id'),
+                done       = Count('id', filter=Q(status='done')),
+                in_progress= Count('id', filter=Q(status='in_progress')),
+                review     = Count('id', filter=Q(status='review')),
+                new        = Count('id', filter=Q(status='new')),
+                overdue    = Count('id', filter=Q(due_date__lt=now, status__in=['new','in_progress','review'])),
+            )
+            .order_by('-total')
+        )
+
+        by_project = []
+        for p in proj_rows:
+            t = p['total'];  d = p['done']
+            deadline = p['project__deadline']
+            by_project.append({
+                'name':         p['project__name'],
+                'status':       p['project__status'],
+                'deadline':     deadline.strftime('%d.%m.%Y') if deadline else '—',
+                'total': t, 'done': d,
+                'in_progress': p['in_progress'], 'review': p['review'], 'new': p['new'],
+                'overdue': p['overdue'],
+                'progress_pct': round(d / t * 100) if t else 0,
+            })
+
+        # ── Task list (≤ 1000) ────────────────────────────────────────────────
+        tasks = []
+        for t in qs.select_related('project', 'assignee', 'creator').order_by('-created_at')[:1000]:
+            assignee_name = _user_name(t.assignee) if t.assignee else '—'
+            is_overdue = bool(t.due_date and t.due_date < now and t.status in ['new','in_progress','review'])
+            completion_dt = t.completed_at or (t.updated_at if t.status == 'done' else None)
+            tasks.append({
+                'title':        t.title,
+                'project':      t.project.name if t.project else '—',
+                'assignee':     assignee_name,
+                'creator':      _user_name(t.creator),
+                'status':       t.status,
+                'priority':     t.priority,
+                'created_at':   t.created_at.strftime('%d.%m.%Y'),
+                'due_date':     t.due_date.strftime('%d.%m.%Y') if t.due_date else '—',
+                'completed_at': completion_dt.strftime('%d.%m.%Y') if completion_dt else '—',
+                'is_overdue':   is_overdue,
+                'estimated_hours': float(t.estimated_hours) if t.estimated_hours else None,
+            })
+
+        return Response({
+            'generated_at': now.strftime('%d.%m.%Y %H:%M'),
+            'summary':      summary,
+            'by_user':      by_user,
+            'by_project':   by_project,
+            'tasks':        tasks,
+        })
 
 
 class KanbanColumnViewSet(viewsets.ModelViewSet):
@@ -501,3 +712,112 @@ class KanbanColumnViewSet(viewsets.ModelViewSet):
         for item in items:
             KanbanColumn.objects.filter(id=item['id']).update(order=item['order'])
         return Response({'message': 'Порядок обновлён'})
+
+
+class AIAnalysisView(APIView):
+    """POST /api/ai/analyze/ — анализ данных через Groq (LLaMA 3.3 70B)"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        api_key = getattr(settings, 'GROQ_API_KEY', None)
+        if not api_key:
+            return Response({'error': 'GROQ_API_KEY не настроен'}, status=500)
+
+        stats = request.data.get('stats', {})
+        company_name = request.data.get('company_name', 'Компания')
+
+        prompt = self._build_prompt(stats, company_name)
+
+        payload = json.dumps({
+            'model': 'llama-3.3-70b-versatile',
+            'messages': [
+                {
+                    'role': 'system',
+                    'content': (
+                        'Ты опытный менеджер проектов и бизнес-аналитик. '
+                        'Отвечай только на русском языке, чётко и структурированно. '
+                        'Используй эмодзи для наглядности. '
+                        'Пиши конкретные выводы и рекомендации, не общие фразы.'
+                    ),
+                },
+                {'role': 'user', 'content': prompt},
+            ],
+            'temperature': 0.4,
+            'max_tokens': 1024,
+        }).encode('utf-8')
+
+        req = urllib.request.Request(
+            'https://api.groq.com/openai/v1/chat/completions',
+            data=payload,
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (compatible; ControlFlow/1.0)',
+            },
+            method='POST',
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                result = json.loads(resp.read().decode('utf-8'))
+                text = result['choices'][0]['message']['content']
+                return Response({'analysis': text})
+        except urllib.error.HTTPError as e:
+            body = e.read().decode('utf-8')
+            return Response({'error': f'Groq API error {e.code}: {body}'}, status=502)
+        except Exception as e:
+            return Response({'error': str(e)}, status=502)
+
+    def _build_prompt(self, stats, company_name):
+        s = stats.get('summary', stats)
+        by_user = stats.get('by_user', [])
+        by_project = stats.get('by_project', [])
+
+        total        = s.get('total', 0)
+        done         = s.get('done', 0)
+        in_progress  = s.get('in_progress', 0)
+        review       = s.get('review', 0)
+        new_tasks    = s.get('new', 0)
+        overdue      = s.get('overdue', 0)
+        rate         = s.get('completion_rate', 0)
+        avg_days     = s.get('avg_completion_days', None)
+
+        lines = [
+            f'Проанализируй состояние задач компании "{company_name}".',
+            f'',
+            f'📊 ОБЩАЯ СТАТИСТИКА:',
+            f'• Всего задач: {total}',
+            f'• Завершено: {done} ({rate}%)',
+            f'• В работе: {in_progress}',
+            f'• На проверке: {review}',
+            f'• Новые: {new_tasks}',
+            f'• Просрочено: {overdue}',
+        ]
+        if avg_days is not None:
+            lines.append(f'• Среднее время выполнения: {avg_days} дн.')
+
+        if by_user:
+            lines += ['', '👤 ПО ИСПОЛНИТЕЛЯМ:']
+            for u in by_user[:8]:
+                lines.append(
+                    f'• {u.get("name","?")} — всего: {u.get("total",0)}, '
+                    f'завершено: {u.get("done",0)}, просрочено: {u.get("overdue",0)}'
+                )
+
+        if by_project:
+            lines += ['', '📁 ПО ПРОЕКТАМ:']
+            for p in by_project[:8]:
+                lines.append(
+                    f'• {p.get("name","?")} — прогресс: {p.get("progress_pct",0)}%, '
+                    f'просрочено: {p.get("overdue",0)}'
+                )
+
+        lines += [
+            '',
+            'Дай структурированный анализ:',
+            '1. Общая оценка здоровья проекта (1-2 предложения)',
+            '2. Ключевые риски (просрочки, перегруженные исполнители)',
+            '3. Конкретные рекомендации (3-5 пунктов)',
+        ]
+
+        return '\n'.join(lines)

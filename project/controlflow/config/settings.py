@@ -186,6 +186,9 @@ CORS_ALLOWED_ORIGINS = config(
 )
 CORS_ALLOW_CREDENTIALS = True
 
+# Groq AI
+GROQ_API_KEY = config('GROQ_API_KEY', default='')
+
 # Cache settings (используем локальную память пока без Redis)
 CACHES = {
     'default': {

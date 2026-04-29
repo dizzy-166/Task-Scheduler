@@ -10,6 +10,8 @@ import ProjectSwitcher from '../components/ProjectSwitcher';
 import MemberActionsMenu from '../components/MemberActionsMenu';
 import RolesPanel from '../components/RolesPanel';
 import ProfileModal from '../components/ProfileModal';
+import AnalyticsView from '../components/AnalyticsView';
+import ReportsView from '../components/ReportsView';
 import { taskService } from '../api/taskService';
 import companyAPI from '../api/companyService';
 import kanbanService from '../api/kanbanService';
@@ -651,6 +653,12 @@ const DashboardPage = () => {
           <button className={`tab-btn ${activeView === 'company' ? 'active' : ''}`} onClick={() => setActiveView('company')}>
             Компания
           </button>
+          <button className={`tab-btn ${activeView === 'analytics' ? 'active' : ''}`} onClick={() => setActiveView('analytics')}>
+            Аналитика
+          </button>
+          <button className={`tab-btn ${activeView === 'reports' ? 'active' : ''}`} onClick={() => setActiveView('reports')}>
+            Отчёты
+          </button>
         </div>
 
         {/* ── Kanban ── */}
@@ -925,6 +933,12 @@ const DashboardPage = () => {
             )}
           </div>
         )}
+
+        {/* ── Analytics ── */}
+        {activeView === 'analytics' && <AnalyticsView />}
+
+        {/* ── Reports ── */}
+        {activeView === 'reports' && <ReportsView />}
         </>
         )}
       </main>
