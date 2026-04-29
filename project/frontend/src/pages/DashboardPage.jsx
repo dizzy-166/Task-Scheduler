@@ -12,6 +12,7 @@ import RolesPanel from '../components/RolesPanel';
 import ProfileModal from '../components/ProfileModal';
 import AnalyticsView from '../components/AnalyticsView';
 import ReportsView from '../components/ReportsView';
+import HomeView from '../components/HomeView';
 import { taskService } from '../api/taskService';
 import companyAPI from '../api/companyService';
 import kanbanService from '../api/kanbanService';
@@ -23,7 +24,7 @@ const DashboardPage = () => {
   const { activeProject } = useProjectStore();
   const navigate = useNavigate();
 
-  const [activeView, setActiveView] = useState('kanban');
+  const [activeView, setActiveView] = useState('home');
   const [taskScope, setTaskScope] = useState('all');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -57,6 +58,11 @@ const DashboardPage = () => {
 
   // Custom role picker per member
   const [openRolePickerFor, setOpenRolePickerFor] = useState(null);
+
+  // List view
+  const [listSearch,  setListSearch]  = useState('');
+  const [listSort,    setListSort]    = useState('dueDate');
+  const [listSortDir, setListSortDir] = useState('asc');
 
   // Profile modal
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -154,6 +160,7 @@ const DashboardPage = () => {
         kanban_column: task.kanban_column,
         creator: task.creator_name,
         createdAt: task.created_at,
+        projectName: task.project_name || task.project_display || '',
       };
 
       // Place by kanban_column first, then fall back to status_key match
@@ -507,6 +514,41 @@ const DashboardPage = () => {
 
   const allTasksList = columns.flatMap(c => tasks[c.id] || []);
 
+  const PRIORITY_STRIP = {
+    Критический: '#EF4444',
+    Высокий:     '#F59E0B',
+    Средний:     '#3B82F6',
+    Низкий:      '#6B7280',
+  };
+
+  // ── Icon nav items ───────────────────────────────────────────────────────────
+  const NAV_ITEMS = [
+    {
+      view: 'home', label: 'Главная',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg>,
+    },
+    {
+      view: 'kanban', label: 'Канбан',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>,
+    },
+    {
+      view: 'list', label: 'Список',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>,
+    },
+    {
+      view: 'analytics', label: 'Аналитика',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+    },
+    {
+      view: 'reports', label: 'Отчёты',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+    },
+    {
+      view: 'company', label: 'Компания',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-4h6v4"/></svg>,
+    },
+  ];
+
   // ── Sidebar JSX (inline, NOT a nested component) ────────────────────────────
   const sidebarJSX = (
     <aside className="sidebar">
@@ -551,6 +593,22 @@ const DashboardPage = () => {
               </svg>
               <span>Мои задачи</span>
             </a>
+          </div>
+        )}
+
+        {activeCompany && (
+          <div className="sidebar-nav-section sidebar-nav-views">
+            <div className="sidebar-nav-label">Разделы</div>
+            {NAV_ITEMS.map(({ view, label, icon }) => (
+              <button
+                key={view}
+                className={`nav-item nav-item--btn${activeView === view ? ' active' : ''}`}
+                onClick={() => setActiveView(view)}
+              >
+                {icon}
+                <span>{label}</span>
+              </button>
+            ))}
           </div>
         )}
       </nav>
@@ -602,64 +660,37 @@ const DashboardPage = () => {
         ) : (<>
 
         <header className="main-header">
-          <div className="header-title">
-            <h2>
-              {activeCompany?.name}
-              {activeProject && <span className="header-project-badge"> / {activeProject.name}</span>}
-              {' — '}
-              {taskScope === 'all' ? 'Дашборд' : 'Мои задачи'}
-            </h2>
-            <p>Управление задачами и проектами</p>
+          <div className="header-breadcrumb">
+            <span className="header-company">{activeCompany?.name}</span>
+            {activeProject && <><span className="header-sep">›</span><span className="header-project">{activeProject.name}</span></>}
+            <span className="header-sep">›</span>
+            <span className="header-view-name">
+              {NAV_ITEMS.find(n => n.view === activeView)?.label || activeView}
+            </span>
           </div>
           <div className="header-actions">
             <button className="theme-toggle-btn" onClick={toggleTheme} title="Сменить тему">
               {theme === 'light' ? '🌙' : '☀️'}
             </button>
             <button className="btn-new-task" onClick={() => setIsTaskModalOpen(true)}>
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="1.5"/>
+              <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+                <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="2"/>
               </svg>
               Новая задача
             </button>
           </div>
         </header>
 
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-label">Всего задач</div>
-            <div className="stat-value">{stats.total}</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">В работе</div>
-            <div className="stat-value" style={{ color: '#2196F3' }}>{stats.inProgress}</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">На проверке</div>
-            <div className="stat-value" style={{ color: '#FF9800' }}>{stats.onReview}</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Завершено</div>
-            <div className="stat-value" style={{ color: '#4CAF50' }}>{stats.completed}</div>
-          </div>
-        </div>
-
-        <div className="view-tabs">
-          <button className={`tab-btn ${activeView === 'kanban' ? 'active' : ''}`} onClick={() => setActiveView('kanban')}>
-            Канбан
-          </button>
-          <button className={`tab-btn ${activeView === 'list' ? 'active' : ''}`} onClick={() => setActiveView('list')}>
-            Список
-          </button>
-          <button className={`tab-btn ${activeView === 'company' ? 'active' : ''}`} onClick={() => setActiveView('company')}>
-            Компания
-          </button>
-          <button className={`tab-btn ${activeView === 'analytics' ? 'active' : ''}`} onClick={() => setActiveView('analytics')}>
-            Аналитика
-          </button>
-          <button className={`tab-btn ${activeView === 'reports' ? 'active' : ''}`} onClick={() => setActiveView('reports')}>
-            Отчёты
-          </button>
-        </div>
+        {/* ── Home ── */}
+        {activeView === 'home' && (
+          <HomeView
+            stats={stats}
+            allTasks={allTasksList}
+            user={user}
+            onTaskClick={handleTaskClick}
+            activeCompany={activeCompany}
+          />
+        )}
 
         {/* ── Kanban ── */}
         {activeView === 'kanban' && (
@@ -738,6 +769,7 @@ const DashboardPage = () => {
                       <div
                         key={task.id}
                         className={`task-card ${col.status_key === 'done' ? 'completed' : ''}`}
+                        style={{ borderLeft: `3px solid ${PRIORITY_STRIP[task.priority] || '#6B7280'}` }}
                         draggable={!isUpdating}
                         onDragStart={e => onDragStart(e, task, col.id)}
                         onDragEnd={onDragEnd}
@@ -780,28 +812,142 @@ const DashboardPage = () => {
         )}
 
         {/* ── List view ── */}
-        {activeView === 'list' && (
-          <div className="list-view">
-            {allTasksList.map(task => (
-              <div key={task.id} className="list-item" onClick={() => handleTaskClick(task)}>
-                <div className="list-item-content">
-                  <div className="list-item-title">
-                    <h4>{task.title}</h4>
-                    <span className={`priority-badge ${getPriorityColor(task.priority)}`}>{task.priority}</span>
-                  </div>
-                  <p className="list-item-desc">{task.description}</p>
-                  <div className="list-item-meta">
-                    <span>👤 {task.assignee}</span>
-                    <span>⏱ {formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
-                  </div>
+        {activeView === 'list' && (() => {
+          const STATUS_LABEL = { new:'Новая', in_progress:'В работе', review:'На проверке', done:'Завершена', cancelled:'Отменена' };
+          const STATUS_COLOR = { new:'#6B7280', in_progress:'#3B82F6', review:'#F59E0B', done:'#10B981', cancelled:'#EF4444' };
+          const PRIO_COLOR   = { Критический:'#EF4444', Высокий:'#F59E0B', Средний:'#3B82F6', Низкий:'#6B7280' };
+          const now = new Date();
+
+          const toggleSort = (col) => {
+            if (listSort === col) setListSortDir(d => d === 'asc' ? 'desc' : 'asc');
+            else { setListSort(col); setListSortDir('asc'); }
+          };
+          const SortIcon = ({ col }) => {
+            if (listSort !== col) return <span className="lv-sort-icon">⇅</span>;
+            return <span className="lv-sort-icon active">{listSortDir === 'asc' ? '↑' : '↓'}</span>;
+          };
+
+          const q = listSearch.toLowerCase();
+          const filtered = allTasksList
+            .filter(t =>
+              !q ||
+              t.title?.toLowerCase().includes(q) ||
+              t.assignee?.toLowerCase().includes(q) ||
+              t.description?.toLowerCase().includes(q)
+            )
+            .sort((a, b) => {
+              let av, bv;
+              if (listSort === 'dueDate') {
+                av = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+                bv = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+              } else if (listSort === 'priority') {
+                const order = { Критический:0, Высокий:1, Средний:2, Низкий:3 };
+                av = order[a.priority] ?? 4; bv = order[b.priority] ?? 4;
+              } else if (listSort === 'status') {
+                const order = { in_progress:0, review:1, new:2, done:3, cancelled:4 };
+                av = order[a.status] ?? 5; bv = order[b.status] ?? 5;
+              } else {
+                av = (a[listSort] || '').toString().toLowerCase();
+                bv = (b[listSort] || '').toString().toLowerCase();
+              }
+              if (av < bv) return listSortDir === 'asc' ? -1 : 1;
+              if (av > bv) return listSortDir === 'asc' ? 1 : -1;
+              return 0;
+            });
+
+          return (
+            <div className="lv-wrap">
+              {/* toolbar */}
+              <div className="lv-toolbar">
+                <div className="lv-search-wrap">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                  </svg>
+                  <input
+                    className="lv-search"
+                    placeholder="Поиск по названию, исполнителю…"
+                    value={listSearch}
+                    onChange={e => setListSearch(e.target.value)}
+                  />
+                  {listSearch && <button className="lv-search-clear" onClick={() => setListSearch('')}>✕</button>}
                 </div>
+                <span className="lv-count">{filtered.length} задач</span>
               </div>
-            ))}
-            {allTasksList.length === 0 && (
-              <div className="empty-state"><p>Нет задач. Создайте первую задачу!</p></div>
-            )}
-          </div>
-        )}
+
+              {/* table */}
+              <div className="lv-table-wrap">
+                <table className="lv-table">
+                  <thead>
+                    <tr>
+                      <th className="lv-th-task" onClick={() => toggleSort('title')}>Задача <SortIcon col="title"/></th>
+                      <th onClick={() => toggleSort('status')}>Статус <SortIcon col="status"/></th>
+                      <th onClick={() => toggleSort('priority')}>Приоритет <SortIcon col="priority"/></th>
+                      <th>Проект</th>
+                      <th onClick={() => toggleSort('assignee')}>Исполнитель <SortIcon col="assignee"/></th>
+                      <th onClick={() => toggleSort('dueDate')}>Дедлайн <SortIcon col="dueDate"/></th>
+                      <th>Оценка</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map(task => {
+                      const overdue = task.dueDate && new Date(task.dueDate) < now && task.status !== 'done' && task.status !== 'cancelled';
+                      const prioColor = PRIO_COLOR[task.priority] || '#6B7280';
+                      const statusColor = STATUS_COLOR[task.status] || '#6B7280';
+                      return (
+                        <tr
+                          key={task.id}
+                          className={`lv-row${overdue ? ' lv-row--overdue' : ''}`}
+                          onClick={() => handleTaskClick(task)}
+                          style={{ borderLeft: `3px solid ${prioColor}` }}
+                        >
+                          <td className="lv-td-task">
+                            {overdue && <span className="lv-overdue-dot" title="Просрочено"/>}
+                            <div>
+                              <div className="lv-task-title">{task.title}</div>
+                              {task.description && <div className="lv-task-desc">{task.description}</div>}
+                            </div>
+                          </td>
+                          <td>
+                            <span className="lv-badge" style={{ background: statusColor + '22', color: statusColor }}>
+                              {STATUS_LABEL[task.status] || task.status}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="lv-badge" style={{ background: prioColor + '22', color: prioColor }}>
+                              {task.priority}
+                            </span>
+                          </td>
+                          <td className="lv-td-muted">{task.projectName || '—'}</td>
+                          <td>
+                            {task.assignee && task.assignee !== 'Не назначен' ? (
+                              <div className="lv-assignee">
+                                <div className="lv-avatar">{task.assignee[0]}</div>
+                                <span>{task.assignee}</span>
+                              </div>
+                            ) : <span className="lv-td-muted">—</span>}
+                          </td>
+                          <td className={overdue ? 'lv-td-overdue' : 'lv-td-muted'}>
+                            {task.dueDate
+                              ? new Date(task.dueDate).toLocaleDateString('ru-RU', { day:'numeric', month:'short', year:'numeric' })
+                              : '—'}
+                          </td>
+                          <td className="lv-td-muted">
+                            {task.estimatedHours ? `${task.estimatedHours} ч` : '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                {filtered.length === 0 && (
+                  <div className="lv-empty">
+                    {listSearch ? `Ничего не найдено по «${listSearch}»` : 'Нет задач'}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── Company view ── */}
         {activeView === 'company' && (

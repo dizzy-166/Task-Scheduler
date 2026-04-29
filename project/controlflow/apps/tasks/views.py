@@ -37,13 +37,16 @@ class TaskViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     
     def get_company_id(self):
-        """Получить ID компании из заголовка"""
         return self.request.headers.get('X-Company-Id')
+
+    def get_project_id(self):
+        return self.request.headers.get('X-Project-Id')
     
     def get_queryset(self):
-        """Получение задач с учётом прав пользователя и компании"""
+        """Получение задач с учётом прав пользователя, компании и проекта"""
         user = self.request.user
         company_id = self.get_company_id()
+        project_id = self.get_project_id()
         queryset = Task.objects.filter(deleted_at__isnull=True)
         
         # Всегда загружаем связанные объекты для производительности
@@ -65,6 +68,10 @@ class TaskViewSet(viewsets.ModelViewSet):
         elif company_id:
             # Если указана компания - фильтруем по ней
             queryset = queryset.filter(company_id=company_id)
+
+        # Фильтрация по проекту (если выбран конкретный проект)
+        if project_id and self.action not in ['my_tasks', 'created_by_me', 'stats', 'report']:
+            queryset = queryset.filter(project_id=project_id)
         
         # Суперпользователь видит всё
         if user.is_superuser:
