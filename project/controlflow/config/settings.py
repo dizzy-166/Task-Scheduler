@@ -53,7 +53,8 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.activity',
     'apps.tasks',
-    'apps.companies', 
+    'apps.companies',
+    'apps.chat', 
 ]
 
 MIDDLEWARE = [

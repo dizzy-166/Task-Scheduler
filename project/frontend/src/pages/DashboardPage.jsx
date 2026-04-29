@@ -13,6 +13,8 @@ import ProfileModal from '../components/ProfileModal';
 import AnalyticsView from '../components/AnalyticsView';
 import ReportsView from '../components/ReportsView';
 import HomeView from '../components/HomeView';
+import ChatView from '../components/ChatView';
+import NotificationBell from '../components/NotificationBell';
 import { taskService } from '../api/taskService';
 import companyAPI from '../api/companyService';
 import kanbanService from '../api/kanbanService';
@@ -547,13 +549,17 @@ const DashboardPage = () => {
       view: 'company', label: 'Компания',
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-4h6v4"/></svg>,
     },
+    {
+      view: 'chat', label: 'Чат',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+    },
   ];
 
   // ── Sidebar JSX (inline, NOT a nested component) ────────────────────────────
   const sidebarJSX = (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <h1 className="logo">ControlFlow</h1>
+        <h1 className="logo">Поток</h1>
       </div>
 
       <nav className="sidebar-nav">
@@ -669,6 +675,7 @@ const DashboardPage = () => {
             </span>
           </div>
           <div className="header-actions">
+            <NotificationBell />
             <button className="theme-toggle-btn" onClick={toggleTheme} title="Сменить тему">
               {theme === 'light' ? '🌙' : '☀️'}
             </button>
@@ -1085,6 +1092,9 @@ const DashboardPage = () => {
 
         {/* ── Reports ── */}
         {activeView === 'reports' && <ReportsView />}
+
+        {/* ── Chat ── */}
+        {activeView === 'chat' && <ChatView />}
         </>
         )}
       </main>

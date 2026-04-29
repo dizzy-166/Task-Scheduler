@@ -45,7 +45,7 @@ const RegisterForm = () => {
   return (
     <div className="register-container">
       <div className="auth-card">
-        <h1 className="auth-title">ControlFlow</h1>
+        <h1 className="auth-title">Поток</h1>
         <p className="auth-subtitle">регистрация</p>
         
         <form onSubmit={handleSubmit}>

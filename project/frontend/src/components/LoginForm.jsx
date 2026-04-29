@@ -19,7 +19,7 @@ const LoginForm = () => {
   return (
     <div className="login-container">
       <div className="auth-card">
-        <h1 className="auth-title">ControlFlow</h1>
+        <h1 className="auth-title">Поток</h1>
         <p className="auth-subtitle">вход в систему</p>
         
         <form onSubmit={handleSubmit}>

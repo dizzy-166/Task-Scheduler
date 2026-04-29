@@ -17,9 +17,11 @@ urlpatterns = [
     path('api/v1/', include('apps.tasks.urls')),
     path('api/v1/', include('apps.companies.urls')),
     path('api/v1/', include('apps.core.urls')),
+    path('api/v1/', include('apps.chat.urls')),
 
     # API (без v1) - для обратной совместимости
     path('api/', include('apps.tasks.urls')),
+    path('api/', include('apps.chat.urls')),
 
     # API документация
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
