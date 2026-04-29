@@ -219,3 +219,19 @@ class Task(models.Model):
         """Восстановление"""
         self.deleted_at = None
         self.save(update_fields=['deleted_at'])
+
+
+class TaskComment(models.Model):
+    id         = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    task       = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='comments')
+    author     = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='task_comments')
+    text       = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'task_comments'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f'{self.author} → {self.task}'

@@ -1,7 +1,7 @@
 # apps/tasks/serializers.py
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Task, KanbanColumn
+from .models import Task, KanbanColumn, TaskComment
 from apps.users.serializers import UserSerializer
 
 
@@ -96,6 +96,25 @@ class TaskDetailSerializer(serializers.ModelSerializer):
 
     def get_parent_task_title(self, obj):
         return obj.parent_task.title if obj.parent_task else ''
+
+
+class TaskCommentSerializer(serializers.ModelSerializer):
+    author_name     = serializers.SerializerMethodField()
+    author_initials = serializers.SerializerMethodField()
+    author_id       = serializers.UUIDField(source='author.id', read_only=True)
+
+    class Meta:
+        model  = TaskComment
+        fields = ['id', 'author_id', 'author_name', 'author_initials', 'text', 'created_at']
+        read_only_fields = ['id', 'author_id', 'author_name', 'author_initials', 'created_at']
+
+    def get_author_name(self, obj):
+        return obj.author.full_name or obj.author.email
+
+    def get_author_initials(self, obj):
+        fn = obj.author.first_name or ''
+        ln = obj.author.last_name  or ''
+        return (fn[:1] + ln[:1]).upper() or obj.author.email[:1].upper()
 
 
 class TaskCreateSerializer(serializers.ModelSerializer):

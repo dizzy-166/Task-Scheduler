@@ -16,11 +16,11 @@ import urllib.request
 import urllib.error
 from django.conf import settings
 
-from .models import Task, KanbanColumn
+from .models import Task, KanbanColumn, TaskComment
 from .serializers import (
     TaskListSerializer, TaskDetailSerializer,
     TaskCreateSerializer, TaskUpdateSerializer,
-    KanbanColumnSerializer,
+    KanbanColumnSerializer, TaskCommentSerializer,
 )
 from .permissions import CanManageTask
 from .filters import TaskFilter
@@ -418,6 +418,30 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(tasks, many=True)
         return Response(serializer.data)
     
+    @action(detail=True, methods=['get', 'post'], url_path='comments')
+    def comments(self, request, pk=None):
+        task = self.get_object()
+        if request.method == 'GET':
+            qs = TaskComment.objects.filter(task=task).select_related('author')
+            return Response(TaskCommentSerializer(qs, many=True).data)
+        text = request.data.get('text', '').strip()
+        if not text:
+            return Response({'error': 'text required'}, status=400)
+        comment = TaskComment.objects.create(task=task, author=request.user, text=text)
+        return Response(TaskCommentSerializer(comment).data, status=201)
+
+    @action(detail=True, methods=['delete'], url_path='comments/(?P<comment_id>[^/.]+)')
+    def delete_comment(self, request, pk=None, comment_id=None):
+        task = self.get_object()
+        try:
+            comment = TaskComment.objects.get(id=comment_id, task=task)
+        except TaskComment.DoesNotExist:
+            return Response({'error': 'not found'}, status=404)
+        if comment.author != request.user:
+            return Response({'error': 'forbidden'}, status=403)
+        comment.delete()
+        return Response(status=204)
+
     @action(detail=False, methods=['get'])
     def stats(self, request):
         """Статистика по задачам"""

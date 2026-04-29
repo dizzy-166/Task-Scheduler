@@ -65,6 +65,18 @@ class TaskService {
   bulkCreateTasks(data) {
     return api.post('/tasks/ai-bulk-create/', data).then(r => r.data);
   }
+
+  getComments(taskId) {
+    return api.get(`/tasks/${taskId}/comments/`).then(r => r.data);
+  }
+
+  addComment(taskId, text) {
+    return api.post(`/tasks/${taskId}/comments/`, { text }).then(r => r.data);
+  }
+
+  deleteComment(taskId, commentId) {
+    return api.delete(`/tasks/${taskId}/comments/${commentId}/`);
+  }
 }
 
 export const taskService = new TaskService();
