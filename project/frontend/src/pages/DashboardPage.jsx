@@ -14,6 +14,8 @@ import AnalyticsView from '../components/AnalyticsView';
 import ReportsView from '../components/ReportsView';
 import HomeView from '../components/HomeView';
 import ChatView from '../components/ChatView';
+import GanttView from '../components/GanttView';
+import AIGenerateModal from '../components/AIGenerateModal';
 import NotificationBell from '../components/NotificationBell';
 import { taskService } from '../api/taskService';
 import companyAPI from '../api/companyService';
@@ -68,6 +70,9 @@ const DashboardPage = () => {
 
   // Profile modal
   const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // AI generate tasks modal
+  const [showAIGenerate, setShowAIGenerate] = useState(false);
 
   const currentUserRole = companyMembers.find(m => m.user === user?.id)?.role || 'member';
   const canManageColumns = currentUserRole === 'owner' || currentUserRole === 'admin';
@@ -550,6 +555,10 @@ const DashboardPage = () => {
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-4h6v4"/></svg>,
     },
     {
+      view: 'gantt', label: 'Диаграмма Ганта',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="8" height="3" rx="1"/><rect x="7" y="10" width="10" height="3" rx="1"/><rect x="5" y="15" width="12" height="3" rx="1"/><line x1="3" y1="3" x2="3" y2="21" strokeWidth="1.2"/></svg>,
+    },
+    {
       view: 'chat', label: 'Чат',
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
     },
@@ -679,6 +688,14 @@ const DashboardPage = () => {
             <button className="theme-toggle-btn" onClick={toggleTheme} title="Сменить тему">
               {theme === 'light' ? '🌙' : '☀️'}
             </button>
+            {activeCompany && (
+              <button className="btn-ai-gen" onClick={() => setShowAIGenerate(true)} title="Сгенерировать задачи с помощью ИИ">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                Задачи с ИИ
+              </button>
+            )}
             <button className="btn-new-task" onClick={() => setIsTaskModalOpen(true)}>
               <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
                 <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="2"/>
@@ -1093,6 +1110,11 @@ const DashboardPage = () => {
         {/* ── Reports ── */}
         {activeView === 'reports' && <ReportsView />}
 
+        {/* ── Gantt ── */}
+        {activeView === 'gantt' && (
+          <GanttView allTasks={allTasksList} onTaskClick={handleTaskClick} />
+        )}
+
         {/* ── Chat ── */}
         {activeView === 'chat' && <ChatView />}
         </>
@@ -1219,6 +1241,16 @@ const DashboardPage = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* AI Generate modal */}
+      {showAIGenerate && (
+        <AIGenerateModal
+          projectId={activeProject?.id || null}
+          projectName={activeProject?.name || activeCompany?.name || ''}
+          onClose={() => setShowAIGenerate(false)}
+          onTasksCreated={loadAllData}
+        />
       )}
 
       {isUpdating && (

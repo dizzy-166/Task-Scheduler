@@ -57,6 +57,14 @@ class TaskService {
   getAIAnalysis(stats, companyName) {
     return api.post('/ai/analyze/', { stats, company_name: companyName }).then(r => r.data);
   }
+
+  generateAITasks(data) {
+    return api.post('/tasks/ai-generate/', data).then(r => r.data);
+  }
+
+  bulkCreateTasks(data) {
+    return api.post('/tasks/ai-bulk-create/', data).then(r => r.data);
+  }
 }
 
 export const taskService = new TaskService();

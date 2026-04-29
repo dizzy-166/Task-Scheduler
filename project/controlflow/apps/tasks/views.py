@@ -721,6 +721,102 @@ class KanbanColumnViewSet(viewsets.ModelViewSet):
         return Response({'message': 'Порядок обновлён'})
 
 
+class AIGenerateTasksView(APIView):
+    """POST /api/tasks/ai-generate/ — генерация списка задач через Groq"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        import re
+        api_key = getattr(settings, 'GROQ_API_KEY', None)
+        if not api_key:
+            return Response({'error': 'GROQ_API_KEY не настроен'}, status=500)
+
+        project_name = request.data.get('project_name', 'Проект')
+        description  = request.data.get('description', '').strip()
+
+        prompt = (
+            f'Ты менеджер проектов. Создай список задач для проекта.\n\n'
+            f'Проект: {project_name}\n'
+            f'Описание: {description}\n\n'
+            f'Верни JSON-массив из 5-8 задач. Каждая задача:\n'
+            f'- title: название (до 100 символов)\n'
+            f'- description: краткое описание (1-2 предложения)\n'
+            f'- priority: low | medium | high | critical\n'
+            f'- due_days: через сколько дней дедлайн (целое, 3-90)\n\n'
+            f'Верни ТОЛЬКО JSON-массив без пояснений.\n'
+            f'Пример: [{{"title":"Название","description":"Описание","priority":"medium","due_days":14}}]'
+        )
+
+        payload = json.dumps({
+            'model': 'llama-3.3-70b-versatile',
+            'messages': [{'role': 'user', 'content': prompt}],
+            'temperature': 0.6,
+            'max_tokens': 1500,
+        }).encode('utf-8')
+
+        req = urllib.request.Request(
+            'https://api.groq.com/openai/v1/chat/completions',
+            data=payload,
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (compatible; Potok/1.0)',
+            },
+            method='POST',
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                result = json.loads(resp.read().decode('utf-8'))
+                text = result['choices'][0]['message']['content']
+                m = re.search(r'\[.*\]', text, re.DOTALL)
+                if not m:
+                    return Response({'error': 'ИИ вернул неожиданный формат'}, status=502)
+                tasks = json.loads(m.group())
+                return Response({'tasks': tasks})
+        except urllib.error.HTTPError as e:
+            body = e.read().decode('utf-8')
+            return Response({'error': f'Groq {e.code}: {body}'}, status=502)
+        except Exception as e:
+            return Response({'error': str(e)}, status=502)
+
+
+class AIBulkCreateTasksView(APIView):
+    """POST /api/tasks/ai-bulk-create/ — массовое создание задач из ИИ-ответа"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from datetime import date, timedelta
+
+        company_id = request.headers.get('X-Company-Id')
+        if not company_id:
+            return Response({'error': 'X-Company-Id required'}, status=400)
+
+        project_id = request.data.get('project_id') or None
+        tasks_data = request.data.get('tasks', [])
+        today = date.today()
+        created = []
+
+        for t in tasks_data:
+            try:
+                due_days = int(t.get('due_days', 14))
+            except (TypeError, ValueError):
+                due_days = 14
+            task = Task.objects.create(
+                company_id=company_id,
+                project_id=project_id,
+                creator=request.user,
+                title=str(t.get('title', 'Задача'))[:200],
+                description=str(t.get('description', '')),
+                priority=t.get('priority', 'medium'),
+                status='new',
+                due_date=today + timedelta(days=due_days),
+            )
+            created.append({'id': str(task.id), 'title': task.title})
+
+        return Response({'created': len(created), 'tasks': created}, status=201)
+
+
 class AIAnalysisView(APIView):
     """POST /api/ai/analyze/ — анализ данных через Groq (LLaMA 3.3 70B)"""
     permission_classes = [IsAuthenticated]

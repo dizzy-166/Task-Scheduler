@@ -14,7 +14,8 @@
       "Bash(python manage.py seed_demo)",
       "Bash(python manage.py startapp chat)",
       "Bash(python manage.py makemigrations chat)",
-      "Bash(python manage.py migrate)"
+      "Bash(python manage.py migrate)",
+      "Bash(python3 -c ' *)"
     ]
   }
 }
