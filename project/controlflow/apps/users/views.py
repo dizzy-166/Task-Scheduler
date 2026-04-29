@@ -112,9 +112,14 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return queryset.filter(id=user.id)
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get', 'patch'])
     def me(self, request):
         """Информация о текущем пользователе"""
+        if request.method == 'PATCH':
+            serializer = self.get_serializer(request.user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
     

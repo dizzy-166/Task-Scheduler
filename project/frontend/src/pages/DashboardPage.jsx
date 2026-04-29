@@ -9,6 +9,7 @@ import CompanySwitcher from '../components/CompanySwitcher';
 import ProjectSwitcher from '../components/ProjectSwitcher';
 import MemberActionsMenu from '../components/MemberActionsMenu';
 import RolesPanel from '../components/RolesPanel';
+import ProfileModal from '../components/ProfileModal';
 import { taskService } from '../api/taskService';
 import companyAPI from '../api/companyService';
 import kanbanService from '../api/kanbanService';
@@ -49,6 +50,14 @@ const DashboardPage = () => {
   const [editingColumn, setEditingColumn] = useState(null);
   const [columnForm, setColumnForm] = useState({ name: '', color: '#6B7280' });
   const [columnError, setColumnError] = useState('');
+  const [dragColId, setDragColId] = useState(null);
+  const isDraggingColRef = useRef(false);
+
+  // Custom role picker per member
+  const [openRolePickerFor, setOpenRolePickerFor] = useState(null);
+
+  // Profile modal
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const currentUserRole = companyMembers.find(m => m.user === user?.id)?.role || 'member';
   const canManageColumns = currentUserRole === 'owner' || currentUserRole === 'admin';
@@ -254,28 +263,73 @@ const DashboardPage = () => {
 
   const onDragEnd = (e) => {
     e.currentTarget.style.opacity = '1';
-    document.querySelectorAll('.kanban-column').forEach(el => el.classList.remove('drag-over'));
+    document.querySelectorAll('.kanban-column').forEach(el => {
+      el.classList.remove('drag-over');
+      el.classList.remove('col-drag-over');
+    });
+  };
+
+  const onColDragStart = (e, col) => {
+    e.stopPropagation();
+    isDraggingColRef.current = true;
+    setDragColId(col.id);
+    e.dataTransfer.setData('colId', col.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const onColDragEnd = () => {
+    isDraggingColRef.current = false;
+    setDragColId(null);
+    document.querySelectorAll('.kanban-column').forEach(el => el.classList.remove('col-drag-over'));
   };
 
   const onDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
-  const onDragEnter = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); };
-  const onDragLeave = (e) => { e.currentTarget.classList.remove('drag-over'); };
+  const onDragEnter = (e) => {
+    e.preventDefault();
+    if (isDraggingColRef.current) e.currentTarget.classList.add('col-drag-over');
+    else e.currentTarget.classList.add('drag-over');
+  };
+  const onDragLeave = (e) => {
+    e.currentTarget.classList.remove('drag-over');
+    e.currentTarget.classList.remove('col-drag-over');
+  };
 
   const onDrop = async (e, targetColId) => {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
+    e.currentTarget.classList.remove('col-drag-over');
+
+    const sourceColId = e.dataTransfer.getData('colId');
+    if (sourceColId) {
+      isDraggingColRef.current = false;
+      setDragColId(null);
+      if (sourceColId === targetColId) return;
+      const fromIdx = columns.findIndex(c => c.id === sourceColId);
+      const toIdx = columns.findIndex(c => c.id === targetColId);
+      const reordered = [...columns];
+      const [moved] = reordered.splice(fromIdx, 1);
+      reordered.splice(toIdx, 0, moved);
+      const withOrder = reordered.map((c, i) => ({ ...c, order: i }));
+      setColumns(withOrder);
+      try {
+        await kanbanService.reorderColumns(withOrder.map(c => ({ id: c.id, order: c.order })));
+      } catch {
+        loadColumns();
+      }
+      return;
+    }
 
     const taskId = e.dataTransfer.getData('taskId');
-    const sourceColId = e.dataTransfer.getData('sourceColumn');
-    if (!taskId || sourceColId === targetColId) return;
+    const taskSourceColId = e.dataTransfer.getData('sourceColumn');
+    if (!taskId || taskSourceColId === targetColId) return;
 
-    const taskToMove = tasks[sourceColId]?.find(t => t.id === taskId);
+    const taskToMove = tasks[taskSourceColId]?.find(t => t.id === taskId);
     if (!taskToMove) return;
 
     const targetCol = columns.find(c => c.id === targetColId);
 
     const updated = { ...tasks };
-    updated[sourceColId] = updated[sourceColId].filter(t => t.id !== taskId);
+    updated[taskSourceColId] = updated[taskSourceColId].filter(t => t.id !== taskId);
     updated[targetColId] = [...(updated[targetColId] || []), { ...taskToMove, kanban_column: targetColId }];
     setTasks(updated);
 
@@ -500,7 +554,7 @@ const DashboardPage = () => {
       </nav>
 
       <div className="sidebar-footer">
-        <div className="user-info-sidebar">
+        <button className="user-info-sidebar" onClick={() => setShowProfileModal(true)} title="Редактировать профиль">
           <div className="user-avatar">
             {user?.first_name?.[0]}{user?.last_name?.[0]}
           </div>
@@ -508,7 +562,7 @@ const DashboardPage = () => {
             <div className="user-name">{user?.full_name || user?.email}</div>
             <div className="user-role">{user?.role || 'Пользователь'}</div>
           </div>
-        </div>
+        </button>
         <button onClick={async () => { await logout(); navigate('/login'); }} className="logout-btn">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M7 1H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M13 13l4-4-4-4M17 9H7" stroke="currentColor" strokeWidth="1.5" fill="none"/>
@@ -617,13 +671,31 @@ const DashboardPage = () => {
               {columns.map(col => (
                 <div
                   key={col.id}
-                  className="kanban-column"
+                  className={`kanban-column${dragColId === col.id ? ' col-dragging' : ''}`}
                   onDragOver={onDragOver}
                   onDragEnter={onDragEnter}
                   onDragLeave={onDragLeave}
                   onDrop={e => onDrop(e, col.id)}
                 >
                   <div className="column-header">
+                    {canManageColumns && (
+                      <span
+                        className="column-drag-handle"
+                        draggable
+                        onDragStart={e => onColDragStart(e, col)}
+                        onDragEnd={onColDragEnd}
+                        title="Перетащить колонку"
+                      >
+                        <svg width="10" height="16" viewBox="0 0 10 16" fill="none">
+                          <circle cx="3" cy="3" r="1.5" fill="currentColor"/>
+                          <circle cx="3" cy="8" r="1.5" fill="currentColor"/>
+                          <circle cx="3" cy="13" r="1.5" fill="currentColor"/>
+                          <circle cx="8" cy="3" r="1.5" fill="currentColor"/>
+                          <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
+                          <circle cx="8" cy="13" r="1.5" fill="currentColor"/>
+                        </svg>
+                      </span>
+                    )}
                     <div className="column-header-left">
                       <span className="column-color-dot" style={{ background: col.color }} />
                       <h3>{col.name}</h3>
@@ -767,46 +839,62 @@ const DashboardPage = () => {
             <div className="members-section">
               <h3>Активные участники</h3>
               <div className="members-list">
-                {companyMembers.map(member => (
-                  <div key={member.id} className="member-item">
-                    <div className="member-info">
-                      <div className="member-avatar">
-                        {member.user_name?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                      <div className="member-details">
-                        <h4>{member.user_name || member.user_email}</h4>
-                        <p>{member.user_email}</p>
-                        <div className="member-roles-container">
-                          {member.roles && member.roles.length > 0 ? (
-                            member.roles.map(role => (
-                              <span key={role.id} className="member-role-badge">
-                                {role.name}
-                                {currentUserRole === 'owner' && role.name !== 'owner' && (
-                                  <button className="remove-role-badge" onClick={() => handleRemoveRoleFromMember(member.user, role.id)}>×</button>
-                                )}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="member-role-badge member-role-default">
-                              {member.role === 'owner' ? '👑 Владелец' : member.role === 'admin' ? '⚙️ Администратор' : '👤 Участник'}
-                            </span>
-                          )}
+                {companyMembers.map(member => {
+                  const unassigned = availableCustomRoles.filter(r => !member.roles?.some(mr => mr.id === r.id));
+                  const canEdit = currentUserRole === 'owner' && member.role !== 'owner';
+                  return (
+                    <div key={member.id} className="member-item">
+                      <div className="member-info" style={{ flex: 'none', minWidth: 180 }}>
+                        <div className="member-avatar">
+                          {member.user_name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                        <div className="member-details">
+                          <h4>{member.user_name || member.user_email}</h4>
+                          <p>{member.user_email}</p>
                         </div>
                       </div>
+
+                      <div className="member-custom-roles">
+                        {member.roles?.map(role => (
+                          <span key={role.id} className="member-role-chip">
+                            {role.name}
+                            {canEdit && (
+                              <button onClick={() => handleRemoveRoleFromMember(member.user, role.id)} title="Снять роль">×</button>
+                            )}
+                          </span>
+                        ))}
+                        {canEdit && unassigned.length > 0 && (
+                          <div style={{ position: 'relative' }}>
+                            <button
+                              className="btn-add-role"
+                              onClick={() => setOpenRolePickerFor(openRolePickerFor === member.user ? null : member.user)}
+                            >
+                              + Роль
+                            </button>
+                            {openRolePickerFor === member.user && (
+                              <div className="role-picker-dropdown">
+                                {unassigned.map(role => (
+                                  <button key={role.id} onClick={() => { handleAssignRoleToMember(member.user, role.id); setOpenRolePickerFor(null); }}>
+                                    {role.name}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="member-actions">
+                        <MemberActionsMenu
+                          member={member}
+                          currentUserRole={currentUserRole}
+                          onChangeRole={handleChangeMemberRole}
+                          onRemoveMember={handleRemoveMember}
+                        />
+                      </div>
                     </div>
-                    <div className="member-actions">
-                      <MemberActionsMenu
-                        member={member}
-                        currentUserRole={currentUserRole}
-                        availableCustomRoles={availableCustomRoles}
-                        onChangeRole={handleChangeMemberRole}
-                        onAssignCustomRole={handleAssignRoleToMember}
-                        onRemoveCustomRole={handleRemoveRoleFromMember}
-                        onRemoveMember={handleRemoveMember}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {companyMembers.length === 0 && (
                   <div className="empty-state"><p>Нет активных участников</p></div>
                 )}
@@ -967,6 +1055,10 @@ const DashboardPage = () => {
         <div className="updating-overlay">
           <div className="updating-spinner"></div>
         </div>
+      )}
+
+      {showProfileModal && (
+        <ProfileModal onClose={() => setShowProfileModal(false)} onProfileUpdated={loadAllData} />
       )}
     </div>
   );

@@ -97,6 +97,17 @@ const useAuthStore = create(
         }
       },
       
+      updateProfile: async (data) => {
+        try {
+          const response = await authAPI.updateProfile(data);
+          set({ user: response.data });
+          return { success: true };
+        } catch (error) {
+          const msg = error.response?.data?.detail || 'Не удалось сохранить профиль';
+          return { success: false, error: msg };
+        }
+      },
+
       forceLogout: () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
