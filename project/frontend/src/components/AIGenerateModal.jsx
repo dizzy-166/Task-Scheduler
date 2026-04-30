@@ -63,45 +63,51 @@ export default function AIGenerateModal({ projectId, projectName, onClose, onTas
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content aigen-modal" onClick={e => e.stopPropagation()}>
+      <div className="aigen-modal" onClick={e => e.stopPropagation()}>
 
-        <div className="modal-header">
-          <h3 className="aigen-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        {/* Header */}
+        <div className="aigen-hd">
+          <div className="aigen-hd-left">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="aigen-star-icon">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
-            Генератор задач ИИ
-          </h3>
-          <button className="modal-close" onClick={onClose}>×</button>
+            <span className="aigen-hd-title">Генератор задач ИИ</span>
+            {projectName && (
+              <div className="aigen-project-chip">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
+                {projectName}
+              </div>
+            )}
+          </div>
+          <button className="aigen-close" onClick={onClose}>×</button>
         </div>
 
         {!generated ? (
           /* ── Step 1: describe project ── */
           <>
-            <div className="aigen-project-chip">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-              </svg>
-              {projectName || 'Без проекта'}
-            </div>
-
-            <div className="form-group aigen-form-group">
-              <label>Опишите проект — что нужно сделать, цели, функциональность</label>
+            <div className="aigen-body">
+              <label className="aigen-label">Опишите проект — что нужно сделать, цели, функциональность</label>
               <textarea
                 className="aigen-textarea"
-                rows={5}
-                placeholder="Например: нужно разработать мобильное приложение для доставки еды. Основные функции: регистрация пользователей, каталог ресторанов, корзина, оплата, отслеживание заказа..."
+                rows={6}
+                placeholder={"Например: нужно разработать мобильное приложение для доставки еды.\nОсновные функции: регистрация пользователей, каталог ресторанов, корзина, оплата, отслеживание заказа…"}
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 onKeyDown={handleKey}
                 autoFocus
               />
-              <div className="aigen-hint">Ctrl+Enter — сгенерировать</div>
+              <div className="aigen-hint">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                Ctrl+Enter — сгенерировать
+              </div>
+              {error && <div className="aigen-error">{error}</div>}
             </div>
 
-            {error && <div className="error-message">{error}</div>}
-
-            <div className="modal-footer">
+            <div className="aigen-foot">
               <button className="btn-secondary" onClick={onClose}>Отмена</button>
               <button
                 className="btn-primary aigen-gen-btn"
@@ -115,7 +121,7 @@ export default function AIGenerateModal({ projectId, projectName, onClose, onTas
                   </>
                 ) : (
                   <>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                     Сгенерировать задачи
@@ -128,53 +134,52 @@ export default function AIGenerateModal({ projectId, projectName, onClose, onTas
           /* ── Step 2: review and select ── */
           <>
             <div className="aigen-result-header">
-              <span>ИИ предложил {generated.length} задач — выберите нужные</span>
+              <span>ИИ предложил <strong>{generated.length}</strong> задач — выберите нужные</span>
               <button className="aigen-select-all-btn" onClick={toggleAll}>
                 {selected.size === generated.length ? 'Снять все' : 'Выбрать все'}
               </button>
             </div>
 
-            <div className="aigen-task-list">
-              {generated.map((task, i) => {
-                const pColor = PRIO_COLOR[task.priority] || '#6B7280';
-                return (
-                  <label
-                    key={i}
-                    className={`aigen-task-item${selected.has(i) ? ' aigen-task-item--sel' : ''}`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selected.has(i)}
-                      onChange={() => toggleItem(i)}
-                    />
-                    <div className="aigen-task-body">
-                      <div className="aigen-task-title">{task.title}</div>
-                      {task.description && (
-                        <div className="aigen-task-desc">{task.description}</div>
-                      )}
-                      <div className="aigen-task-meta">
-                        <span
-                          className="lv-badge"
-                          style={{ background: pColor + '22', color: pColor }}
-                        >
-                          {PRIO_LABEL[task.priority] || task.priority}
-                        </span>
-                        <span className="aigen-due-chip">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                          </svg>
-                          через {task.due_days} дн.
-                        </span>
+            <div className="aigen-body aigen-body--list">
+              <div className="aigen-task-list">
+                {generated.map((task, i) => {
+                  const pColor = PRIO_COLOR[task.priority] || '#6B7280';
+                  return (
+                    <label
+                      key={i}
+                      className={`aigen-task-item${selected.has(i) ? ' aigen-task-item--sel' : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected.has(i)}
+                        onChange={() => toggleItem(i)}
+                      />
+                      <div className="aigen-task-body">
+                        <div className="aigen-task-title">{task.title}</div>
+                        {task.description && (
+                          <div className="aigen-task-desc">{task.description}</div>
+                        )}
+                        <div className="aigen-task-meta">
+                          <span className="lv-badge" style={{ background: pColor + '22', color: pColor }}>
+                            {PRIO_LABEL[task.priority] || task.priority}
+                          </span>
+                          <span className="aigen-due-chip">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+                              <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            через {task.due_days} дн.
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </label>
-                );
-              })}
+                    </label>
+                  );
+                })}
+              </div>
+              {error && <div className="aigen-error">{error}</div>}
             </div>
 
-            {error && <div className="error-message">{error}</div>}
-
-            <div className="modal-footer">
+            <div className="aigen-foot">
               <button className="btn-secondary" onClick={() => { setGenerated(null); setError(''); }}>
                 ← Назад
               </button>

@@ -98,12 +98,16 @@ class CanManageTask(permissions.BasePermission):
         if view.action == 'change_status':
             has_edit_any = self._check_permission(request, 'tasks.edit_any')
             has_edit_own = self._check_permission(request, 'tasks.edit_own')
-            
+
             if has_edit_any:
                 return True
             if has_edit_own:
                 return obj.creator == user or obj.assignee == user
-            
+
             return False
-        
-        return False
+
+        # Таймер, комментарии, подзадачи — разрешены любому участнику
+        if view.action in ['start_timer', 'stop_timer', 'comments', 'delete_comment', 'subtasks']:
+            return True
+
+        return True

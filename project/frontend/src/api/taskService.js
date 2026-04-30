@@ -77,6 +77,26 @@ class TaskService {
   deleteComment(taskId, commentId) {
     return api.delete(`/tasks/${taskId}/comments/${commentId}/`);
   }
+
+  startTimer(taskId) {
+    return api.post(`/tasks/${taskId}/start_timer/`).then(r => r.data);
+  }
+  stopTimer(taskId) {
+    return api.post(`/tasks/${taskId}/stop_timer/`).then(r => r.data);
+  }
+  getActiveTimer(taskId) {
+    return api.get(`/tasks/${taskId}/active_timer/`).then(r => r.data);
+  }
+
+  getSubtasks(taskId) {
+    return api.get(`/tasks/${taskId}/subtasks/`).then(r => r.data);
+  }
+  createSubtask(parentId, data) {
+    return api.post('/tasks/', { ...data, parent_task: parentId }).then(r => r.data);
+  }
+  updateSubtaskStatus(subtaskId, newStatus) {
+    return api.patch(`/tasks/${subtaskId}/`, { status: newStatus }).then(r => r.data);
+  }
 }
 
 export const taskService = new TaskService();

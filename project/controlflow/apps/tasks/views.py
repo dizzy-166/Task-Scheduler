@@ -11,12 +11,13 @@ from django.db.models import Count
 from django.db.models.functions import TruncWeek
 from django.utils import timezone
 from datetime import timedelta
+from decimal import Decimal
 import json
 import urllib.request
 import urllib.error
 from django.conf import settings
 
-from .models import Task, KanbanColumn, TaskComment
+from .models import Task, KanbanColumn, TaskComment, TaskTimer
 from .serializers import (
     TaskListSerializer, TaskDetailSerializer,
     TaskCreateSerializer, TaskUpdateSerializer,
@@ -441,6 +442,46 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Response({'error': 'forbidden'}, status=403)
         comment.delete()
         return Response(status=204)
+
+    # ── Timer actions ──────────────────────────────────────────────────────────
+    @action(detail=True, methods=['post'], url_path='start_timer')
+    def start_timer(self, request, pk=None):
+        task = self.get_object()
+        existing = TaskTimer.objects.filter(task=task, user=request.user).first()
+        if existing:
+            return Response({'running': True, 'started_at': existing.started_at})
+        timer = TaskTimer.objects.create(task=task, user=request.user)
+        return Response({'running': True, 'started_at': timer.started_at}, status=201)
+
+    @action(detail=True, methods=['post'], url_path='stop_timer')
+    def stop_timer(self, request, pk=None):
+        task = self.get_object()
+        timer = TaskTimer.objects.filter(task=task, user=request.user).first()
+        if not timer:
+            return Response({'error': 'Нет активного таймера'}, status=400)
+        elapsed_seconds = (timezone.now() - timer.started_at).total_seconds()
+        elapsed_hours = Decimal(str(round(elapsed_seconds / 3600, 2)))
+        task.actual_hours = (task.actual_hours or Decimal('0')) + elapsed_hours
+        task.save(update_fields=['actual_hours'])
+        timer.delete()
+        return Response({'logged_hours': float(elapsed_hours), 'actual_hours': float(task.actual_hours)})
+
+    @action(detail=True, methods=['get'], url_path='active_timer')
+    def active_timer(self, request, pk=None):
+        task = self.get_object()
+        timer = TaskTimer.objects.filter(task=task, user=request.user).first()
+        if timer:
+            return Response({'running': True, 'started_at': timer.started_at})
+        return Response({'running': False, 'started_at': None})
+
+    # ── Subtasks action ────────────────────────────────────────────────────────
+    @action(detail=True, methods=['get'], url_path='subtasks')
+    def subtasks(self, request, pk=None):
+        task = self.get_object()
+        qs = Task.objects.filter(parent_task=task, deleted_at__isnull=True).select_related(
+            'assignee', 'creator', 'project', 'company'
+        )
+        return Response(TaskListSerializer(qs, many=True).data)
 
     @action(detail=False, methods=['get'])
     def stats(self, request):

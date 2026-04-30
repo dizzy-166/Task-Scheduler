@@ -15,8 +15,7 @@ function fmtDate(iso) {
 }
 
 function fmtCommentTime(iso) {
-  const d   = new Date(iso);
-  const now = new Date();
+  const d = new Date(iso), now = new Date();
   const diff = (now - d) / 1000;
   if (diff < 60)    return 'только что';
   if (diff < 3600)  return `${Math.floor(diff / 60)} мин. назад`;
@@ -24,8 +23,14 @@ function fmtCommentTime(iso) {
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 }
 
+function padZ(n) { return String(n).padStart(2, '0'); }
+function fmtElapsed(ms) {
+  const s = Math.floor(ms / 1000);
+  return `${padZ(Math.floor(s / 3600))}:${padZ(Math.floor((s % 3600) / 60))}:${padZ(s % 60)}`;
+}
+
 // ── TaskModal ─────────────────────────────────────────────────────────────────
-const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskDelete, task, mode = 'create' }) => {
+const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete, task, mode = 'create' }) => {
   const { user } = useAuthStore();
 
   const [formData, setFormData] = useState({
@@ -36,11 +41,23 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskDelete, task, mode = 
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
 
-  // comments state
+  const [isEditing,    setIsEditing]    = useState(false);
+  const [editSnapshot, setEditSnapshot] = useState(null);
+
   const [comments,       setComments]       = useState([]);
   const [commentText,    setCommentText]    = useState('');
   const [commentLoading, setCommentLoading] = useState(false);
   const commentListRef = useRef(null);
+
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [timerStart,   setTimerStart]   = useState(null);
+  const [timerDisplay, setTimerDisplay] = useState('00:00:00');
+  const [actualHours,  setActualHours]  = useState(null);
+  const timerRef = useRef(null);
+
+  const [subtasks,       setSubtasks]       = useState([]);
+  const [newSubtask,     setNewSubtask]     = useState('');
+  const [subtaskLoading, setSubtaskLoading] = useState(false);
 
   // ── effects ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -56,146 +73,278 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskDelete, task, mode = 
         due_date:        task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
         estimated_hours: task.estimated_hours || '',
       });
+      setActualHours(task.actual_hours ?? null);
+      setIsEditing(false);
       loadComments(task.id);
+      loadSubtasks(task.id);
+      checkTimer(task.id);
     } else if (mode === 'create') {
       resetForm();
       setComments([]);
+      setSubtasks([]);
     }
   }, [isOpen, mode, task]);
 
-  // scroll comments to bottom when list updates
   useEffect(() => {
-    if (commentListRef.current) {
-      commentListRef.current.scrollTop = commentListRef.current.scrollHeight;
-    }
+    if (commentListRef.current) commentListRef.current.scrollTop = commentListRef.current.scrollHeight;
   }, [comments]);
+
+  useEffect(() => {
+    if (timerRunning && timerStart) {
+      timerRef.current = setInterval(() => setTimerDisplay(fmtElapsed(Date.now() - timerStart)), 1000);
+    } else {
+      clearInterval(timerRef.current);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [timerRunning, timerStart]);
+
+  useEffect(() => { if (!isOpen) clearInterval(timerRef.current); }, [isOpen]);
 
   // ── loaders ────────────────────────────────────────────────────────────────
   const loadCompanyMembers = async () => {
     try {
-      const companyStorage = localStorage.getItem('company-storage');
-      if (!companyStorage) { await loadAllUsers(); return; }
-      const companyId = JSON.parse(companyStorage)?.state?.activeCompany?.id;
+      const s = localStorage.getItem('company-storage');
+      if (!s) { await loadAllUsers(); return; }
+      const companyId = JSON.parse(s)?.state?.activeCompany?.id;
       if (!companyId) { await loadAllUsers(); return; }
-
       const response = await companyAPI.getMembers(companyId);
-      let membersData = response?.data || response;
-      if (membersData?.results) membersData = membersData.results;
-      if (Array.isArray(membersData)) {
-        setUsers(membersData.map(m => ({
-          id: m.user,
-          full_name: m.user_name || m.user_email || 'Неизвестный',
-          email: m.user_email || '',
-        })));
-      } else {
-        setUsers([]);
-      }
-    } catch {
-      await loadAllUsers();
-    }
+      let data = response?.data || response;
+      if (data?.results) data = data.results;
+      setUsers(Array.isArray(data) ? data.map(m => ({
+        id: m.user, full_name: m.user_name || m.user_email || 'Неизвестный', email: m.user_email || '',
+      })) : []);
+    } catch { await loadAllUsers(); }
   };
 
   const loadAllUsers = async () => {
     try {
       const data = await taskService.getUsers();
-      const list = Array.isArray(data) ? data : data?.results || data?.data || [];
-      setUsers(list);
-    } catch {
-      setUsers([]);
-    }
+      setUsers(Array.isArray(data) ? data : data?.results || data?.data || []);
+    } catch { setUsers([]); }
   };
 
   const loadComments = async (taskId) => {
+    try { setComments(await taskService.getComments(taskId) || []); }
+    catch { setComments([]); }
+  };
+
+  const loadSubtasks = async (taskId) => {
     try {
-      const data = await taskService.getComments(taskId);
-      setComments(Array.isArray(data) ? data : []);
-    } catch {
-      setComments([]);
-    }
+      const data = await taskService.getSubtasks(taskId);
+      setSubtasks(Array.isArray(data) ? data : []);
+    } catch { setSubtasks([]); }
+  };
+
+  const checkTimer = async (taskId) => {
+    try {
+      const data = await taskService.getActiveTimer(taskId);
+      if (data.running && data.started_at) {
+        const startMs = new Date(data.started_at).getTime();
+        setTimerStart(startMs); setTimerRunning(true);
+        setTimerDisplay(fmtElapsed(Date.now() - startMs));
+      } else {
+        setTimerRunning(false); setTimerStart(null); setTimerDisplay('00:00:00');
+      }
+    } catch { setTimerRunning(false); }
   };
 
   // ── handlers ───────────────────────────────────────────────────────────────
-  const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    setError('');
-  };
+  const handleChange = (e) => { setFormData(p => ({ ...p, [e.target.name]: e.target.value })); setError(''); };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     if (!formData.title.trim()) { setError('Название задачи обязательно'); return; }
     setLoading(true);
     try {
-      const due = formData.due_date ? new Date(formData.due_date).toISOString() : null;
       const newTask = await taskService.createTask({
         title:           formData.title,
         description:     formData.description || '',
         priority:        formData.priority,
         status:          formData.status,
         estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null,
-        due_date:        due,
+        due_date:        formData.due_date ? new Date(formData.due_date).toISOString() : null,
         assignee:        formData.assignee_id || null,
       });
       if (onTaskCreated) onTaskCreated(newTask);
-      onClose();
-      resetForm();
-    } catch (err) {
-      setError(err.message || 'Ошибка создания задачи');
-    } finally {
-      setLoading(false);
-    }
+      onClose(); resetForm();
+    } catch (err) { setError(err.message || 'Ошибка создания задачи'); }
+    finally { setLoading(false); }
   };
 
-  const handleDelete = () => { if (onTaskDelete && task) onTaskDelete(task.id); };
+  const handleDelete  = () => { if (onTaskDelete && task) onTaskDelete(task.id); };
+  const startEdit     = () => { setEditSnapshot({ ...formData }); setIsEditing(true); setError(''); };
+  const cancelEdit    = () => { setFormData(editSnapshot); setIsEditing(false); setError(''); };
+
+  const saveEdit = async () => {
+    if (!formData.title.trim()) { setError('Название задачи обязательно'); return; }
+    setLoading(true);
+    try {
+      const updated = await taskService.partialUpdateTask(task.id, {
+        title:           formData.title,
+        description:     formData.description || '',
+        assignee:        formData.assignee_id || null,
+        priority:        formData.priority,
+        status:          formData.status,
+        due_date:        formData.due_date ? new Date(formData.due_date).toISOString() : null,
+        estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null,
+      });
+      setIsEditing(false);
+      if (onTaskUpdated) onTaskUpdated(updated);
+    } catch (err) { setError(err.message || 'Ошибка сохранения'); }
+    finally { setLoading(false); }
+  };
+
+  const handleStartTimer = async () => {
+    try {
+      const data = await taskService.startTimer(task.id);
+      if (data.started_at) { setTimerStart(new Date(data.started_at).getTime()); setTimerRunning(true); }
+    } catch {}
+  };
+
+  const handleStopTimer = async () => {
+    clearInterval(timerRef.current);
+    try {
+      const data = await taskService.stopTimer(task.id);
+      setTimerRunning(false); setTimerStart(null); setTimerDisplay('00:00:00');
+      if (data.actual_hours !== undefined) setActualHours(data.actual_hours);
+    } catch {}
+  };
 
   const handleAddComment = async () => {
     if (!commentText.trim() || commentLoading) return;
     setCommentLoading(true);
     try {
-      const created = await taskService.addComment(task.id, commentText.trim());
-      setComments(prev => [...prev, created]);
-      setCommentText('');
-    } catch {
-      // silent
-    } finally {
-      setCommentLoading(false);
-    }
+      const c = await taskService.addComment(task.id, commentText.trim());
+      setComments(p => [...p, c]); setCommentText('');
+    } catch {} finally { setCommentLoading(false); }
   };
 
-  const handleDeleteComment = async (commentId) => {
-    try {
-      await taskService.deleteComment(task.id, commentId);
-      setComments(prev => prev.filter(c => c.id !== commentId));
-    } catch {
-      // silent
-    }
+  const handleDeleteComment = async (id) => {
+    try { await taskService.deleteComment(task.id, id); setComments(p => p.filter(c => c.id !== id)); } catch {}
   };
 
   const onCommentKey = (e) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); handleAddComment(); }
   };
 
+  const handleAddSubtask = async () => {
+    if (!newSubtask.trim() || subtaskLoading) return;
+    setSubtaskLoading(true);
+    try {
+      const s = await taskService.createSubtask(task.id, { title: newSubtask.trim(), priority: 'medium', status: 'new' });
+      setSubtasks(p => [...p, s]); setNewSubtask('');
+    } catch {} finally { setSubtaskLoading(false); }
+  };
+
+  const handleToggleSubtask = async (subtask) => {
+    const next = subtask.status === 'done' ? 'new' : 'done';
+    try {
+      await taskService.updateSubtaskStatus(subtask.id, next);
+      setSubtasks(p => p.map(s => s.id === subtask.id ? { ...s, status: next } : s));
+    } catch {}
+  };
+
+  const onSubtaskKey = (e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddSubtask(); } };
+
   const resetForm = () => {
     setFormData({ title: '', description: '', assignee_id: '', priority: 'medium', status: 'new', due_date: '', estimated_hours: '' });
-    setError('');
-    setCommentText('');
+    setError(''); setCommentText(''); setIsEditing(false);
+    setTimerRunning(false); setTimerDisplay('00:00:00'); setActualHours(null);
   };
 
   if (!isOpen) return null;
 
-  const pColor = PRIORITY_COLOR[formData.priority] || '#6B7280';
-  const sColor = STATUS_COLOR[formData.status]   || '#6B7280';
+  const pColor         = PRIORITY_COLOR[formData.priority] || '#6B7280';
+  const sColor         = STATUS_COLOR[formData.status]   || '#6B7280';
+  const fieldsDisabled = mode === 'view' && !isEditing;
+  const doneCount      = subtasks.filter(s => s.status === 'done').length;
+  const subtaskPct     = subtasks.length > 0 ? Math.round((doneCount / subtasks.length) * 100) : 0;
+
+  // ── shared form fields ─────────────────────────────────────────────────────
+  const formFields = (
+    <>
+      {mode === 'create' && (
+        <div className="form-group">
+          <label>Название задачи *</label>
+          <input type="text" name="title" value={formData.title} onChange={handleChange}
+            placeholder="Введите название задачи" autoFocus />
+        </div>
+      )}
+
+      <div className="form-group">
+        <label>Описание</label>
+        <textarea name="description" value={formData.description} onChange={handleChange}
+          rows={mode === 'view' ? 3 : 4} placeholder="Описание задачи…" disabled={fieldsDisabled} />
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label>Приоритет</label>
+          <select name="priority" value={formData.priority} onChange={handleChange} disabled={fieldsDisabled}>
+            <option value="low">Низкий</option>
+            <option value="medium">Средний</option>
+            <option value="high">Высокий</option>
+            <option value="critical">Критический</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Статус</label>
+          <select name="status" value={formData.status} onChange={handleChange} disabled={fieldsDisabled}>
+            <option value="new">Новая</option>
+            <option value="in_progress">В работе</option>
+            <option value="review">На проверке</option>
+            <option value="done">Завершена</option>
+            <option value="cancelled">Отменена</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label>Исполнитель</label>
+        <select name="assignee_id" value={formData.assignee_id} onChange={handleChange} disabled={fieldsDisabled}>
+          <option value="">Не назначен</option>
+          {users.map(u => <option key={u.id} value={u.id}>{u.full_name || u.email}</option>)}
+        </select>
+      </div>
+
+      {mode === 'view' && task && (
+        <div className="form-row">
+          <div className="form-group">
+            <label>Создатель</label>
+            <input type="text" value={task.creator?.full_name || task.creator_name || '—'} readOnly />
+          </div>
+          <div className="form-group">
+            <label>Создана</label>
+            <input type="text" value={fmtDate(task.created_at)} readOnly />
+          </div>
+        </div>
+      )}
+
+      <div className="form-row">
+        <div className="form-group">
+          <label>Дедлайн</label>
+          <input type="datetime-local" name="due_date" value={formData.due_date} onChange={handleChange} disabled={fieldsDisabled} />
+        </div>
+        <div className="form-group">
+          <label>Оценка (часы)</label>
+          <input type="number" name="estimated_hours" value={formData.estimated_hours} onChange={handleChange}
+            step="0.5" min="0" placeholder="напр. 4.5" disabled={fieldsDisabled} />
+        </div>
+      </div>
+    </>
+  );
 
   // ── render ─────────────────────────────────────────────────────────────────
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className={`modal-content tm-modal${mode === 'view' ? ' tm-modal--view' : ''}`}
+        className={`tm-modal${mode === 'view' ? ' tm-modal--view' : ''}`}
         onClick={e => e.stopPropagation()}
       >
-        {/* ── Header ── */}
-        <div className="modal-header">
-          <div className="tm-header-left">
-            {mode === 'view' && (
+        {/* Header */}
+        <div className="tm-hd">
+          <div className="tm-hd-left">
+            {mode === 'view' && !isEditing && (
               <>
                 <span className="tm-badge" style={{ background: sColor + '22', color: sColor }}>
                   {STATUS_LABEL[formData.status] || formData.status}
@@ -205,128 +354,105 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskDelete, task, mode = 
                 </span>
               </>
             )}
-            <h3 className="tm-title">
-              {mode === 'view' ? (task?.title || 'Задача') : 'Новая задача'}
-            </h3>
+            {mode === 'view' && isEditing ? (
+              <input className="tm-title-input" name="title" value={formData.title}
+                onChange={handleChange} placeholder="Название задачи" autoFocus />
+            ) : (
+              <h3 className="tm-title">{mode === 'view' ? (task?.title || 'Задача') : 'Новая задача'}</h3>
+            )}
           </div>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <div className="tm-hd-right">
+            {mode === 'view' && !isEditing && (
+              <button className="btn-edit" onClick={startEdit}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Редактировать
+              </button>
+            )}
+            <button className="tm-close" onClick={onClose}>×</button>
+          </div>
         </div>
 
-        {/* ── Two-column layout in view mode ── */}
-        <div className={`tm-body${mode === 'view' ? ' tm-body--split' : ''}`}>
-
-          {/* ── Left: task form ── */}
-          <div className="tm-form-col">
-            <form onSubmit={handleSubmit}>
-
-              {mode === 'create' && (
-                <div className="form-group">
-                  <label>Название задачи *</label>
-                  <input
-                    type="text" name="title" value={formData.title}
-                    onChange={handleChange} placeholder="Введите название задачи" autoFocus
-                  />
-                </div>
+        {/* Timer bar (view only) */}
+        {mode === 'view' && task && (
+          <div className="tm-timer-bar">
+            <div className="tm-timer-left">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span className={`tm-timer-display${timerRunning ? ' tm-timer-display--running' : ''}`}>{timerDisplay}</span>
+              {actualHours != null && Number(actualHours) > 0 && (
+                <span className="tm-timer-logged">Итого: {parseFloat(actualHours).toFixed(2)} ч.</span>
               )}
-
-              <div className="form-group">
-                <label>Описание</label>
-                <textarea
-                  name="description" value={formData.description}
-                  onChange={handleChange} rows={mode === 'view' ? 3 : 4}
-                  placeholder="Описание задачи…" disabled={mode === 'view'}
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Приоритет</label>
-                  <select name="priority" value={formData.priority} onChange={handleChange} disabled={mode === 'view'}>
-                    <option value="low">Низкий</option>
-                    <option value="medium">Средний</option>
-                    <option value="high">Высокий</option>
-                    <option value="critical">Критический</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Статус</label>
-                  <select name="status" value={formData.status} onChange={handleChange} disabled={mode === 'view'}>
-                    <option value="new">Новая</option>
-                    <option value="in_progress">В работе</option>
-                    <option value="review">На проверке</option>
-                    <option value="done">Завершена</option>
-                    <option value="cancelled">Отменена</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Исполнитель</label>
-                <select name="assignee_id" value={formData.assignee_id} onChange={handleChange} disabled={mode === 'view'}>
-                  <option value="">Не назначен</option>
-                  {users.map(u => (
-                    <option key={u.id} value={u.id}>{u.full_name || u.email}</option>
-                  ))}
-                </select>
-              </div>
-
-              {mode === 'view' && task && (
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Создатель</label>
-                    <input type="text" value={task.creator?.full_name || task.creator_name || '—'} readOnly />
-                  </div>
-                  <div className="form-group">
-                    <label>Создана</label>
-                    <input type="text" value={fmtDate(task.created_at)} readOnly />
-                  </div>
-                </div>
-              )}
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Дедлайн</label>
-                  <input type="datetime-local" name="due_date" value={formData.due_date} onChange={handleChange} disabled={mode === 'view'} />
-                </div>
-                <div className="form-group">
-                  <label>Оценка (часы)</label>
-                  <input type="number" name="estimated_hours" value={formData.estimated_hours} onChange={handleChange} step="0.5" min="0" placeholder="напр. 4.5" disabled={mode === 'view'} />
-                </div>
-              </div>
-
-              {error && <div className="error-message">{error}</div>}
-
-              <div className="modal-footer">
-                {mode === 'view' && onTaskDelete && (
-                  <button type="button" className="btn-danger" onClick={handleDelete}>
-                    Удалить
-                  </button>
-                )}
-                <button type="button" className="btn-secondary" onClick={onClose}>
-                  {mode === 'view' ? 'Закрыть' : 'Отмена'}
-                </button>
-                {mode !== 'view' && (
-                  <button type="submit" className="btn-primary" disabled={loading}>
-                    {loading ? <span className="spinner" /> : 'Создать задачу'}
-                  </button>
-                )}
-              </div>
-            </form>
+            </div>
+            {timerRunning ? (
+              <button className="tm-timer-btn tm-timer-btn--stop" onClick={handleStopTimer}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+                Стоп
+              </button>
+            ) : (
+              <button className="tm-timer-btn tm-timer-btn--start" onClick={handleStartTimer}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Начать
+              </button>
+            )}
           </div>
+        )}
 
-          {/* ── Right: comments (view mode only) ── */}
-          {mode === 'view' && (
+        {/* ── CREATE mode: simple scrollable body ── */}
+        {mode === 'create' && (
+          <div className="tm-body tm-body--create">
+            {formFields}
+          </div>
+        )}
+
+        {/* ── VIEW mode: two-column body ── */}
+        {mode === 'view' && (
+          <div className="tm-body tm-body--split">
+            {/* Left: form + subtasks */}
+            <div className="tm-form-col">
+              {formFields}
+
+              <div className="tm-subtasks">
+                <div className="tm-subtasks-header">
+                  <span className="tm-subtasks-title">Подзадачи</span>
+                  {subtasks.length > 0 && <span className="tm-subtasks-count">{doneCount}/{subtasks.length}</span>}
+                </div>
+                {subtasks.length > 0 && (
+                  <div className="tm-subtasks-progress">
+                    <div className="tm-subtasks-bar"><div className="tm-subtasks-fill" style={{ width: `${subtaskPct}%` }} /></div>
+                    <span className="tm-subtasks-pct">{subtaskPct}%</span>
+                  </div>
+                )}
+                <div className="tm-subtask-list">
+                  {subtasks.map(s => (
+                    <div key={s.id} className={`tm-subtask-item${s.status === 'done' ? ' tm-subtask-item--done' : ''}`}>
+                      <input type="checkbox" checked={s.status === 'done'} onChange={() => handleToggleSubtask(s)} className="tm-subtask-check" />
+                      <span className="tm-subtask-name">{s.title}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="tm-subtask-add">
+                  <input type="text" className="tm-subtask-input" placeholder="Добавить подзадачу… (Enter)"
+                    value={newSubtask} onChange={e => setNewSubtask(e.target.value)} onKeyDown={onSubtaskKey} />
+                  <button className="tm-subtask-btn" onClick={handleAddSubtask} disabled={!newSubtask.trim() || subtaskLoading}>
+                    {subtaskLoading ? '…' : '+'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: comments */}
             <div className="tm-comments-col">
               <div className="tm-comments-header">
                 <span className="tm-comments-title">Комментарии</span>
                 <span className="tm-comments-count">{comments.length}</span>
               </div>
-
               <div className="tm-comment-list" ref={commentListRef}>
                 {comments.length === 0 ? (
-                  <div className="tm-comments-empty">
-                    Нет комментариев. Напишите первым!
-                  </div>
+                  <div className="tm-comments-empty">Нет комментариев. Напишите первым!</div>
                 ) : (
                   comments.map(c => {
                     const isOwn = c.author_id === user?.id || String(c.author_id) === String(user?.id);
@@ -338,13 +464,10 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskDelete, task, mode = 
                             <span className="tm-comment-author">{c.author_name}</span>
                             <span className="tm-comment-time">{fmtCommentTime(c.created_at)}</span>
                             {isOwn && (
-                              <button
-                                className="tm-comment-del"
-                                onClick={() => handleDeleteComment(c.id)}
-                                title="Удалить"
-                              >
+                              <button className="tm-comment-del" onClick={() => handleDeleteComment(c.id)} title="Удалить">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                                  <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
                                 </svg>
                               </button>
                             )}
@@ -356,25 +479,12 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskDelete, task, mode = 
                   })
                 )}
               </div>
-
               <div className="tm-comment-input-wrap">
-                <textarea
-                  className="tm-comment-input"
-                  placeholder="Написать комментарий… (Ctrl+Enter)"
-                  value={commentText}
-                  onChange={e => setCommentText(e.target.value)}
-                  onKeyDown={onCommentKey}
-                  rows={2}
-                />
-                <button
-                  className="tm-comment-send"
-                  onClick={handleAddComment}
-                  disabled={!commentText.trim() || commentLoading}
-                  title="Отправить (Ctrl+Enter)"
-                >
-                  {commentLoading ? (
-                    <span className="tm-comment-spinner" />
-                  ) : (
+                <textarea className="tm-comment-input" placeholder="Написать комментарий… (Ctrl+Enter)"
+                  value={commentText} onChange={e => setCommentText(e.target.value)} onKeyDown={onCommentKey} rows={2} />
+                <button className="tm-comment-send" onClick={handleAddComment}
+                  disabled={!commentText.trim() || commentLoading} title="Отправить (Ctrl+Enter)">
+                  {commentLoading ? <span className="tm-comment-spinner" /> : (
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <line x1="22" y1="2" x2="11" y2="13"/>
                       <polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -383,7 +493,34 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskDelete, task, mode = 
                 </button>
               </div>
             </div>
-          )}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="tm-footer">
+          {error && <span className="tm-footer-error">{error}</span>}
+          <div className="tm-footer-actions">
+            {mode === 'view' && isEditing ? (
+              <>
+                <button className="btn-secondary" onClick={cancelEdit}>Отмена</button>
+                <button className="btn-primary" onClick={saveEdit} disabled={loading}>
+                  {loading ? <span className="spinner" /> : 'Сохранить'}
+                </button>
+              </>
+            ) : mode === 'view' ? (
+              <>
+                {onTaskDelete && <button className="btn-danger" onClick={handleDelete}>Удалить</button>}
+                <button className="btn-secondary" onClick={onClose}>Закрыть</button>
+              </>
+            ) : (
+              <>
+                <button className="btn-secondary" onClick={onClose}>Отмена</button>
+                <button className="btn-primary" onClick={handleSubmit} disabled={loading}>
+                  {loading ? <span className="spinner" /> : 'Создать задачу'}
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

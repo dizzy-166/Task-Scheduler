@@ -221,6 +221,21 @@ class Task(models.Model):
         self.save(update_fields=['deleted_at'])
 
 
+class TaskTimer(models.Model):
+    """Активный таймер трекинга времени на задаче (один на пару user+task)"""
+    id         = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    task       = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='active_timers')
+    user       = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='active_task_timers')
+    started_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'task_timers'
+        unique_together = [['task', 'user']]
+
+    def __str__(self):
+        return f'{self.user} → {self.task}'
+
+
 class TaskComment(models.Model):
     id         = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     task       = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='comments')
