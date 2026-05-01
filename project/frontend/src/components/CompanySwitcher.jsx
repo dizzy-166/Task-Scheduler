@@ -61,6 +61,7 @@ const CompanySwitcher = () => {
       setNewCompanyDesc('');
       setError('');
       setActiveCompany(result.company);
+      await fetchCompanies();
       navigate('/dashboard');
     } else {
       setError(result.error);

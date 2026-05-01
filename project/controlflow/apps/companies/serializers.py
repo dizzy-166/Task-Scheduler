@@ -50,10 +50,17 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
 
 class CompanyCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания компании"""
-    
+
+    owner_name = serializers.SerializerMethodField()
+    members_count = serializers.IntegerField(read_only=True, default=1)
+
     class Meta:
         model = Company
-        fields = ['name', 'description']
+        fields = ['id', 'name', 'description', 'owner', 'owner_name', 'members_count', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'owner', 'owner_name', 'members_count', 'created_at', 'updated_at']
+
+    def get_owner_name(self, obj):
+        return obj.owner.full_name if obj.owner else ''
     
     def create(self, validated_data):
         from apps.tasks.models import KanbanColumn
