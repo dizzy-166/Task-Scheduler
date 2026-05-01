@@ -106,7 +106,6 @@ DATABASES = {
         'OPTIONS': {
             'connect_timeout': 10,
             'sslmode': config('DB_SSLMODE', default='prefer'),
-            'options': '-c search_path="ControlFlow"',
         },
     }
 }
