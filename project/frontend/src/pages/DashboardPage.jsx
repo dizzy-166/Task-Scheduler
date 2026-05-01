@@ -74,7 +74,9 @@ const DashboardPage = () => {
   // AI generate tasks modal
   const [showAIGenerate, setShowAIGenerate] = useState(false);
 
-  const currentUserRole = companyMembers.find(m => m.user === user?.id)?.role || 'member';
+  const currentUserRole =
+    companyMembers.find(m => m.user === user?.id)?.role ||
+    (activeCompany?.owner === user?.id ? 'owner' : 'member');
   const canManageColumns = currentUserRole === 'owner' || currentUserRole === 'admin';
 
   // ── Load everything when company / project changes ─────────────────────────
@@ -837,6 +839,15 @@ const DashboardPage = () => {
               {columns.length === 0 && (
                 <div className="empty-state">
                   <p>Нет колонок. Создайте первую колонку.</p>
+                  {canManageColumns && (
+                    <button
+                      className="btn-primary"
+                      style={{ marginTop: 12 }}
+                      onClick={() => { setEditingColumn(null); setColumnForm({ name: '', color: '#6B7280' }); setShowColumnModal(true); }}
+                    >
+                      + Добавить колонку
+                    </button>
+                  )}
                 </div>
               )}
             </div>

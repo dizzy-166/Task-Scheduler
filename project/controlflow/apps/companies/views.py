@@ -242,7 +242,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
         members = CompanyMember.objects.filter(
             company=company,
             status='active'
-        ).select_related('user', 'invited_by')
+        ).select_related('user', 'invited_by', 'company')
         
         print(f"DEBUG: found {len(members)} active members")
         serializer = CompanyMemberSerializer(members, many=True)

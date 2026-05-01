@@ -3,6 +3,13 @@ from django.utils import timezone
 from .models import Company, CompanyMember
 from apps.users.serializers import UserSerializer
 
+DEFAULT_KANBAN_COLUMNS = [
+    {'name': 'Новые',       'color': '#6B7280', 'status_key': 'new',         'order': 0},
+    {'name': 'В работе',    'color': '#3B82F6', 'status_key': 'in_progress', 'order': 1},
+    {'name': 'На проверке', 'color': '#F59E0B', 'status_key': 'review',      'order': 2},
+    {'name': 'Готово',      'color': '#10B981', 'status_key': 'done',        'order': 3},
+]
+
 
 class CompanySerializer(serializers.ModelSerializer):
     """Базовый сериализатор компании"""
@@ -49,9 +56,10 @@ class CompanyCreateSerializer(serializers.ModelSerializer):
         fields = ['name', 'description']
     
     def create(self, validated_data):
+        from apps.tasks.models import KanbanColumn
         user = self.context['request'].user
         company = Company.objects.create(owner=user, **validated_data)
-        
+
         CompanyMember.objects.create(
             company=company,
             user=user,
@@ -59,7 +67,12 @@ class CompanyCreateSerializer(serializers.ModelSerializer):
             status='active',
             joined_at=timezone.now()
         )
-        
+
+        KanbanColumn.objects.bulk_create([
+            KanbanColumn(company=company, **col)
+            for col in DEFAULT_KANBAN_COLUMNS
+        ])
+
         return company
 
 

@@ -95,14 +95,17 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'controlflow',
-        'USER': 'postgres',
-        'PASSWORD': '123',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': config('DB_NAME', default='controlflow'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
         'CONN_MAX_AGE': 0,
+        'DISABLE_SERVER_SIDE_CURSORS': True,
         'OPTIONS': {
-            'options': '-c search_path=public'
+            'connect_timeout': 10,
+            'sslmode': config('DB_SSLMODE', default='prefer'),
+            'options': '-c search_path="ControlFlow"',
         },
     }
 }
