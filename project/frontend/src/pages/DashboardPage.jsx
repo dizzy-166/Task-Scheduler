@@ -46,6 +46,8 @@ const DashboardPage = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('member');
   const [inviteError, setInviteError] = useState('');
+  const [userSuggestions, setUserSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedInviteCompanyId, setSelectedInviteCompanyId] = useState(activeCompany?.id || '');
   const [showDeleteCompanyModal, setShowDeleteCompanyModal] = useState(false);
   const [deleteCompanyError, setDeleteCompanyError] = useState('');
@@ -308,6 +310,7 @@ const DashboardPage = () => {
     else e.currentTarget.classList.add('drag-over');
   };
   const onDragLeave = (e) => {
+    if (e.currentTarget.contains(e.relatedTarget)) return;
     e.currentTarget.classList.remove('drag-over');
     e.currentTarget.classList.remove('col-drag-over');
   };
@@ -1169,9 +1172,46 @@ const DashboardPage = () => {
                   </select>
                 </div>
               )}
-              <div className="form-group">
-                <label>Email участника *</label>
-                <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="user@example.com" required autoFocus />
+              <div className="form-group" style={{ position: 'relative' }}>
+                <label>Email или имя участника *</label>
+                <input
+                  type="text"
+                  value={inviteEmail}
+                  onChange={async e => {
+                    const val = e.target.value;
+                    setInviteEmail(val);
+                    if (val.length >= 2) {
+                      try {
+                        const res = await companyAPI.searchUsers(val);
+                        setUserSuggestions(res.data || []);
+                        setShowSuggestions(true);
+                      } catch { setUserSuggestions([]); }
+                    } else {
+                      setUserSuggestions([]);
+                      setShowSuggestions(false);
+                    }
+                  }}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  onFocus={() => userSuggestions.length > 0 && setShowSuggestions(true)}
+                  placeholder="Введите email или имя..."
+                  required
+                  autoFocus
+                  autoComplete="off"
+                />
+                {showSuggestions && userSuggestions.length > 0 && (
+                  <ul className="invite-suggestions">
+                    {userSuggestions.map(u => (
+                      <li key={u.id} onMouseDown={() => {
+                        setInviteEmail(u.email);
+                        setShowSuggestions(false);
+                        setUserSuggestions([]);
+                      }}>
+                        <span className="invite-suggestion-name">{u.full_name}</span>
+                        <span className="invite-suggestion-email">{u.email}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
               <div className="form-group">
                 <label>Роль</label>

@@ -7,7 +7,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import models as django_models
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.db.models.functions import TruncWeek
 from django.utils import timezone
 from datetime import timedelta
@@ -493,7 +493,11 @@ class TaskViewSet(viewsets.ModelViewSet):
         by_assignee_qs = (
             queryset.filter(assignee__isnull=False)
             .values('assignee__first_name', 'assignee__last_name', 'assignee__email')
-            .annotate(count=Count('id'))
+            .annotate(
+                count=Count('id'),
+                actual_hours=Sum('actual_hours'),
+                estimated_hours=Sum('estimated_hours'),
+            )
             .order_by('-count')[:10]
         )
         by_assignee = [
@@ -503,6 +507,8 @@ class TaskViewSet(viewsets.ModelViewSet):
                     or a['assignee__email']
                 ),
                 'count': a['count'],
+                'actual_hours': float(a['actual_hours'] or 0),
+                'estimated_hours': float(a['estimated_hours'] or 0),
             }
             for a in by_assignee_qs
         ]
@@ -547,6 +553,11 @@ class TaskViewSet(viewsets.ModelViewSet):
             for wk in all_weeks
         ]
 
+        totals = queryset.aggregate(
+            total_actual=Sum('actual_hours'),
+            total_estimated=Sum('estimated_hours'),
+        )
+
         stats = {
             'total': queryset.count(),
             'by_status': {
@@ -566,6 +577,8 @@ class TaskViewSet(viewsets.ModelViewSet):
                 due_date__lt=now,
                 status__in=['new', 'in_progress', 'review']
             ).count(),
+            'total_actual_hours': float(totals['total_actual'] or 0),
+            'total_estimated_hours': float(totals['total_estimated'] or 0),
             'by_assignee': by_assignee,
             'by_project': by_project,
             'weekly_trend': weekly_trend,

@@ -138,6 +138,9 @@ export default function AnalyticsView() {
   const done = data.by_status?.done || 0;
   const overdue = data.overdue || 0;
   const completionRate = total > 0 ? Math.round((done / total) * 100) : 0;
+  const totalActual = data.total_actual_hours || 0;
+  const totalEstimated = data.total_estimated_hours || 0;
+  const timeEfficiency = totalEstimated > 0 ? Math.round((totalActual / totalEstimated) * 100) : null;
 
   const statusData = Object.entries(data.by_status || {})
     .map(([key, value]) => ({ name: STATUS_LABELS[key] || key, value, color: STATUS_COLORS[key] }))
@@ -148,6 +151,7 @@ export default function AnalyticsView() {
     .filter(d => d.value > 0);
 
   const assigneeData = (data.by_assignee || []).slice(0, 8);
+  const assigneeHoursData = assigneeData.filter(a => a.actual_hours > 0);
   const projectData  = (data.by_project  || []).slice(0, 8);
   const trendData    = data.weekly_trend  || [];
 
@@ -200,6 +204,19 @@ export default function AnalyticsView() {
             <div className="analytics-progress-fill" style={{ width: `${completionRate}%` }} />
           </div>
         </div>
+        <div className="analytics-card analytics-card--teal">
+          <div className="analytics-card-value">{totalActual.toFixed(1)}<span className="analytics-card-unit">ч</span></div>
+          <div className="analytics-card-label">Потрачено по таймеру</div>
+        </div>
+        {timeEfficiency !== null && (
+          <div className="analytics-card" style={{ borderTop: `3px solid ${timeEfficiency > 100 ? '#EF4444' : '#10B981'}` }}>
+            <div className="analytics-card-value" style={{ color: timeEfficiency > 100 ? '#EF4444' : '#10B981' }}>
+              {timeEfficiency}%
+            </div>
+            <div className="analytics-card-label">Факт / Оценка</div>
+            <div className="analytics-card-sub">{totalEstimated.toFixed(1)} ч оценка</div>
+          </div>
+        )}
       </div>
 
       {/* ── Row 1: status donut + priority bars ── */}
@@ -285,6 +302,25 @@ export default function AnalyticsView() {
                 <Bar dataKey="count" name="Задачи" radius={[0, 4, 4, 0]}>
                   {assigneeData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                 </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {assigneeHoursData.length > 0 && (
+          <div className="analytics-chart-card">
+            <h3 className="analytics-chart-title">Часы по исполнителям</h3>
+            <ResponsiveContainer width="100%" height={Math.max(200, assigneeHoursData.length * 36)}>
+              <BarChart data={assigneeHoursData} layout="vertical"
+                margin={{ top: 4, right: 24, bottom: 4, left: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 12, fill: 'var(--text-secondary)' }}
+                  tickFormatter={v => `${v}ч`} />
+                <YAxis type="category" dataKey="name" width={110}
+                  tick={{ fontSize: 12, fill: 'var(--text-secondary)' }} />
+                <Tooltip content={<CustomTooltip />} formatter={(v) => [`${v.toFixed(1)} ч`]} />
+                <Bar dataKey="actual_hours" name="Потрачено" radius={[0, 4, 4, 0]} fill="#14B8A6" />
+                <Bar dataKey="estimated_hours" name="Оценка" radius={[0, 4, 4, 0]} fill="#6366F1" opacity={0.4} />
               </BarChart>
             </ResponsiveContainer>
           </div>

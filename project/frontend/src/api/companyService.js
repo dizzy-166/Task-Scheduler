@@ -18,6 +18,9 @@ const companyAPI = {
   
   // Пригласить пользователя
   inviteMember: (companyId, data) => api.post(`/companies/${companyId}/invite/`, data),
+
+  // Поиск пользователей для автокомплита приглашения
+  searchUsers: (q) => api.get(`/users/search/?q=${encodeURIComponent(q)}`),
   
   // Получить активных участников
   getMembers: (companyId) => api.get(`/companies/${companyId}/members/`),

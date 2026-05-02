@@ -1258,6 +1258,43 @@ body {
   border-top: 1px solid #e0e0e0;
 }
 
+.invite-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 1000;
+  margin: 4px 0 0;
+  padding: 4px 0;
+  list-style: none;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.invite-suggestions li {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 14px;
+  cursor: pointer;
+  gap: 2px;
+  transition: background 0.12s;
+}
+.invite-suggestions li:hover {
+  background: var(--hover-bg);
+}
+.invite-suggestion-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.invite-suggestion-email {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
 .btn-primary {
   padding: 10px 20px;
   background: #0066ff;
@@ -4639,6 +4676,9 @@ body {
 .analytics-card--green .analytics-card-value { color: #10B981; }
 .analytics-card--red   .analytics-card-value { color: #EF4444; }
 .analytics-card--purple .analytics-card-value { color: #8B5CF6; }
+.analytics-card--teal   .analytics-card-value { color: #14B8A6; }
+.analytics-card-unit { font-size: 0.55em; margin-left: 2px; opacity: 0.7; }
+.analytics-card-sub  { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
 
 .analytics-progress-bar {
   height: 4px;

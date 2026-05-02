@@ -6,6 +6,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from django.db import models as django_models
+from django.db.models import Q
 
 from apps.activity.utils import log_activity
 from .models import User
@@ -147,3 +148,25 @@ class UserViewSet(viewsets.ModelViewSet):
         queryset = User.objects.filter(manager=request.user, deleted_at__isnull=True)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def search(self, request):
+        """Поиск пользователей по email/имени для автокомплита приглашения"""
+        q = request.query_params.get('q', '').strip()
+        if len(q) < 2:
+            return Response([])
+        users = User.objects.filter(
+            deleted_at__isnull=True, is_active=True
+        ).filter(
+            Q(email__icontains=q) |
+            Q(first_name__icontains=q) |
+            Q(last_name__icontains=q)
+        ).only('id', 'email', 'first_name', 'last_name')[:10]
+        return Response([
+            {
+                'id': str(u.id),
+                'email': u.email,
+                'full_name': f'{u.first_name} {u.last_name}'.strip() or u.email,
+            }
+            for u in users
+        ])
