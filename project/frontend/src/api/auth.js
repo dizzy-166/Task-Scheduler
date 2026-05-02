@@ -99,6 +99,10 @@ export const authAPI = {
   getProfile: () => api.get('/users/me/'),
   updateProfile: (data) => api.patch('/users/me/', data),
   changePassword: (data) => api.post('/users/change_password/', data),
+  verifyEmail: (email, code) => api.post('/auth/verify-email/', { email, code }),
+  resendVerification: (email) => api.post('/auth/resend-verification/', { email }),
+  forgotPassword: (email) => api.post('/auth/forgot-password/', { email }),
+  resetPassword: (token, password) => api.post('/auth/reset-password/', { token, password }),
 };
 
 export default api;

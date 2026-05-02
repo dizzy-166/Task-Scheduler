@@ -4,6 +4,9 @@ import useAuthStore from './store/authStore';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import DashboardPage from './pages/DashboardPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
@@ -73,6 +76,10 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Routes>
     </>
   );

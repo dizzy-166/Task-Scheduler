@@ -1,7 +1,17 @@
 import uuid
+import secrets
+from datetime import timedelta
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
+
+
+def _verification_expires():
+    return timezone.now() + timedelta(hours=24)
+
+
+def _reset_expires():
+    return timezone.now() + timedelta(hours=1)
 
 
 # ========== User Manager ==========
@@ -197,3 +207,37 @@ class UserRole(models.Model):
         if self.expires_at:
             return timezone.now() > self.expires_at
         return False
+
+
+# ========== Email Verification Token ==========
+class EmailVerificationToken(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='verification_tokens')
+    token = models.CharField(max_length=64, unique=True, default=secrets.token_urlsafe)
+    created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField(default=_verification_expires)
+    is_used = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'email_verification_tokens'
+
+    @property
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+
+# ========== Password Reset Token ==========
+class PasswordResetToken(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reset_tokens')
+    token = models.CharField(max_length=64, unique=True, default=secrets.token_urlsafe)
+    created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField(default=_reset_expires)
+    is_used = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'password_reset_tokens'
+
+    @property
+    def is_expired(self):
+        return timezone.now() > self.expires_at

@@ -5,14 +5,18 @@ import useAuthStore from '../store/authStore';
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [notVerified, setNotVerified] = useState(false);
   const navigate = useNavigate();
-  const { login, isLoading, error } = useAuthStore();
+  const { login, resendVerification, isLoading, error } = useAuthStore();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setNotVerified(false);
     const result = await login(email, password);
     if (result.success) {
       navigate('/dashboard');
+    } else if (result.error?.includes('Подтвердите email')) {
+      setNotVerified(true);
     }
   };
 
@@ -21,10 +25,23 @@ const LoginForm = () => {
       <div className="auth-card">
         <h1 className="auth-title">Поток</h1>
         <p className="auth-subtitle">вход в систему</p>
-        
+
         <form onSubmit={handleSubmit}>
           {error && (
-            <div className="global-error">{error}</div>
+            <div className="global-error">
+              {error}
+              {notVerified && email && (
+                <div style={{ marginTop: '8px' }}>
+                  <button
+                    type="button"
+                    style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', fontSize: '13px', padding: 0 }}
+                    onClick={() => resendVerification(email)}
+                  >
+                    Отправить письмо повторно
+                  </button>
+                </div>
+              )}
+            </div>
           )}
           
           <div className="form-group">
@@ -39,7 +56,10 @@ const LoginForm = () => {
           </div>
           
           <div className="form-group">
-            <label>Пароль</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <label>Пароль</label>
+              <Link to="/forgot-password" style={{ fontSize: '13px' }}>Забыли пароль?</Link>
+            </div>
             <input
               type="password"
               value={password}
@@ -48,11 +68,11 @@ const LoginForm = () => {
               required
             />
           </div>
-          
+
           <button type="submit" className="btn" disabled={isLoading}>
             {isLoading ? <span className="spinner"></span> : 'Войти'}
           </button>
-          
+
           <p className="auth-subtitle" style={{ marginTop: '24px' }}>
             Нет аккаунта? <Link to="/register">Регистрация</Link>
           </p>

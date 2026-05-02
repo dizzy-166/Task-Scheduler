@@ -115,6 +115,58 @@ const useAuthStore = create(
       },
 
       clearError: () => set({ error: null }),
+
+      verifyEmail: async (email, code) => {
+        set({ isLoading: true, error: null });
+        try {
+          await authAPI.verifyEmail(email, code);
+          set({ isLoading: false });
+          return { success: true };
+        } catch (error) {
+          const msg = error.response?.data?.detail || 'Не удалось подтвердить email.';
+          set({ error: msg, isLoading: false });
+          return { success: false, error: msg };
+        }
+      },
+
+      resendVerification: async (email) => {
+        set({ isLoading: true, error: null });
+        try {
+          const res = await authAPI.resendVerification(email);
+          set({ isLoading: false });
+          return { success: true, detail: res.data?.detail };
+        } catch (error) {
+          const msg = error.response?.data?.detail || 'Ошибка отправки письма.';
+          set({ error: msg, isLoading: false });
+          return { success: false };
+        }
+      },
+
+      forgotPassword: async (email) => {
+        set({ isLoading: true, error: null });
+        try {
+          const res = await authAPI.forgotPassword(email);
+          set({ isLoading: false });
+          return { success: true, detail: res.data?.detail };
+        } catch (error) {
+          const msg = error.response?.data?.detail || 'Ошибка отправки письма.';
+          set({ error: msg, isLoading: false });
+          return { success: false };
+        }
+      },
+
+      resetPassword: async (token, password) => {
+        set({ isLoading: true, error: null });
+        try {
+          const res = await authAPI.resetPassword(token, password);
+          set({ isLoading: false });
+          return { success: true, detail: res.data?.detail };
+        } catch (error) {
+          const msg = error.response?.data?.detail || 'Не удалось сбросить пароль.';
+          set({ error: msg, isLoading: false });
+          return { success: false, error: msg };
+        }
+      },
     }),
     {
       name: 'auth-storage',
