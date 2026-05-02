@@ -95,7 +95,7 @@ class RegisterView(generics.CreateAPIView):
         EmailVerificationToken.objects.create(user=user, token=code)
         try:
             send_verification_email(user, code)
-        except Exception as e:
+        except BaseException as e:
             logger.error(f'Failed to send verification email to {user.email}: {e}')
 
         return Response(
@@ -149,7 +149,7 @@ class ResendVerificationView(generics.GenericAPIView):
             EmailVerificationToken.objects.create(user=user, token=code)
             try:
                 send_verification_email(user, code)
-            except Exception as e:
+            except BaseException as e:
                 logger.error(f'Failed to resend verification email to {user.email}: {e}')
         return Response({'detail': 'Если такой email зарегистрирован и не подтверждён, код отправлен.'})
 
