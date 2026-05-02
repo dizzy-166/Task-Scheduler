@@ -1,5 +1,4 @@
-from django.core.management.base import BaseCommand
-from apps.users.models import Permission
+from django.db import migrations
 
 PERMISSIONS = [
     {'code': 'tasks.create',    'resource': 'tasks',    'action': 'create',    'description': 'Создавать задачи'},
@@ -16,16 +15,22 @@ PERMISSIONS = [
 ]
 
 
-class Command(BaseCommand):
-    help = 'Seed default permissions into the database'
+def seed_permissions(apps, schema_editor):
+    Permission = apps.get_model('users', 'Permission')
+    for data in PERMISSIONS:
+        Permission.objects.get_or_create(code=data['code'], defaults=data)
 
-    def handle(self, *args, **options):
-        created = 0
-        for data in PERMISSIONS:
-            _, was_created = Permission.objects.get_or_create(code=data['code'], defaults=data)
-            if was_created:
-                created += 1
-        skipped = len(PERMISSIONS) - created
-        self.stdout.write(self.style.SUCCESS(
-            f'Done: {created} created, {skipped} already existed.'
-        ))
+
+def noop(apps, schema_editor):
+    pass
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('users', '0003_permission_role_rolepermission_userrole_and_more'),
+    ]
+
+    operations = [
+        migrations.RunPython(seed_permissions, noop),
+    ]
