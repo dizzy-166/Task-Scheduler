@@ -1107,6 +1107,9 @@ const DashboardPage = () => {
                         <div className="member-details">
                           <h4>{member.user_name || member.user_email}</h4>
                           <p>{member.user_email}</p>
+                          <span className="member-base-role-badge" data-role={member.role}>
+                            {{ owner: 'Владелец', admin: 'Администратор', member: 'Участник' }[member.role] || member.role}
+                          </span>
                         </div>
                       </div>
 
