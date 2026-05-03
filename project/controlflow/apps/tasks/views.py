@@ -802,60 +802,37 @@ class KanbanColumnViewSet(viewsets.ModelViewSet):
         return Response({'message': 'Порядок обновлён'})
 
 
-_OPENROUTER_FREE_MODELS = [
-    'mistralai/mistral-7b-instruct:free',
-    'google/gemma-2-9b-it:free',
-    'qwen/qwen-2.5-7b-instruct:free',
-    'meta-llama/llama-3.2-3b-instruct:free',
-]
-
-
-def _openrouter_generate(messages, api_key, temperature=0.6, max_tokens=1500):
-    """Call OpenRouter API, trying free models in order until one works."""
-    last_err = None
-    for model in _OPENROUTER_FREE_MODELS:
-        payload = json.dumps({
-            'model': model,
-            'messages': messages,
-            'temperature': temperature,
-            'max_tokens': max_tokens,
-        }).encode('utf-8')
-        req = urllib.request.Request(
-            'https://openrouter.ai/api/v1/chat/completions',
-            data=payload,
-            headers={
-                'Authorization': f'Bearer {api_key}',
-                'Content-Type': 'application/json',
-                'HTTP-Referer': 'https://task-scheduler-snowy.vercel.app',
-                'X-Title': 'ControlFlow',
-            },
-            method='POST',
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                result = json.loads(resp.read().decode('utf-8'))
-            return result['choices'][0]['message']['content']
-        except urllib.error.HTTPError as e:
-            body = e.read().decode('utf-8')
-            logger.warning('OpenRouter model=%s code=%s body=%s', model, e.code, body)
-            last_err = f'{e.code}: {body}'
-            if e.code in (401, 403):
-                break
-        except Exception as e:
-            logger.warning('OpenRouter model=%s error=%s', model, e)
-            last_err = str(e)
-    raise Exception(f'OpenRouter: все модели недоступны. Последняя ошибка: {last_err}')
+def _cerebras_generate(messages, api_key, temperature=0.6, max_tokens=1500):
+    """Call Cerebras API (OpenAI-compatible) and return generated text."""
+    payload = json.dumps({
+        'model': 'llama-3.1-8b',
+        'messages': messages,
+        'temperature': temperature,
+        'max_tokens': max_tokens,
+    }).encode('utf-8')
+    req = urllib.request.Request(
+        'https://api.cerebras.ai/v1/chat/completions',
+        data=payload,
+        headers={
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
+        },
+        method='POST',
+    )
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        result = json.loads(resp.read().decode('utf-8'))
+    return result['choices'][0]['message']['content']
 
 
 class AIGenerateTasksView(APIView):
-    """POST /api/tasks/ai-generate/ — генерация списка задач через OpenRouter"""
+    """POST /api/tasks/ai-generate/ — генерация списка задач через Cerebras"""
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         import re
-        api_key = getattr(settings, 'OPENROUTER_API_KEY', None)
+        api_key = getattr(settings, 'CEREBRAS_API_KEY', None)
         if not api_key:
-            return Response({'error': 'OPENROUTER_API_KEY не настроен'}, status=500)
+            return Response({'error': 'CEREBRAS_API_KEY не настроен'}, status=500)
 
         project_name = request.data.get('project_name', 'Проект')
         description  = request.data.get('description', '').strip()
@@ -874,19 +851,19 @@ class AIGenerateTasksView(APIView):
         )
 
         try:
-            text = _openrouter_generate([{'role': 'user', 'content': prompt}], api_key)
+            text = _cerebras_generate([{'role': 'user', 'content': prompt}], api_key)
             m = re.search(r'\[.*\]', text, re.DOTALL)
             if not m:
-                logger.error('OpenRouter unexpected format: %s', text[:200])
+                logger.error('Cerebras unexpected format: %s', text[:200])
                 return Response({'error': 'ИИ вернул неожиданный формат'}, status=502)
             tasks = json.loads(m.group())
             return Response({'tasks': tasks})
         except urllib.error.HTTPError as e:
             body = e.read().decode('utf-8')
-            logger.error('OpenRouter HTTPError code=%s body=%s', e.code, body)
-            return Response({'error': f'OpenRouter {e.code}: {body}'}, status=502)
+            logger.error('Cerebras HTTPError code=%s body=%s', e.code, body)
+            return Response({'error': f'Cerebras {e.code}: {body}'}, status=502)
         except Exception as e:
-            logger.error('OpenRouter error: %s', e)
+            logger.error('Cerebras error: %s', e)
             return Response({'error': str(e)}, status=502)
 
 
@@ -927,13 +904,13 @@ class AIBulkCreateTasksView(APIView):
 
 
 class AIAnalysisView(APIView):
-    """POST /api/ai/analyze/ — анализ данных через OpenRouter"""
+    """POST /api/ai/analyze/ — анализ данных через Cerebras"""
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        api_key = getattr(settings, 'OPENROUTER_API_KEY', None)
+        api_key = getattr(settings, 'CEREBRAS_API_KEY', None)
         if not api_key:
-            return Response({'error': 'OPENROUTER_API_KEY не настроен'}, status=500)
+            return Response({'error': 'CEREBRAS_API_KEY не настроен'}, status=500)
 
         stats = request.data.get('stats', {})
         company_name = request.data.get('company_name', 'Компания')
@@ -952,14 +929,14 @@ class AIAnalysisView(APIView):
         ]
 
         try:
-            text = _openrouter_generate(messages, api_key, temperature=0.4, max_tokens=1024)
+            text = _cerebras_generate(messages, api_key, temperature=0.4, max_tokens=1024)
             return Response({'analysis': text})
         except urllib.error.HTTPError as e:
             body = e.read().decode('utf-8')
-            logger.error('OpenRouter analysis HTTPError code=%s body=%s', e.code, body)
-            return Response({'error': f'OpenRouter {e.code}: {body}'}, status=502)
+            logger.error('Cerebras analysis HTTPError code=%s body=%s', e.code, body)
+            return Response({'error': f'Cerebras {e.code}: {body}'}, status=502)
         except Exception as e:
-            logger.error('OpenRouter analysis error: %s', e)
+            logger.error('Cerebras analysis error: %s', e)
             return Response({'error': str(e)}, status=502)
 
     def _build_prompt(self, stats, company_name):
