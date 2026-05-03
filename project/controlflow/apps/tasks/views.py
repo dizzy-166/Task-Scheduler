@@ -13,9 +13,12 @@ from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 import json
+import logging
 import urllib.request
 import urllib.error
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 from .models import Task, KanbanColumn, TaskComment, TaskTimer
 from .serializers import (
@@ -825,38 +828,47 @@ class AIGenerateTasksView(APIView):
             f'Пример: [{{"title":"Название","description":"Описание","priority":"medium","due_days":14}}]'
         )
 
-        payload = json.dumps({
-            'model': 'llama-3.3-70b-versatile',
-            'messages': [{'role': 'user', 'content': prompt}],
-            'temperature': 0.6,
-            'max_tokens': 1500,
-        }).encode('utf-8')
+        def call_groq(model):
+            payload = json.dumps({
+                'model': model,
+                'messages': [{'role': 'user', 'content': prompt}],
+                'temperature': 0.6,
+                'max_tokens': 1500,
+            }).encode('utf-8')
+            req = urllib.request.Request(
+                'https://api.groq.com/openai/v1/chat/completions',
+                data=payload,
+                headers={
+                    'Authorization': f'Bearer {api_key}',
+                    'Content-Type': 'application/json',
+                },
+                method='POST',
+            )
+            with urllib.request.urlopen(req, timeout=25) as resp:
+                return json.loads(resp.read().decode('utf-8'))
 
-        req = urllib.request.Request(
-            'https://api.groq.com/openai/v1/chat/completions',
-            data=payload,
-            headers={
-                'Authorization': f'Bearer {api_key}',
-                'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (compatible; Potok/1.0)',
-            },
-            method='POST',
-        )
-
-        try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                result = json.loads(resp.read().decode('utf-8'))
+        models = ['llama-3.1-8b-instant', 'llama3-8b-8192', 'llama-3.3-70b-versatile']
+        last_err = None
+        for model in models:
+            try:
+                result = call_groq(model)
                 text = result['choices'][0]['message']['content']
                 m = re.search(r'\[.*\]', text, re.DOTALL)
                 if not m:
                     return Response({'error': 'ИИ вернул неожиданный формат'}, status=502)
                 tasks = json.loads(m.group())
                 return Response({'tasks': tasks})
-        except urllib.error.HTTPError as e:
-            body = e.read().decode('utf-8')
-            return Response({'error': f'Groq {e.code}: {body}'}, status=502)
-        except Exception as e:
-            return Response({'error': str(e)}, status=502)
+            except urllib.error.HTTPError as e:
+                body = e.read().decode('utf-8')
+                logger.error('Groq HTTPError model=%s code=%s body=%s', model, e.code, body)
+                last_err = f'Groq {e.code}: {body}'
+                if e.code in (401, 403):
+                    break
+            except Exception as e:
+                logger.error('Groq error model=%s: %s', model, e)
+                last_err = str(e)
+
+        return Response({'error': last_err or 'Groq недоступен'}, status=502)
 
 
 class AIBulkCreateTasksView(APIView):
@@ -909,45 +921,49 @@ class AIAnalysisView(APIView):
 
         prompt = self._build_prompt(stats, company_name)
 
-        payload = json.dumps({
-            'model': 'llama-3.3-70b-versatile',
-            'messages': [
-                {
-                    'role': 'system',
-                    'content': (
-                        'Ты опытный менеджер проектов и бизнес-аналитик. '
-                        'Отвечай только на русском языке, чётко и структурированно. '
-                        'Используй эмодзи для наглядности. '
-                        'Пиши конкретные выводы и рекомендации, не общие фразы.'
-                    ),
-                },
-                {'role': 'user', 'content': prompt},
-            ],
-            'temperature': 0.4,
-            'max_tokens': 1024,
-        }).encode('utf-8')
-
-        req = urllib.request.Request(
-            'https://api.groq.com/openai/v1/chat/completions',
-            data=payload,
-            headers={
-                'Authorization': f'Bearer {api_key}',
-                'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (compatible; ControlFlow/1.0)',
-            },
-            method='POST',
+        system_msg = (
+            'Ты опытный менеджер проектов и бизнес-аналитик. '
+            'Отвечай только на русском языке, чётко и структурированно. '
+            'Используй эмодзи для наглядности. '
+            'Пиши конкретные выводы и рекомендации, не общие фразы.'
         )
 
-        try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                result = json.loads(resp.read().decode('utf-8'))
+        def call_groq(model):
+            payload = json.dumps({
+                'model': model,
+                'messages': [
+                    {'role': 'system', 'content': system_msg},
+                    {'role': 'user', 'content': prompt},
+                ],
+                'temperature': 0.4,
+                'max_tokens': 1024,
+            }).encode('utf-8')
+            req = urllib.request.Request(
+                'https://api.groq.com/openai/v1/chat/completions',
+                data=payload,
+                headers={
+                    'Authorization': f'Bearer {api_key}',
+                    'Content-Type': 'application/json',
+                },
+                method='POST',
+            )
+            with urllib.request.urlopen(req, timeout=25) as resp:
+                return json.loads(resp.read().decode('utf-8'))
+
+        for model in ['llama-3.1-8b-instant', 'llama3-8b-8192', 'llama-3.3-70b-versatile']:
+            try:
+                result = call_groq(model)
                 text = result['choices'][0]['message']['content']
                 return Response({'analysis': text})
-        except urllib.error.HTTPError as e:
-            body = e.read().decode('utf-8')
-            return Response({'error': f'Groq API error {e.code}: {body}'}, status=502)
-        except Exception as e:
-            return Response({'error': str(e)}, status=502)
+            except urllib.error.HTTPError as e:
+                body = e.read().decode('utf-8')
+                logger.error('Groq analysis HTTPError model=%s code=%s body=%s', model, e.code, body)
+                if e.code in (401, 403):
+                    return Response({'error': f'Groq {e.code}: {body}'}, status=502)
+            except Exception as e:
+                logger.error('Groq analysis error model=%s: %s', model, e)
+
+        return Response({'error': 'Groq недоступен'}, status=502)
 
     def _build_prompt(self, stats, company_name):
         s = stats.get('summary', stats)
