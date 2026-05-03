@@ -802,28 +802,49 @@ class KanbanColumnViewSet(viewsets.ModelViewSet):
         return Response({'message': 'Порядок обновлён'})
 
 
+_OPENROUTER_FREE_MODELS = [
+    'mistralai/mistral-7b-instruct:free',
+    'google/gemma-2-9b-it:free',
+    'qwen/qwen-2.5-7b-instruct:free',
+    'meta-llama/llama-3.2-3b-instruct:free',
+]
+
+
 def _openrouter_generate(messages, api_key, temperature=0.6, max_tokens=1500):
-    """Call OpenRouter API (OpenAI-compatible) and return generated text."""
-    payload = json.dumps({
-        'model': 'meta-llama/llama-3.1-8b-instruct:free',
-        'messages': messages,
-        'temperature': temperature,
-        'max_tokens': max_tokens,
-    }).encode('utf-8')
-    req = urllib.request.Request(
-        'https://openrouter.ai/api/v1/chat/completions',
-        data=payload,
-        headers={
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://task-scheduler-snowy.vercel.app',
-            'X-Title': 'ControlFlow',
-        },
-        method='POST',
-    )
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        result = json.loads(resp.read().decode('utf-8'))
-    return result['choices'][0]['message']['content']
+    """Call OpenRouter API, trying free models in order until one works."""
+    last_err = None
+    for model in _OPENROUTER_FREE_MODELS:
+        payload = json.dumps({
+            'model': model,
+            'messages': messages,
+            'temperature': temperature,
+            'max_tokens': max_tokens,
+        }).encode('utf-8')
+        req = urllib.request.Request(
+            'https://openrouter.ai/api/v1/chat/completions',
+            data=payload,
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://task-scheduler-snowy.vercel.app',
+                'X-Title': 'ControlFlow',
+            },
+            method='POST',
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                result = json.loads(resp.read().decode('utf-8'))
+            return result['choices'][0]['message']['content']
+        except urllib.error.HTTPError as e:
+            body = e.read().decode('utf-8')
+            logger.warning('OpenRouter model=%s code=%s body=%s', model, e.code, body)
+            last_err = f'{e.code}: {body}'
+            if e.code in (401, 403):
+                break
+        except Exception as e:
+            logger.warning('OpenRouter model=%s error=%s', model, e)
+            last_err = str(e)
+    raise Exception(f'OpenRouter: все модели недоступны. Последняя ошибка: {last_err}')
 
 
 class AIGenerateTasksView(APIView):
