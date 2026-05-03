@@ -90,6 +90,18 @@ const CompanySwitcher = () => {
           <span className="company-trigger-name">
             {activeCompany?.name || 'Выберите компанию'}
           </span>
+          {invites.length > 0 && (
+            <span style={{
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '10px',
+              fontSize: '11px',
+              fontWeight: 700,
+              padding: '1px 6px',
+              marginLeft: '4px',
+              lineHeight: '16px',
+            }}>{invites.length}</span>
+          )}
           <svg className="company-trigger-caret" width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>

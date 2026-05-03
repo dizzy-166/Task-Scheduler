@@ -21,6 +21,61 @@ import { taskService } from '../api/taskService';
 import companyAPI from '../api/companyService';
 import kanbanService from '../api/kanbanService';
 
+const InviteCards = () => {
+  const { invites, respondToInvite, fetchCompanies, setActiveCompany } = useCompanyStore();
+  if (!invites.length) return null;
+
+  const handleAccept = async (companyId) => {
+    const result = await respondToInvite(companyId, 'accept');
+    if (result?.success) {
+      const companies = await fetchCompanies();
+      const accepted = (companies || []).find(c => c.id === companyId);
+      if (accepted) setActiveCompany(accepted);
+    }
+  };
+
+  const handleDecline = (companyId) => respondToInvite(companyId, 'decline');
+
+  return (
+    <div style={{ marginTop: '24px', width: '100%', maxWidth: '480px' }}>
+      <p style={{ fontWeight: 600, marginBottom: '12px', fontSize: '15px' }}>
+        📨 У вас {invites.length === 1 ? 'есть приглашение' : `есть приглашения (${invites.length})`}
+      </p>
+      {invites.map(invite => (
+        <div key={invite.id} style={{
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '10px',
+          padding: '14px 16px',
+          marginBottom: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+        }}>
+          <div>
+            <div style={{ fontWeight: 600, marginBottom: '2px' }}>
+              {invite.company_name || invite.company?.name}
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+              Роль: {invite.role_display || invite.role}
+              {invite.invited_by_name && ` · Пригласил: ${invite.invited_by_name}`}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <button className="btn-primary btn-small" onClick={() => handleAccept(invite.company)}>
+              Принять
+            </button>
+            <button className="btn-secondary btn-small" onClick={() => handleDecline(invite.company)}>
+              Отклонить
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const DashboardPage = () => {
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
@@ -672,6 +727,7 @@ const DashboardPage = () => {
             <div className="empty-icon">🏢</div>
             <h2>Выберите или создайте компанию</h2>
             <p>Для начала работы создайте компанию или примите приглашение</p>
+            <InviteCards />
           </div>
         ) : loading ? (
           <div className="loading-container">
