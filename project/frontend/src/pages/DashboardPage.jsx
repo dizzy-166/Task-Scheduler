@@ -452,7 +452,7 @@ const DashboardPage = () => {
           try {
             const rolesResponse = await companyAPI.getMemberRoles(activeCompany.id, member.user);
             const roles = safeExtractArray(rolesResponse);
-            return { ...member, roles: roles.map(r => r.role || r) };
+            return { ...member, roles: roles.map(r => ({ id: r.role, name: r.role_name })) };
           } catch {
             return { ...member, roles: [] };
           }
