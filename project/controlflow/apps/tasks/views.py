@@ -802,15 +802,39 @@ class KanbanColumnViewSet(viewsets.ModelViewSet):
         return Response({'message': 'Порядок обновлён'})
 
 
+def _openrouter_generate(messages, api_key, temperature=0.6, max_tokens=1500):
+    """Call OpenRouter API (OpenAI-compatible) and return generated text."""
+    payload = json.dumps({
+        'model': 'meta-llama/llama-3.1-8b-instruct:free',
+        'messages': messages,
+        'temperature': temperature,
+        'max_tokens': max_tokens,
+    }).encode('utf-8')
+    req = urllib.request.Request(
+        'https://openrouter.ai/api/v1/chat/completions',
+        data=payload,
+        headers={
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://task-scheduler-snowy.vercel.app',
+            'X-Title': 'ControlFlow',
+        },
+        method='POST',
+    )
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        result = json.loads(resp.read().decode('utf-8'))
+    return result['choices'][0]['message']['content']
+
+
 class AIGenerateTasksView(APIView):
-    """POST /api/tasks/ai-generate/ — генерация списка задач через Groq"""
+    """POST /api/tasks/ai-generate/ — генерация списка задач через OpenRouter"""
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         import re
-        api_key = getattr(settings, 'GROQ_API_KEY', None)
+        api_key = getattr(settings, 'OPENROUTER_API_KEY', None)
         if not api_key:
-            return Response({'error': 'GROQ_API_KEY не настроен'}, status=500)
+            return Response({'error': 'OPENROUTER_API_KEY не настроен'}, status=500)
 
         project_name = request.data.get('project_name', 'Проект')
         description  = request.data.get('description', '').strip()
@@ -828,47 +852,21 @@ class AIGenerateTasksView(APIView):
             f'Пример: [{{"title":"Название","description":"Описание","priority":"medium","due_days":14}}]'
         )
 
-        def call_groq(model):
-            payload = json.dumps({
-                'model': model,
-                'messages': [{'role': 'user', 'content': prompt}],
-                'temperature': 0.6,
-                'max_tokens': 1500,
-            }).encode('utf-8')
-            req = urllib.request.Request(
-                'https://api.groq.com/openai/v1/chat/completions',
-                data=payload,
-                headers={
-                    'Authorization': f'Bearer {api_key}',
-                    'Content-Type': 'application/json',
-                },
-                method='POST',
-            )
-            with urllib.request.urlopen(req, timeout=25) as resp:
-                return json.loads(resp.read().decode('utf-8'))
-
-        models = ['llama-3.1-8b-instant', 'llama3-8b-8192', 'llama-3.3-70b-versatile']
-        last_err = None
-        for model in models:
-            try:
-                result = call_groq(model)
-                text = result['choices'][0]['message']['content']
-                m = re.search(r'\[.*\]', text, re.DOTALL)
-                if not m:
-                    return Response({'error': 'ИИ вернул неожиданный формат'}, status=502)
-                tasks = json.loads(m.group())
-                return Response({'tasks': tasks})
-            except urllib.error.HTTPError as e:
-                body = e.read().decode('utf-8')
-                logger.error('Groq HTTPError model=%s code=%s body=%s', model, e.code, body)
-                last_err = f'Groq {e.code}: {body}'
-                if e.code in (401, 403):
-                    break
-            except Exception as e:
-                logger.error('Groq error model=%s: %s', model, e)
-                last_err = str(e)
-
-        return Response({'error': last_err or 'Groq недоступен'}, status=502)
+        try:
+            text = _openrouter_generate([{'role': 'user', 'content': prompt}], api_key)
+            m = re.search(r'\[.*\]', text, re.DOTALL)
+            if not m:
+                logger.error('OpenRouter unexpected format: %s', text[:200])
+                return Response({'error': 'ИИ вернул неожиданный формат'}, status=502)
+            tasks = json.loads(m.group())
+            return Response({'tasks': tasks})
+        except urllib.error.HTTPError as e:
+            body = e.read().decode('utf-8')
+            logger.error('OpenRouter HTTPError code=%s body=%s', e.code, body)
+            return Response({'error': f'OpenRouter {e.code}: {body}'}, status=502)
+        except Exception as e:
+            logger.error('OpenRouter error: %s', e)
+            return Response({'error': str(e)}, status=502)
 
 
 class AIBulkCreateTasksView(APIView):
@@ -908,62 +906,40 @@ class AIBulkCreateTasksView(APIView):
 
 
 class AIAnalysisView(APIView):
-    """POST /api/ai/analyze/ — анализ данных через Groq (LLaMA 3.3 70B)"""
+    """POST /api/ai/analyze/ — анализ данных через OpenRouter"""
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        api_key = getattr(settings, 'GROQ_API_KEY', None)
+        api_key = getattr(settings, 'OPENROUTER_API_KEY', None)
         if not api_key:
-            return Response({'error': 'GROQ_API_KEY не настроен'}, status=500)
+            return Response({'error': 'OPENROUTER_API_KEY не настроен'}, status=500)
 
         stats = request.data.get('stats', {})
         company_name = request.data.get('company_name', 'Компания')
 
-        prompt = self._build_prompt(stats, company_name)
+        messages = [
+            {
+                'role': 'system',
+                'content': (
+                    'Ты опытный менеджер проектов и бизнес-аналитик. '
+                    'Отвечай только на русском языке, чётко и структурированно. '
+                    'Используй эмодзи для наглядности. '
+                    'Пиши конкретные выводы и рекомендации, не общие фразы.'
+                ),
+            },
+            {'role': 'user', 'content': self._build_prompt(stats, company_name)},
+        ]
 
-        system_msg = (
-            'Ты опытный менеджер проектов и бизнес-аналитик. '
-            'Отвечай только на русском языке, чётко и структурированно. '
-            'Используй эмодзи для наглядности. '
-            'Пиши конкретные выводы и рекомендации, не общие фразы.'
-        )
-
-        def call_groq(model):
-            payload = json.dumps({
-                'model': model,
-                'messages': [
-                    {'role': 'system', 'content': system_msg},
-                    {'role': 'user', 'content': prompt},
-                ],
-                'temperature': 0.4,
-                'max_tokens': 1024,
-            }).encode('utf-8')
-            req = urllib.request.Request(
-                'https://api.groq.com/openai/v1/chat/completions',
-                data=payload,
-                headers={
-                    'Authorization': f'Bearer {api_key}',
-                    'Content-Type': 'application/json',
-                },
-                method='POST',
-            )
-            with urllib.request.urlopen(req, timeout=25) as resp:
-                return json.loads(resp.read().decode('utf-8'))
-
-        for model in ['llama-3.1-8b-instant', 'llama3-8b-8192', 'llama-3.3-70b-versatile']:
-            try:
-                result = call_groq(model)
-                text = result['choices'][0]['message']['content']
-                return Response({'analysis': text})
-            except urllib.error.HTTPError as e:
-                body = e.read().decode('utf-8')
-                logger.error('Groq analysis HTTPError model=%s code=%s body=%s', model, e.code, body)
-                if e.code in (401, 403):
-                    return Response({'error': f'Groq {e.code}: {body}'}, status=502)
-            except Exception as e:
-                logger.error('Groq analysis error model=%s: %s', model, e)
-
-        return Response({'error': 'Groq недоступен'}, status=502)
+        try:
+            text = _openrouter_generate(messages, api_key, temperature=0.4, max_tokens=1024)
+            return Response({'analysis': text})
+        except urllib.error.HTTPError as e:
+            body = e.read().decode('utf-8')
+            logger.error('OpenRouter analysis HTTPError code=%s body=%s', e.code, body)
+            return Response({'error': f'OpenRouter {e.code}: {body}'}, status=502)
+        except Exception as e:
+            logger.error('OpenRouter analysis error: %s', e)
+            return Response({'error': str(e)}, status=502)
 
     def _build_prompt(self, stats, company_name):
         s = stats.get('summary', stats)

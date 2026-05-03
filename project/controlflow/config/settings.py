@@ -215,8 +215,9 @@ CORS_ALLOW_HEADERS = [
     'x-project-id',
 ]
 
-# Groq AI
+# AI
 GROQ_API_KEY = config('GROQ_API_KEY', default='')
+OPENROUTER_API_KEY = config('OPENROUTER_API_KEY', default='')
 
 # Email (Brevo)
 BREVO_API_KEY = config('BREVO_API_KEY', default='')
