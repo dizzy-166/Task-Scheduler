@@ -58,10 +58,15 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-feature-settings: 'liga' 1, 'calt' 1, 'kern' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   background: var(--bg-primary);
   min-height: 100vh;
   color: var(--text-primary);
+  line-height: 1.5;
   transition: background-color 0.3s, color 0.3s;
 }
 
@@ -69,6 +74,11 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.3px;
+  line-height: 1.25;
 }
 
 /* Контейнеры для страниц */
@@ -95,10 +105,11 @@ body {
 
 .auth-title {
   font-size: 28px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
   text-align: center;
   margin-bottom: 8px;
+  letter-spacing: -0.4px;
 }
 
 .auth-subtitle {
@@ -363,7 +374,7 @@ body {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--text-secondary);
   padding: 8px 24px 4px;
 }
@@ -680,10 +691,11 @@ body {
 }
 
 .header-title h2 {
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 26px;
+  font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 4px;
+  letter-spacing: -0.5px;
 }
 
 .header-title p {
@@ -756,8 +768,10 @@ body {
 
 .stat-value {
   font-size: 32px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
 }
 
 /* View Tabs */
@@ -814,9 +828,10 @@ body {
 }
 
 .column-header h3 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
+  letter-spacing: -0.2px;
 }
 
 .task-count {
@@ -862,11 +877,13 @@ body {
 }
 
 .task-header h4 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
   flex: 1;
+  line-height: 1.4;
+  letter-spacing: -0.1px;
 }
 
 .priority-badge {
@@ -895,7 +912,7 @@ body {
   font-size: 13px;
   color: var(--text-secondary);
   margin-bottom: 16px;
-  line-height: 1.4;
+  line-height: 1.55;
 }
 
 .task-footer {
@@ -1015,9 +1032,10 @@ body {
 }
 
 .calendar-header h3 {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.3px;
 }
 
 .calendar-nav {
@@ -1183,10 +1201,11 @@ body {
 }
 
 .modal-header h3 {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 19px;
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+  letter-spacing: -0.3px;
 }
 
 .modal-close {
@@ -1747,10 +1766,15 @@ body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-feature-settings: 'liga' 1, 'calt' 1, 'kern' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   background: var(--bg-primary);
   min-height: 100vh;
   color: var(--text-primary);
+  line-height: 1.5;
   transition: background-color 0.3s, color 0.3s;
 }
 
@@ -1781,10 +1805,11 @@ body {
 
 .auth-title {
   font-size: 28px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
   text-align: center;
   margin-bottom: 8px;
+  letter-spacing: -0.4px;
 }
 
 .auth-subtitle {
@@ -2122,10 +2147,11 @@ body {
 }
 
 .header-title h2 {
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 26px;
+  font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 4px;
+  letter-spacing: -0.5px;
 }
 
 .header-title p {
@@ -2200,8 +2226,10 @@ body {
 
 .stat-value {
   font-size: 32px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
 }
 
 /* View tabs */
@@ -2264,9 +2292,10 @@ body {
 }
 
 .column-header h3 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
+  letter-spacing: -0.2px;
 }
 
 .task-count {
@@ -2319,11 +2348,13 @@ body {
 }
 
 .task-header h4 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
   flex: 1;
+  line-height: 1.4;
+  letter-spacing: -0.1px;
 }
 
 .priority-badge {
@@ -2342,7 +2373,7 @@ body {
   font-size: 13px;
   color: var(--text-secondary);
   margin-bottom: 16px;
-  line-height: 1.4;
+  line-height: 1.55;
 }
 
 .task-footer {
@@ -2467,10 +2498,11 @@ body {
 }
 
 .modal-header h3 {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 19px;
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+  letter-spacing: -0.3px;
 }
 
 .modal-close {
