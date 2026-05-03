@@ -25,7 +25,9 @@
 | 📊 Kanban | Drag-and-drop, настраиваемые колонки, фильтрация по проекту |
 | 📋 Список | Таблица задач с сортировкой и поиском |
 | 📅 Gantt | Диаграмма Ганта с временной шкалой |
-| 🤖 AI-генерация | Создание задач через Groq AI по описанию проекта |
+| 🤖 AI-генерация | Создание задач по описанию проекта (Cerebras Llama 3.1) |
+| 📊 AI-анализ | Анализ состояния задач и рекомендации через ИИ |
+| ✉️ Email | Верификация при регистрации, сброс пароля по ссылке |
 | ⏱ Таймер | Встроенный трекер времени с историей |
 | 📝 Подзадачи | Иерархия задач с прогресс-баром |
 | 💬 Чат | Общение внутри компании в реальном времени |
@@ -45,7 +47,8 @@
 - drf-spectacular — авто-генерация OpenAPI-документации
 - Whitenoise — раздача статики
 - Gunicorn — WSGI-сервер в production
-- Groq AI — генерация задач
+- Cerebras API (Llama 3.1 8B) — AI-генерация задач и аналитика
+- Brevo — отправка email (верификация, сброс пароля)
 
 **Фронтенд**
 - React 19 + Vite
@@ -91,7 +94,9 @@ DB_PASSWORD=твой_пароль
 DB_HOST=localhost
 DB_PORT=5432
 CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
-GROQ_API_KEY=твой_groq_ключ
+BREVO_API_KEY=твой_brevo_ключ
+DEFAULT_FROM_EMAIL=noreply@example.com
+FRONTEND_URL=http://localhost:5173
 ```
 
 ```bash
@@ -130,16 +135,21 @@ npm run dev
 | `DB_HOST` | из Render PostgreSQL |
 | `DB_PORT` | `5432` |
 | `CORS_ALLOWED_ORIGINS` | URL фронтенда на Vercel |
-| `GROQ_API_KEY` | опционально, для AI-генерации |
+| `BREVO_API_KEY` | Ключ Brevo для отправки email |
+| `DEFAULT_FROM_EMAIL` | Адрес отправителя |
+| `FRONTEND_URL` | URL фронтенда (для ссылок в письмах) |
 
 ### Vercel (фронтенд)
 
 1. Импортируй репозиторий, Root Directory: `project/frontend`
-2. Добавь переменную окружения:
+2. Добавь переменные окружения:
 
 ```
 VITE_API_URL=https://<твой-сервис>.onrender.com/api/v1
+VITE_CEREBRAS_API_KEY=твой_cerebras_ключ
 ```
+
+> AI-запросы идут напрямую из браузера на Cerebras API — Render не участвует.
 
 ## 📁 Структура проекта
 
