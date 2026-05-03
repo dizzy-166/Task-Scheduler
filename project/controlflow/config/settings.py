@@ -218,9 +218,9 @@ CORS_ALLOW_HEADERS = [
 # Groq AI
 GROQ_API_KEY = config('GROQ_API_KEY', default='')
 
-# Email (Resend)
-RESEND_API_KEY = config('RESEND_API_KEY', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='onboarding@resend.dev')
+# Email (Brevo)
+BREVO_API_KEY = config('BREVO_API_KEY', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@example.com')
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
 
 # Cache settings (используем локальную память пока без Redis)
