@@ -217,7 +217,7 @@ export default function AnalyticsView() {
               <button className="analytics-ai-close" onClick={() => { setAiOpen(false); setAiText(null); }}>✕</button>
             </div>
             <div className="analytics-ai-body">
-              {aiLoading && <div className="analytics-ai-loading"><div className="spinner-large"/><p>Groq думает…</p></div>}
+              {aiLoading && <div className="analytics-ai-loading"><div className="spinner-large"/><p>ИИ анализирует…</p></div>}
               {aiError   && <div className="analytics-ai-error">{aiError}</div>}
               {aiText    && <div className="analytics-ai-text">{renderMd(aiText)}</div>}
             </div>
