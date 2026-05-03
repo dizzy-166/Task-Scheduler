@@ -116,10 +116,56 @@ export default function AnalyticsView() {
     setAiLoading(true);
     setAiError(null);
     try {
-      const res = await taskService.getAIAnalysis(data, activeCompany?.name || '');
-      setAiText(res.analysis);
-    } catch {
-      setAiError('Не удалось получить анализ. Проверьте API-ключ.');
+      const s = data?.summary || data || {};
+      const byUser = data?.by_user || [];
+      const byProject = data?.by_project || [];
+      const companyName = activeCompany?.name || 'Компания';
+
+      let prompt = `Проанализируй состояние задач компании "${companyName}".\n\n📊 ОБЩАЯ СТАТИСТИКА:\n`;
+      prompt += `• Всего задач: ${s.total || 0}\n`;
+      prompt += `• Завершено: ${s.done || 0} (${s.completion_rate || 0}%)\n`;
+      prompt += `• В работе: ${s.in_progress || 0}\n`;
+      prompt += `• На проверке: ${s.review || 0}\n`;
+      prompt += `• Новые: ${s.new || 0}\n`;
+      prompt += `• Просрочено: ${s.overdue || 0}\n`;
+      if (s.avg_completion_days != null) prompt += `• Среднее время выполнения: ${s.avg_completion_days} дн.\n`;
+
+      if (byUser.length) {
+        prompt += `\n👤 ПО ИСПОЛНИТЕЛЯМ:\n`;
+        byUser.slice(0, 8).forEach(u => {
+          prompt += `• ${u.name || '?'} — всего: ${u.total || 0}, завершено: ${u.done || 0}, просрочено: ${u.overdue || 0}\n`;
+        });
+      }
+      if (byProject.length) {
+        prompt += `\n📁 ПО ПРОЕКТАМ:\n`;
+        byProject.slice(0, 8).forEach(p => {
+          prompt += `• ${p.name || '?'} — прогресс: ${p.progress_pct || 0}%, просрочено: ${p.overdue || 0}\n`;
+        });
+      }
+      prompt += `\nДай структурированный анализ:\n1. Общая оценка здоровья проекта (1-2 предложения)\n2. Ключевые риски (просрочки, перегруженные исполнители)\n3. Конкретные рекомендации (3-5 пунктов)`;
+
+      const resp = await fetch('https://api.cerebras.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_CEREBRAS_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-8b',
+          messages: [
+            { role: 'system', content: 'Ты опытный менеджер проектов и бизнес-аналитик. Отвечай только на русском языке, чётко и структурированно. Используй эмодзи для наглядности. Пиши конкретные выводы и рекомендации, не общие фразы.' },
+            { role: 'user', content: prompt },
+          ],
+          temperature: 0.4,
+          max_tokens: 1024,
+        }),
+      });
+      if (!resp.ok) throw new Error(`Cerebras ${resp.status}`);
+      const result = await resp.json();
+      setAiText(result.choices[0].message.content);
+    } catch (e) {
+      console.error('AI analysis error:', e);
+      setAiError('Не удалось получить анализ. Попробуйте ещё раз.');
     } finally {
       setAiLoading(false);
     }
