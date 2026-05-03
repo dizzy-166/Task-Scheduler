@@ -192,7 +192,11 @@ export default function GanttView({ allTasks, onTaskClick }) {
                       }}
                       title={`${task.title}\n${STATUS_LABEL[task.status] || task.status} · ${task.assignee}`}
                     >
-                      <span className="gantt-bar-label">{task.title}</span>
+                      {barWidth >= 60 && (
+                        <span className="gantt-bar-label" style={{ maxWidth: barWidth - 16 }}>
+                          {task.title}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
