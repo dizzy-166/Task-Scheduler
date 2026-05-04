@@ -46,13 +46,17 @@ function ReplyQuote({ reply, onCancel }) {
 
 function Message({ m, myId, onReply, isNew }) {
   const [hover, setHover] = useState(false);
+  const hideTimer = useRef(null);
   const isMe = m.sender === myId;
+
+  const onEnter = () => { clearTimeout(hideTimer.current); setHover(true); };
+  const onLeave = () => { hideTimer.current = setTimeout(() => setHover(false), 300); };
 
   return (
     <div
       className={`ch-msg${isMe ? ' ch-msg--me' : ''}${isNew ? ' ch-msg--new' : ''}`}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
     >
       {!isMe && <Avatar initials={m.sender_initials} />}
       <div className="ch-bubble-wrap">
@@ -64,7 +68,13 @@ function Message({ m, myId, onReply, isNew }) {
         </div>
       </div>
       {hover && (
-        <button className="ch-reply-btn" onClick={() => onReply(m)} title="Ответить">
+        <button
+          className="ch-reply-btn"
+          onClick={() => onReply(m)}
+          onMouseEnter={onEnter}
+          onMouseLeave={onLeave}
+          title="Ответить"
+        >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>
           </svg>
