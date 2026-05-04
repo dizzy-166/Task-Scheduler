@@ -135,8 +135,6 @@ const DashboardPage = () => {
   // Chat notifications
   const [chatUnread, setChatUnread] = useState(0);
   const [chatToast,  setChatToast]  = useState(null);
-  const bgChatLastIdRef = useRef(0);
-  const bgChatInitRef   = useRef(false);
 
   const currentUserRole =
     companyMembers.find(m => m.user === user?.id)?.role ||
@@ -158,40 +156,48 @@ const DashboardPage = () => {
 
   // ── Chat background notifications ───────────────────────────────────────────
   useEffect(() => {
-    bgChatLastIdRef.current = 0;
-    bgChatInitRef.current   = false;
-  }, [activeCompany?.id]);
-
-  useEffect(() => {
-    if (!activeCompany) return;
     if (activeView === 'chat') {
       setChatUnread(0);
       setChatToast(null);
       return;
     }
+    if (!activeCompany) return;
+
     let alive = true;
+    let lastId = null; // null = not initialised yet
+
     const poll = async () => {
+      if (!alive) return;
       try {
         const data = await chatService.getMessages({ type: 'company' });
-        const msgs = Array.isArray(data) ? data : [];
-        if (!bgChatInitRef.current) {
-          if (msgs.length) bgChatLastIdRef.current = msgs[msgs.length - 1].id;
-          bgChatInitRef.current = true;
+        const msgs = Array.isArray(data) ? data : (data?.results ?? []);
+        if (!msgs.length) return;
+
+        const latestId = msgs[msgs.length - 1].id;
+
+        if (lastId === null) {
+          lastId = latestId; // baseline — don't notify for existing messages
           return;
         }
-        const fresh = msgs.filter(m => m.id > bgChatLastIdRef.current && m.sender !== user?.id);
-        if (fresh.length && alive) {
-          bgChatLastIdRef.current = msgs[msgs.length - 1].id;
+
+        if (latestId === lastId) return;
+
+        const myId = user?.id;
+        const fresh = msgs.filter(m => String(m.id) > String(lastId) && m.sender !== myId);
+        lastId = latestId;
+
+        if (fresh.length) {
           setChatUnread(n => n + fresh.length);
           const last = fresh[fresh.length - 1];
           setChatToast({ sender: last.sender_name, text: last.text });
-        } else if (msgs.length) {
-          bgChatLastIdRef.current = Math.max(bgChatLastIdRef.current, msgs[msgs.length - 1].id);
         }
-      } catch {}
+      } catch (e) {
+        console.error('[chat bg poll]', e);
+      }
     };
+
     poll();
-    const id = setInterval(poll, 10000);
+    const id = setInterval(poll, 8000);
     return () => { alive = false; clearInterval(id); };
   }, [activeCompany?.id, activeView, user?.id]);
 
