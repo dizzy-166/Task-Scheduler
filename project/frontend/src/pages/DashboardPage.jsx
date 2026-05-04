@@ -20,6 +20,7 @@ import NotificationBell from '../components/NotificationBell';
 import { taskService } from '../api/taskService';
 import companyAPI from '../api/companyService';
 import kanbanService from '../api/kanbanService';
+import chatService from '../api/chatService';
 
 const InviteCards = () => {
   const { invites, respondToInvite, fetchCompanies, setActiveCompany } = useCompanyStore();
@@ -131,6 +132,12 @@ const DashboardPage = () => {
   // AI generate tasks modal
   const [showAIGenerate, setShowAIGenerate] = useState(false);
 
+  // Chat notifications
+  const [chatUnread, setChatUnread] = useState(0);
+  const [chatToast,  setChatToast]  = useState(null);
+  const bgChatLastIdRef = useRef(0);
+  const bgChatInitRef   = useRef(false);
+
   const currentUserRole =
     companyMembers.find(m => m.user === user?.id)?.role ||
     (activeCompany?.owner === user?.id ? 'owner' : 'member');
@@ -148,6 +155,51 @@ const DashboardPage = () => {
       setLoading(false);
     }
   }, [activeCompany, activeProject]);
+
+  // ── Chat background notifications ───────────────────────────────────────────
+  useEffect(() => {
+    bgChatLastIdRef.current = 0;
+    bgChatInitRef.current   = false;
+  }, [activeCompany?.id]);
+
+  useEffect(() => {
+    if (!activeCompany) return;
+    if (activeView === 'chat') {
+      setChatUnread(0);
+      setChatToast(null);
+      return;
+    }
+    let alive = true;
+    const poll = async () => {
+      try {
+        const data = await chatService.getMessages({ type: 'company' });
+        const msgs = Array.isArray(data) ? data : [];
+        if (!bgChatInitRef.current) {
+          if (msgs.length) bgChatLastIdRef.current = msgs[msgs.length - 1].id;
+          bgChatInitRef.current = true;
+          return;
+        }
+        const fresh = msgs.filter(m => m.id > bgChatLastIdRef.current && m.sender !== user?.id);
+        if (fresh.length && alive) {
+          bgChatLastIdRef.current = msgs[msgs.length - 1].id;
+          setChatUnread(n => n + fresh.length);
+          const last = fresh[fresh.length - 1];
+          setChatToast({ sender: last.sender_name, text: last.text });
+        } else if (msgs.length) {
+          bgChatLastIdRef.current = Math.max(bgChatLastIdRef.current, msgs[msgs.length - 1].id);
+        }
+      } catch {}
+    };
+    poll();
+    const id = setInterval(poll, 10000);
+    return () => { alive = false; clearInterval(id); };
+  }, [activeCompany?.id, activeView, user?.id]);
+
+  useEffect(() => {
+    if (!chatToast) return;
+    const t = setTimeout(() => setChatToast(null), 5000);
+    return () => clearTimeout(t);
+  }, [chatToast]);
 
   // ── Columns ─────────────────────────────────────────────────────────────────
   const loadColumns = async () => {
@@ -689,7 +741,10 @@ const DashboardPage = () => {
                 onClick={() => setActiveView(view)}
               >
                 {icon}
-                <span>{label}</span>
+                <span style={{ flex: 1 }}>{label}</span>
+                {view === 'chat' && chatUnread > 0 && (
+                  <span className="chat-unread-badge">{chatUnread > 99 ? '99+' : chatUnread}</span>
+                )}
               </button>
             ))}
           </div>
@@ -1380,6 +1435,26 @@ const DashboardPage = () => {
 
       {showProfileModal && (
         <ProfileModal onClose={() => setShowProfileModal(false)} onProfileUpdated={loadAllData} />
+      )}
+
+      {/* Chat toast notification */}
+      {chatToast && (
+        <div
+          className="chat-toast"
+          onClick={() => { setActiveView('chat'); setChatToast(null); setChatUnread(0); }}
+        >
+          <div className="chat-toast-header">
+            <svg className="chat-toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span className="chat-toast-sender">{chatToast.sender}</span>
+            <button
+              className="chat-toast-close"
+              onClick={e => { e.stopPropagation(); setChatToast(null); }}
+            >✕</button>
+          </div>
+          <div className="chat-toast-text">{chatToast.text}</div>
+        </div>
       )}
     </div>
   );

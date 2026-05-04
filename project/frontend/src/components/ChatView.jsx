@@ -44,13 +44,13 @@ function ReplyQuote({ reply, onCancel }) {
   );
 }
 
-function Message({ m, myId, onReply }) {
+function Message({ m, myId, onReply, isNew }) {
   const [hover, setHover] = useState(false);
   const isMe = m.sender === myId;
 
   return (
     <div
-      className={`ch-msg${isMe ? ' ch-msg--me' : ''}`}
+      className={`ch-msg${isMe ? ' ch-msg--me' : ''}${isNew ? ' ch-msg--new' : ''}`}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
@@ -79,22 +79,45 @@ export default function ChatView() {
   const { user }          = useAuthStore();
   const { activeCompany } = useCompanyStore();
 
-  // sidebar data
   const [projects, setProjects] = useState([]);
   const [members,  setMembers]  = useState([]);
-
-  // active channel: { type: 'company'|'project'|'direct', id, name }
-  const [channel, setChannel] = useState({ type: 'company', id: null, name: 'Общий' });
-
-  // messages
+  const [channel, setChannel]   = useState({ type: 'company', id: null, name: 'Общий' });
   const [messages,  setMessages]  = useState([]);
   const [text,      setText]      = useState('');
   const [replyTo,   setReplyTo]   = useState(null);
   const [sending,   setSending]   = useState(false);
+  const [newCount,  setNewCount]  = useState(0);
+  const [newIds,    setNewIds]    = useState(new Set());
 
-  const bottomRef  = useRef(null);
-  const inputRef   = useRef(null);
-  const lastIdRef  = useRef(0);
+  const bottomRef       = useRef(null);
+  const inputRef        = useRef(null);
+  const messagesAreaRef = useRef(null);
+  const lastIdRef       = useRef(0);
+  const nearBottomRef   = useRef(true);
+  const myIdRef         = useRef(user?.id);
+
+  useEffect(() => { myIdRef.current = user?.id; }, [user?.id]);
+
+  // Remove new-message highlight after animation
+  useEffect(() => {
+    if (!newIds.size) return;
+    const t = setTimeout(() => setNewIds(new Set()), 2500);
+    return () => clearTimeout(t);
+  }, [newIds]);
+
+  // ── scroll tracking ────────────────────────────────────────────────────────
+  const handleScroll = useCallback(() => {
+    const el = messagesAreaRef.current;
+    if (!el) return;
+    const fromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    nearBottomRef.current = fromBottom < 80;
+    if (fromBottom < 80) setNewCount(0);
+  }, []);
+
+  const scrollToLatest = useCallback(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setNewCount(0);
+  }, []);
 
   // ── load sidebar data ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -104,36 +127,59 @@ export default function ChatView() {
   }, [activeCompany]);
 
   // ── load messages ──────────────────────────────────────────────────────────
-  const loadMessages = useCallback(async (scrollToBottom = false) => {
+  const loadMessages = useCallback(async (initial = false) => {
     try {
       const params = { type: channel.type };
       if (channel.type === 'project') params.project_id = channel.id;
       if (channel.type === 'direct')  params.with_user  = channel.id;
       const data = await chatService.getMessages(params);
       const msgs = Array.isArray(data) ? data : [];
-      setMessages(msgs);
-      if (scrollToBottom || !lastIdRef.current)
-        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
+
+      if (initial || !lastIdRef.current) {
+        setMessages(msgs);
+        if (msgs.length) lastIdRef.current = msgs[msgs.length - 1].id;
+        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'instant' }), 60);
+        return;
+      }
+
+      // Detect new messages since last poll
+      const freshAll    = msgs.filter(m => m.id > lastIdRef.current);
+      const freshOthers = freshAll.filter(m => m.sender !== myIdRef.current);
       if (msgs.length) lastIdRef.current = msgs[msgs.length - 1].id;
+
+      setMessages(msgs);
+
+      if (!freshAll.length) return;
+
+      if (freshOthers.length) {
+        // Highlight new messages from others
+        setNewIds(prev => {
+          const next = new Set(prev);
+          freshOthers.forEach(m => next.add(m.id));
+          return next;
+        });
+        if (nearBottomRef.current) {
+          setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
+        } else {
+          setNewCount(n => n + freshOthers.length);
+        }
+      } else {
+        // Own message arrived (sent from another tab)
+        if (nearBottomRef.current)
+          setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
+      }
     } catch {}
   }, [channel]);
 
   useEffect(() => {
-    lastIdRef.current = 0;
+    lastIdRef.current   = 0;
+    nearBottomRef.current = true;
+    setNewCount(0);
+    setNewIds(new Set());
     loadMessages(true);
     const id = setInterval(() => loadMessages(false), 4000);
     return () => clearInterval(id);
   }, [loadMessages]);
-
-  // auto-scroll on new message
-  useEffect(() => {
-    if (!messages.length) return;
-    const lastId = messages[messages.length - 1].id;
-    if (lastId !== lastIdRef.current) {
-      lastIdRef.current = lastId;
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
 
   // ── send ───────────────────────────────────────────────────────────────────
   const send = async () => {
@@ -149,6 +195,7 @@ export default function ChatView() {
       if (channel.type === 'direct')  payload.recipient_id = channel.id;
 
       const msg = await chatService.sendMessage(payload);
+      lastIdRef.current = msg.id;
       setMessages(m => [...m, msg]);
       setText('');
       setReplyTo(null);
@@ -172,6 +219,13 @@ export default function ChatView() {
 
   const grouped = groupByDate(messages);
   const myId    = user?.id;
+
+  // Russian plural for messages
+  const newLabel = newCount === 1
+    ? '1 новое сообщение'
+    : newCount < 5
+      ? `${newCount} новых сообщения`
+      : `${newCount} новых сообщений`;
 
   // ── render ─────────────────────────────────────────────────────────────────
   return (
@@ -225,24 +279,41 @@ export default function ChatView() {
           </span>
         </div>
 
-        <div className="ch-messages">
-          {messages.length === 0 && (
-            <div className="ch-empty">Нет сообщений. Начните общение!</div>
+        <div className="ch-messages-wrap">
+          <div
+            className="ch-messages"
+            ref={messagesAreaRef}
+            onScroll={handleScroll}
+          >
+            {messages.length === 0 && (
+              <div className="ch-empty">Нет сообщений. Начните общение!</div>
+            )}
+            {grouped.map((item) => {
+              if (item.type === 'date') return (
+                <div key={item.key} className="ch-date-sep"><span>{item.label}</span></div>
+              );
+              return (
+                <Message
+                  key={item.data.id}
+                  m={item.data}
+                  myId={myId}
+                  onReply={setReplyTo}
+                  isNew={newIds.has(item.data.id)}
+                />
+              );
+            })}
+            <div ref={bottomRef} />
+          </div>
+
+          {/* New messages banner */}
+          {newCount > 0 && (
+            <button className="ch-new-msg-btn" onClick={scrollToLatest}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+              {newLabel}
+            </button>
           )}
-          {grouped.map((item, i) => {
-            if (item.type === 'date') return (
-              <div key={item.key} className="ch-date-sep"><span>{item.label}</span></div>
-            );
-            return (
-              <Message
-                key={item.data.id}
-                m={item.data}
-                myId={myId}
-                onReply={setReplyTo}
-              />
-            );
-          })}
-          <div ref={bottomRef} />
         </div>
 
         <div className="ch-input-area">
