@@ -164,41 +164,59 @@ const DashboardPage = () => {
     if (!activeCompany) return;
 
     let alive = true;
-    let lastId = null; // null = not initialised yet
+    let intervalId = null;
+    const lastIds = {}; // key → last seen message id per channel
 
-    const poll = async () => {
-      if (!alive) return;
+    // Returns the latest new message from others in a channel, or null
+    const checkChannel = async (params) => {
+      const key = params.with_user ? `dm:${params.with_user}` : 'company';
       try {
-        const data = await chatService.getMessages({ type: 'company' });
+        const data = await chatService.getMessages(params);
         const msgs = Array.isArray(data) ? data : (data?.results ?? []);
-        if (!msgs.length) return;
+        if (!msgs.length) return null;
 
-        const latestId = msgs[msgs.length - 1].id;
+        const latestId = Number(msgs[msgs.length - 1].id);
 
-        if (lastId === null) {
-          lastId = latestId; // baseline — don't notify for existing messages
-          return;
+        if (lastIds[key] == null) {
+          lastIds[key] = latestId; // set baseline, don't notify
+          return null;
         }
-
-        if (latestId === lastId) return;
+        if (latestId <= lastIds[key]) return null;
 
         const myId = user?.id;
-        const fresh = msgs.filter(m => String(m.id) > String(lastId) && m.sender !== myId);
-        lastId = latestId;
-
-        if (fresh.length) {
-          setChatUnread(n => n + fresh.length);
-          const last = fresh[fresh.length - 1];
-          setChatToast({ sender: last.sender_name, text: last.text });
-        }
-      } catch (e) {
-        console.error('[chat bg poll]', e);
-      }
+        const fresh = msgs.filter(m => Number(m.id) > lastIds[key] && m.sender !== myId);
+        lastIds[key] = latestId;
+        return fresh.length ? fresh[fresh.length - 1] : null;
+      } catch { return null; }
     };
 
-    poll();
-    const id = setInterval(poll, 8000);
-    return () => { alive = false; clearInterval(id); };
+    chatService.getMembers().then(async ms => {
+      if (!alive) return;
+      const members = Array.isArray(ms) ? ms : [];
+
+      const channels = [
+        { type: 'company' },
+        ...members.map(m => ({ type: 'direct', with_user: m.id })),
+      ];
+
+      // First pass: set baselines for all channels
+      await Promise.all(channels.map(p => checkChannel(p)));
+      if (!alive) return;
+
+      const poll = async () => {
+        if (!alive) return;
+        const hits = (await Promise.all(channels.map(p => checkChannel(p)))).filter(Boolean);
+        if (hits.length && alive) {
+          setChatUnread(n => n + hits.length);
+          const last = hits[hits.length - 1];
+          setChatToast({ sender: last.sender_name, text: last.text });
+        }
+      };
+
+      intervalId = setInterval(poll, 8000);
+    }).catch(() => {});
+
+    return () => { alive = false; clearInterval(intervalId); };
   }, [activeCompany?.id, activeView, user?.id]);
 
   useEffect(() => {
