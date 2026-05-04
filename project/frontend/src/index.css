@@ -6229,6 +6229,100 @@ body {
 }
 .ch-reply-quote-cancel:hover { color: var(--text-primary); }
 
+/* ── Context menu ── */
+.ch-ctx-menu {
+  position: fixed;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.35);
+  min-width: 190px;
+  padding: 4px 0;
+  z-index: 3000;
+  animation: ch-ctx-in .1s ease;
+}
+@keyframes ch-ctx-in {
+  from { opacity: 0; transform: scale(.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.ch-ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 16px;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background .1s;
+}
+.ch-ctx-item:hover { background: var(--bg-hover, rgba(255,255,255,.07)); }
+.ch-ctx-item svg { flex-shrink: 0; color: var(--text-secondary); }
+.ch-ctx-danger { color: #ef4444 !important; }
+.ch-ctx-danger svg { color: #ef4444 !important; }
+.ch-ctx-divider { height: 1px; background: var(--border-color); margin: 4px 0; }
+
+/* ── Edit mode ── */
+.ch-edit-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+  max-width: 480px;
+}
+.ch-edit-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg-input, rgba(255,255,255,.07));
+  border: 1.5px solid #6366f1;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+}
+.ch-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ch-edit-hint { flex: 1; font-size: 11px; color: var(--text-secondary); }
+.ch-edit-save-btn {
+  padding: 4px 14px;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+}
+.ch-edit-save-btn:hover { background: #5254cc; }
+.ch-edit-cancel-btn {
+  padding: 4px 10px;
+  background: none;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+}
+.ch-edit-cancel-btn:hover { color: var(--text-primary); }
+
+/* ── Edited indicator ── */
+.ch-edited {
+  font-size: 10px;
+  font-style: italic;
+  opacity: 0.55;
+}
+
 /* ── Input area ── */
 .ch-input-area {
   flex-shrink: 0;

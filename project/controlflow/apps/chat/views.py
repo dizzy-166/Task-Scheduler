@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -71,6 +72,37 @@ class ChatMessagesView(APIView):
         return Response(ChatMessageSerializer(
             ChatMessage.objects.select_related('sender', 'reply_to', 'reply_to__sender').get(pk=msg.pk)
         ).data, status=201)
+
+
+class ChatMessageDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        try:
+            msg = ChatMessage.objects.get(pk=pk)
+        except ChatMessage.DoesNotExist:
+            return Response({'error': 'Not found'}, status=404)
+        if msg.sender != request.user:
+            return Response({'error': 'Forbidden'}, status=403)
+        text = request.data.get('text', '').strip()
+        if not text:
+            return Response({'error': 'text required'}, status=400)
+        msg.text = text
+        msg.edited_at = timezone.now()
+        msg.save()
+        return Response(ChatMessageSerializer(
+            ChatMessage.objects.select_related('sender', 'reply_to', 'reply_to__sender').get(pk=msg.pk)
+        ).data)
+
+    def delete(self, request, pk):
+        try:
+            msg = ChatMessage.objects.get(pk=pk)
+        except ChatMessage.DoesNotExist:
+            return Response({'error': 'Not found'}, status=404)
+        if msg.sender != request.user:
+            return Response({'error': 'Forbidden'}, status=403)
+        msg.delete()
+        return Response(status=204)
 
 
 class ChatMembersView(APIView):
