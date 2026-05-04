@@ -135,6 +135,7 @@ const DashboardPage = () => {
   // Chat notifications
   const [chatUnread, setChatUnread] = useState(0);
   const [chatToast,  setChatToast]  = useState(null);
+  const chatLastIdsRef = useRef({});
 
   const currentUserRole =
     companyMembers.find(m => m.user === user?.id)?.role ||
@@ -154,6 +155,11 @@ const DashboardPage = () => {
     }
   }, [activeCompany, activeProject]);
 
+  // Reset chat tracking when company or user changes
+  useEffect(() => {
+    chatLastIdsRef.current = {};
+  }, [activeCompany?.id, user?.id]);
+
   // ── Chat background notifications ───────────────────────────────────────────
   useEffect(() => {
     if (activeView === 'chat') {
@@ -165,7 +171,7 @@ const DashboardPage = () => {
 
     let alive = true;
     let intervalId = null;
-    const lastIds = {}; // key → last seen message id per channel
+    const lastIds = chatLastIdsRef.current; // persists across view-switch re-runs
 
     // Returns the latest new message from others in a channel, or null
     const checkChannel = async (params) => {
