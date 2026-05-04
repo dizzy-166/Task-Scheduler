@@ -197,6 +197,7 @@ export default function ChatView() {
   const [editingId, setEditingId] = useState(null);
   const [editText,  setEditText]  = useState('');
   const [ctxMenu,   setCtxMenu]   = useState(null); // { x, y, msg }
+  const editingIdRef = useRef(null);
 
   const bottomRef       = useRef(null);
   const inputRef        = useRef(null);
@@ -206,6 +207,7 @@ export default function ChatView() {
   const myIdRef         = useRef(user?.id);
 
   useEffect(() => { myIdRef.current = user?.id; }, [user?.id]);
+  useEffect(() => { editingIdRef.current = editingId; }, [editingId]);
 
   useEffect(() => {
     if (!newIds.size) return;
@@ -256,8 +258,8 @@ export default function ChatView() {
 
       // Preserve in-progress edits
       setMessages(prev => {
-        const editId = editingId;
-        return msgs.map(m => (m.id === editId ? prev.find(p => p.id === editId) || m : m));
+        const editId = editingIdRef.current;
+        return editId ? msgs.map(m => m.id === editId ? (prev.find(p => p.id === editId) || m) : m) : msgs;
       });
 
       if (!freshAll.length) return;
@@ -271,7 +273,7 @@ export default function ChatView() {
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
       }
     } catch {}
-  }, [channel, editingId]);
+  }, [channel]);
 
   useEffect(() => {
     lastIdRef.current   = 0;
