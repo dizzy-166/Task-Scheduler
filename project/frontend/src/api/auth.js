@@ -46,49 +46,71 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Флаг чтобы не диспатчить событие несколько раз при пачке параллельных 401
-let _sessionExpiredDispatched = false;
+// ── Token refresh queue ───────────────────────────────────────────────────────
+// Prevents multiple parallel 401s from each firing their own refresh request.
+// The first 401 does the refresh; all others wait in failedQueue and are
+// retried once the new token arrives (or rejected if refresh itself fails).
 
-const _dispatchSessionExpired = () => {
-  if (_sessionExpiredDispatched) return;
-  _sessionExpiredDispatched = true;
+let isRefreshing = false;
+let failedQueue  = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(({ resolve, reject }) => error ? reject(error) : resolve(token));
+  failedQueue = [];
+};
+
+const dispatchSessionExpired = () => {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
   sessionStorage.setItem('session_expired', '1');
   window.dispatchEvent(new Event('auth:session_expired'));
-  // Сбрасываем флаг через секунду — на случай если пользователь снова залогинится
-  setTimeout(() => { _sessionExpiredDispatched = false; }, 1000);
 };
 
-// Обработка истечения токена
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (refreshToken) {
-        try {
-          const response = await axios.post(`${API_URL}/auth/refresh/`, {
-            refresh: refreshToken,
-          });
-
-          localStorage.setItem('accessToken', response.data.access);
-          originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
-
-          return api(originalRequest);
-        } catch {
-          _dispatchSessionExpired();
-        }
-      } else {
-        _dispatchSessionExpired();
-      }
+    if (error.response?.status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    // While a refresh is already in flight, queue this request
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      }).then(token => {
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return api(originalRequest);
+      });
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      isRefreshing = false;
+      processQueue(error);
+      dispatchSessionExpired();
+      return Promise.reject(error);
+    }
+
+    try {
+      const { data } = await axios.post(`${API_URL}/auth/refresh/`, { refresh: refreshToken });
+      const newToken = data.access;
+      localStorage.setItem('accessToken', newToken);
+      api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      originalRequest.headers.Authorization = `Bearer ${newToken}`;
+      processQueue(null, newToken);
+      return api(originalRequest);
+    } catch (refreshError) {
+      processQueue(refreshError);
+      dispatchSessionExpired();
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
   }
 );
 
