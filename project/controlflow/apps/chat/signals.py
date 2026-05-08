@@ -58,14 +58,22 @@ def task_post_save(sender, instance, created, **kwargs):
                 related_task=instance,
             )
 
-        # Смена статуса — уведомляем создателя (если он не сам менял)
-        if old_status and instance.status != old_status and instance.creator:
+        # Смена статуса — уведомляем всех участников компании
+        if old_status and instance.status != old_status and instance.company_id:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
             label = STATUS_LABELS.get(instance.status, instance.status)
-            Notification.objects.create(
-                recipient=instance.creator,
-                company_id=instance.company_id,
-                type='status_changed',
-                title=f'Статус изменён: {label}',
-                body=instance.title,
-                related_task=instance,
-            )
+            members = User.objects.filter(
+                company_memberships__company_id=instance.company_id
+            ).distinct()
+            Notification.objects.bulk_create([
+                Notification(
+                    recipient=member,
+                    company_id=instance.company_id,
+                    type='status_changed',
+                    title=f'Статус изменён: {label}',
+                    body=instance.title,
+                    related_task=instance,
+                )
+                for member in members
+            ])
