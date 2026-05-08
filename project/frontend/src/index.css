@@ -852,8 +852,7 @@ h1, h2, h3, h4, h5, h6 {
 .kanban-column {
   background: var(--kanban-column-bg);
   border-radius: 12px;
-  flex: 0 0 280px;
-  width: 280px;
+  flex-shrink: 0;
 }
 
 .column-header {
@@ -2305,7 +2304,7 @@ body {
 .kanban-column {
   background: var(--kanban-column-bg);
   border-radius: 12px;
-  min-width: 280px;
+  flex-shrink: 0;
   transition: background-color 0.2s ease;
 }
 
