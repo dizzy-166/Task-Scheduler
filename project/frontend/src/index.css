@@ -494,13 +494,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .main-header {
-  padding: 14px 28px;
+  padding: 12px 20px;
+  margin: 16px 20px 0;
   background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: 0 2px 12px var(--shadow-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 56px;
+  min-height: 52px;
 }
 
 .header-breadcrumb {
