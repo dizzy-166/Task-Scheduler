@@ -853,23 +853,16 @@ const DashboardPage = () => {
           </svg>
           {!sidebarCollapsed && <span>Поток</span>}
         </div>
-        {!sidebarCollapsed && (
-          <button className="sidebar-collapse-btn" onClick={toggleSidebar} title="Свернуть">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <polyline points="15 18 9 12 15 6"/>
-            </svg>
-          </button>
-        )}
+        <button className="sidebar-collapse-btn" onClick={toggleSidebar} title={sidebarCollapsed ? 'Развернуть' : 'Свернуть'}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            {sidebarCollapsed
+              ? <polyline points="9 18 15 12 9 6"/>
+              : <polyline points="15 18 9 12 15 6"/>}
+          </svg>
+        </button>
       </div>
 
       <nav className="sidebar-nav">
-        {sidebarCollapsed && (
-          <button className="sidebar-expand-btn" onClick={toggleSidebar} title="Развернуть">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
-        )}
         {!sidebarCollapsed && (
           <div className="sidebar-nav-section">
             <CompanySwitcher />
