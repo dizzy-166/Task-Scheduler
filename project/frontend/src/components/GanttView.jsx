@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect } from 'react';
+import { useMemo, useRef, useEffect, useState } from 'react';
 
 const PRIO_COLOR = {
   Критический: '#EF4444',
@@ -25,6 +25,13 @@ function diffDays(a, b) {
 export default function GanttView({ allTasks, onTaskClick }) {
   const today = startOfDay(new Date());
   const outerRef = useRef(null);
+  const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const onResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const { minDate, maxDate, dayWidth } = useMemo(() => {
     const dated = allTasks.filter(t => t.dueDate || t.createdAt);
@@ -41,9 +48,17 @@ export default function GanttView({ allTasks, onTaskClick }) {
     const min    = new Date(Math.max(rawMin.getTime(), addDays(today, -30).getTime()));
     const max    = addDays(new Date(Math.max(...allMs)), 5);
     const span   = Math.max(diffDays(min, max), 14);
-    const dw     = span <= 30 ? 38 : span <= 90 ? 20 : 11;
+
+    // Комфортная ширина дня по диапазону
+    const preferred = span <= 30 ? 38 : span <= 90 ? 20 : 11;
+    // Автоподбор под экран: доступная ширина = вьюпорт − сайдбар (260) − колонка задач (240) − отступы (48)
+    const available = viewportWidth - 260 - 240 - 48;
+    const fitDw     = available > 0 ? Math.floor(available / span) : preferred;
+    // Берём минимум из комфортного и подогнанного; минимум 5px чтобы бары были видны
+    const dw = Math.max(5, Math.min(preferred, fitDw));
+
     return { minDate: min, maxDate: max, dayWidth: dw };
-  }, [allTasks]);
+  }, [allTasks, viewportWidth]);
 
   // Автоскролл к «сегодня» при смене набора задач
   useEffect(() => {
