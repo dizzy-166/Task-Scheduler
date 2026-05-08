@@ -90,6 +90,7 @@ const DashboardPage = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [tasks, setTasks] = useState({});
   const [columns, setColumns] = useState([]);
+  const [kanbanColWidth, setKanbanColWidth] = useState(280);
   const [stats, setStats] = useState({ total: 0, inProgress: 0, onReview: 0, completed: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -889,22 +890,55 @@ const DashboardPage = () => {
         {/* ── Kanban ── */}
         {activeView === 'kanban' && (
           <div className="kanban-wrapper">
-            {canManageColumns && (
-              <div className="kanban-toolbar">
+            <div className="kanban-toolbar">
+              {canManageColumns && (
                 <button
                   className="btn-secondary btn-small"
                   onClick={() => { setEditingColumn(null); setColumnForm({ name: '', color: '#6B7280' }); setShowColumnModal(true); }}
                 >
                   + Добавить колонку
                 </button>
+              )}
+              <div className="kanban-zoom-controls">
+                <button
+                  className="kanban-zoom-btn"
+                  onClick={() => setKanbanColWidth(w => Math.max(180, w - 40))}
+                  title="Уменьшить колонки"
+                  disabled={kanbanColWidth <= 180}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>
+                  </svg>
+                </button>
+                <span className="kanban-zoom-label">{Math.round((kanbanColWidth / 280) * 100)}%</span>
+                <button
+                  className="kanban-zoom-btn"
+                  onClick={() => setKanbanColWidth(w => Math.min(480, w + 40))}
+                  title="Увеличить колонки"
+                  disabled={kanbanColWidth >= 480}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+                  </svg>
+                </button>
+                {kanbanColWidth !== 280 && (
+                  <button
+                    className="kanban-zoom-btn kanban-zoom-reset"
+                    onClick={() => setKanbanColWidth(280)}
+                    title="Сбросить масштаб"
+                  >
+                    100%
+                  </button>
+                )}
               </div>
-            )}
+            </div>
 
             <div className="kanban-board">
               {columns.map(col => (
                 <div
                   key={col.id}
                   className={`kanban-column${dragColId === col.id ? ' col-dragging' : ''}`}
+                  style={{ flex: `0 0 ${kanbanColWidth}px`, width: kanbanColWidth }}
                   onDragOver={onDragOver}
                   onDragEnter={onDragEnter}
                   onDragLeave={onDragLeave}
