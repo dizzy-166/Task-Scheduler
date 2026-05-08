@@ -17,6 +17,7 @@ import ChatView from '../components/ChatView';
 import GanttView from '../components/GanttView';
 import AIGenerateModal from '../components/AIGenerateModal';
 import NotificationBell from '../components/NotificationBell';
+import OnboardingTutorial from '../components/OnboardingTutorial';
 import { taskService } from '../api/taskService';
 import companyAPI from '../api/companyService';
 import kanbanService from '../api/kanbanService';
@@ -83,6 +84,11 @@ const DashboardPage = () => {
   const { activeCompany, companies, deleteCompany } = useCompanyStore();
   const { activeProject } = useProjectStore();
   const navigate = useNavigate();
+
+  const [showTutorial, setShowTutorial] = useState(() => {
+    if (!user?.id) return false;
+    return !localStorage.getItem(`tutorial_done_${user.id}`);
+  });
 
   const [activeView, setActiveView] = useState('home');
   const [taskScope, setTaskScope] = useState('all');
@@ -1535,6 +1541,13 @@ const DashboardPage = () => {
           </div>
           <div className="chat-toast-text">{chatToast.text}</div>
         </div>
+      )}
+
+      {showTutorial && (
+        <OnboardingTutorial
+          userId={user?.id}
+          onDone={() => setShowTutorial(false)}
+        />
       )}
     </div>
   );
