@@ -36,58 +36,111 @@ function setColWidths(ws, widths) {
   ws['!cols'] = widths.map(w => ({ wch: w }));
 }
 
+const SE = { new:'🆕 Новая', in_progress:'🔵 В работе', review:'🔶 На проверке', done:'✅ Завершена', cancelled:'🚫 Отменена' };
+const PE = { low:'⚪ Низкий', medium:'🟡 Средний', high:'🟠 Высокий', critical:'🔴 Критический' };
+const bar = pct => '█'.repeat(Math.round((pct||0)/10)) + '░'.repeat(10-Math.round((pct||0)/10)) + `  ${pct??0}%`;
+
 function doExcel(data, company) {
   const wb = XLSX.utils.book_new();
   const s = data.summary;
 
-  // Sheet 1 — Summary
+  // Sheet 1 — Summary / KPI
   const wsSummary = XLSX.utils.aoa_to_sheet([
-    ['Отчёт по задачам'],
-    ['Компания', company], ['Сформирован', data.generated_at], [''],
-    ['Всего задач', s.total], ['Завершено', s.done], ['В работе', s.in_progress],
-    ['На проверке', s.review], ['Новые', s.new], ['Отменено', s.cancelled],
-    ['Просрочено', s.overdue], ['% выполнения', s.completion_rate+'%'],
+    [`📊 Отчёт по задачам — ${company}`],
+    [`Сформирован: ${data.generated_at}    ·    Всего задач: ${s.total}`],
+    [''],
+    ['── СТАТУСЫ ───────────────────────────────'],
+    ['✅ Завершено',     s.done,        bar(s.completion_rate), `Выполнено: ${s.completion_rate}%`],
+    ['🔵 В работе',      s.in_progress, '', ''],
+    ['🔶 На проверке',   s.review,      '', ''],
+    ['🆕 Новые',         s.new,         '', ''],
+    ['🚫 Отменено',      s.cancelled,   '', ''],
+    ['⚠️ Просрочено',    s.overdue,     '', ''],
+    [''],
+    ['── МЕТРИКИ ──────────────────────────────'],
+    ['% выполнения',                    s.completion_rate + '%'],
     ['Среднее время выполнения (дней)', s.avg_completion_days ?? '—'],
   ]);
-  setColWidths(wsSummary, [36, 20]);
-  XLSX.utils.book_append_sheet(wb, wsSummary, 'Сводка');
+  setColWidths(wsSummary, [38, 10, 20, 20]);
+  XLSX.utils.book_append_sheet(wb, wsSummary, '📊 Сводка');
 
   // Sheet 2 — By assignee
   const wsUsers = XLSX.utils.aoa_to_sheet([
-    ['Исполнитель','Email','Всего','Завершено','В работе','На проверке','Новые','Просрочено','% выполнения','Среднее дн.'],
-    ...data.by_user.map(u => [u.name,u.email,u.total,u.done,u.in_progress,u.review,u.new,u.overdue,u.completion_rate+'%',u.avg_completion_days??'—']),
+    ['Исполнитель','Email','Всего','✅ Завершено','🔵 В работе','🔶 Проверка','🆕 Новые','⚠️ Просрочено','Прогресс','Ср. дней'],
+    ...data.by_user.map(u => [
+      u.name, u.email, u.total, u.done, u.in_progress, u.review, u.new,
+      u.overdue > 0 ? `⚠️ ${u.overdue}` : 0,
+      bar(u.completion_rate),
+      u.avg_completion_days ?? '—',
+    ]),
   ]);
-  setColWidths(wsUsers, [24, 30, 8, 10, 10, 12, 8, 10, 12, 12]);
+  setColWidths(wsUsers, [24, 30, 8, 12, 12, 12, 8, 14, 18, 10]);
   wsUsers['!freeze'] = { xSplit: 0, ySplit: 1 };
   wsUsers['!autofilter'] = { ref: wsUsers['!ref'] };
-  XLSX.utils.book_append_sheet(wb, wsUsers, 'По исполнителям');
+  XLSX.utils.book_append_sheet(wb, wsUsers, '👤 По исполнителям');
 
   // Sheet 3 — By project
   const wsProj = XLSX.utils.aoa_to_sheet([
-    ['Проект','Статус','Дедлайн','Всего','Завершено','В работе','На проверке','Просрочено','Прогресс'],
-    ...data.by_project.map(p => [p.name,PROJ_S[p.status]||p.status,p.deadline,p.total,p.done,p.in_progress,p.review,p.overdue,p.progress_pct+'%']),
-  ]);
-  setColWidths(wsProj, [28, 12, 12, 8, 10, 10, 12, 10, 10]);
-  wsProj['!freeze'] = { xSplit: 0, ySplit: 1 };
-  wsProj['!autofilter'] = { ref: wsProj['!ref'] };
-  XLSX.utils.book_append_sheet(wb, wsProj, 'По проектам');
-
-  // Sheet 4 — Task list
-  const wsTasks = XLSX.utils.aoa_to_sheet([
-    ['Задача','Описание','Проект','Исполнитель','Автор','Статус','Приоритет','Создана','Срок','Завершена','Просрочена','Оценка (ч)','Факт (ч)'],
-    ...data.tasks.map(t => [
-      t.title, t.description ?? '', t.project, t.assignee, t.creator,
-      SL[t.status]||t.status, PL[t.priority]||t.priority,
-      t.created_at, t.due_date, t.completed_at,
-      t.is_overdue ? 'Да' : 'Нет',
-      t.estimated_hours ?? '—',
-      t.actual_hours ?? '—',
+    ['Проект','Статус','Дедлайн','Всего','✅ Завершено','🔵 В работе','🔶 Проверка','⚠️ Просрочено','Прогресс'],
+    ...data.by_project.map(p => [
+      p.name, PROJ_S[p.status]||p.status, p.deadline,
+      p.total, p.done, p.in_progress, p.review,
+      p.overdue > 0 ? `⚠️ ${p.overdue}` : 0,
+      bar(p.progress_pct),
     ]),
   ]);
-  setColWidths(wsTasks, [32, 48, 20, 22, 22, 12, 12, 12, 12, 12, 10, 11, 10]);
+  setColWidths(wsProj, [30, 12, 12, 8, 12, 12, 12, 14, 18]);
+  wsProj['!freeze'] = { xSplit: 0, ySplit: 1 };
+  wsProj['!autofilter'] = { ref: wsProj['!ref'] };
+  XLSX.utils.book_append_sheet(wb, wsProj, '📁 По проектам');
+
+  // Sheet 4 — Full task list
+  const taskRows = data.tasks.map(t => [
+    t.is_overdue ? `⚠️ ${t.title}` : t.title,
+    t.description ?? '',
+    t.project,
+    t.assignee,
+    t.creator,
+    SE[t.status] || t.status,
+    PE[t.priority] || t.priority,
+    t.created_at,
+    t.due_date,
+    t.completed_at ?? '—',
+    t.is_overdue ? '⚠️ Да' : 'Нет',
+    t.estimated_hours ?? '—',
+    t.actual_hours ?? '—',
+  ]);
+  const wsTasks = XLSX.utils.aoa_to_sheet([
+    ['Задача','Описание','Проект','Исполнитель','Автор','Статус','Приоритет','Создана','Срок','Завершена','Просрочена','Оценка (ч)','Факт (ч)'],
+    ...taskRows,
+  ]);
+  setColWidths(wsTasks, [36, 48, 20, 22, 22, 18, 18, 12, 12, 12, 12, 11, 10]);
   wsTasks['!freeze'] = { xSplit: 0, ySplit: 1 };
   wsTasks['!autofilter'] = { ref: wsTasks['!ref'] };
-  XLSX.utils.book_append_sheet(wb, wsTasks, 'Задачи');
+  XLSX.utils.book_append_sheet(wb, wsTasks, '📋 Задачи');
+
+  // Sheet 5 — Overdue tasks only
+  const overdueTasks = data.tasks.filter(t => t.is_overdue);
+  if (overdueTasks.length) {
+    const wsOverdue = XLSX.utils.aoa_to_sheet([
+      [`⚠️ ПРОСРОЧЕННЫЕ ЗАДАЧИ — ${overdueTasks.length} шт.`],
+      [''],
+      ['Задача','Проект','Исполнитель','Статус','Приоритет','Срок','Оценка (ч)','Факт (ч)'],
+      ...overdueTasks.map(t => [
+        t.title, t.project, t.assignee,
+        SE[t.status] || t.status,
+        PE[t.priority] || t.priority,
+        t.due_date,
+        t.estimated_hours ?? '—',
+        t.actual_hours ?? '—',
+      ]),
+    ]);
+    setColWidths(wsOverdue, [36, 20, 22, 18, 18, 12, 11, 10]);
+    wsOverdue['!freeze'] = { xSplit: 0, ySplit: 3 };
+    wsOverdue['!autofilter'] = { ref: `A3:H${overdueTasks.length + 3}` };
+    wsOverdue['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }];
+    XLSX.utils.book_append_sheet(wb, wsOverdue, '⚠️ Просроченные');
+  }
 
   XLSX.writeFile(wb, `отчёт_${new Date().toLocaleDateString('ru')}.xlsx`);
 }
