@@ -338,7 +338,7 @@ const DashboardPage = () => {
 
   useEffect(() => {
     if (activeView !== 'kanban' && activeView !== 'list') return;
-    if (!activeProject) return;
+    if (!activeCompany) return; // need at least a company context; works in "all projects" mode too
 
     const tick = () => {
       if (document.visibilityState === 'visible') setPollTick(n => n + 1);
@@ -347,7 +347,7 @@ const DashboardPage = () => {
     const onVisibility = () => { if (document.visibilityState === 'visible') tick(); };
     document.addEventListener('visibilitychange', onVisibility);
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisibility); };
-  }, [activeView, activeProject?.id]);
+  }, [activeView, activeCompany?.id, activeProject?.id]);
 
   useEffect(() => {
     if (pollTick === 0) return; // skip initial mount
