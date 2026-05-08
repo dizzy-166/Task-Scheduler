@@ -710,6 +710,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             completion_dt = t.completed_at or (t.updated_at if t.status == 'done' else None)
             tasks.append({
                 'title':        t.title,
+                'description':  t.description or '',
                 'project':      t.project.name if t.project else '—',
                 'assignee':     assignee_name,
                 'creator':      _user_name(t.creator),
@@ -720,6 +721,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                 'completed_at': completion_dt.strftime('%d.%m.%Y') if completion_dt else '—',
                 'is_overdue':   is_overdue,
                 'estimated_hours': float(t.estimated_hours) if t.estimated_hours else None,
+                'actual_hours': float(t.actual_hours) if t.actual_hours else None,
             })
 
         return Response({

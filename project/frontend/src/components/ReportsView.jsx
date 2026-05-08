@@ -32,33 +32,62 @@ const MiniBar = ({ pct, color = '#6366f1' }) => (
 );
 
 // ── Excel export ──────────────────────────────────────────────────────────────
+function setColWidths(ws, widths) {
+  ws['!cols'] = widths.map(w => ({ wch: w }));
+}
+
 function doExcel(data, company) {
   const wb = XLSX.utils.book_new();
   const s = data.summary;
 
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+  // Sheet 1 — Summary
+  const wsSummary = XLSX.utils.aoa_to_sheet([
     ['Отчёт по задачам'],
     ['Компания', company], ['Сформирован', data.generated_at], [''],
     ['Всего задач', s.total], ['Завершено', s.done], ['В работе', s.in_progress],
     ['На проверке', s.review], ['Новые', s.new], ['Отменено', s.cancelled],
     ['Просрочено', s.overdue], ['% выполнения', s.completion_rate+'%'],
-    ['Среднее время (дней)', s.avg_completion_days ?? '—'],
-  ]), 'Сводка');
+    ['Среднее время выполнения (дней)', s.avg_completion_days ?? '—'],
+  ]);
+  setColWidths(wsSummary, [36, 20]);
+  XLSX.utils.book_append_sheet(wb, wsSummary, 'Сводка');
 
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
-    ['Исполнитель','Email','Всего','Завершено','В работе','Проверка','Новые','Просрочено','%','Среднее дн.'],
+  // Sheet 2 — By assignee
+  const wsUsers = XLSX.utils.aoa_to_sheet([
+    ['Исполнитель','Email','Всего','Завершено','В работе','На проверке','Новые','Просрочено','% выполнения','Среднее дн.'],
     ...data.by_user.map(u => [u.name,u.email,u.total,u.done,u.in_progress,u.review,u.new,u.overdue,u.completion_rate+'%',u.avg_completion_days??'—']),
-  ]), 'По исполнителям');
+  ]);
+  setColWidths(wsUsers, [24, 30, 8, 10, 10, 12, 8, 10, 12, 12]);
+  wsUsers['!freeze'] = { xSplit: 0, ySplit: 1 };
+  wsUsers['!autofilter'] = { ref: wsUsers['!ref'] };
+  XLSX.utils.book_append_sheet(wb, wsUsers, 'По исполнителям');
 
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
-    ['Проект','Статус','Дедлайн','Всего','Завершено','В работе','Проверка','Просрочено','Прогресс'],
+  // Sheet 3 — By project
+  const wsProj = XLSX.utils.aoa_to_sheet([
+    ['Проект','Статус','Дедлайн','Всего','Завершено','В работе','На проверке','Просрочено','Прогресс'],
     ...data.by_project.map(p => [p.name,PROJ_S[p.status]||p.status,p.deadline,p.total,p.done,p.in_progress,p.review,p.overdue,p.progress_pct+'%']),
-  ]), 'По проектам');
+  ]);
+  setColWidths(wsProj, [28, 12, 12, 8, 10, 10, 12, 10, 10]);
+  wsProj['!freeze'] = { xSplit: 0, ySplit: 1 };
+  wsProj['!autofilter'] = { ref: wsProj['!ref'] };
+  XLSX.utils.book_append_sheet(wb, wsProj, 'По проектам');
 
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
-    ['Задача','Проект','Исполнитель','Автор','Статус','Приоритет','Создана','Срок','Завершена','Просрочена','Оценка (ч)'],
-    ...data.tasks.map(t => [t.title,t.project,t.assignee,t.creator,SL[t.status]||t.status,PL[t.priority]||t.priority,t.created_at,t.due_date,t.completed_at,t.is_overdue?'Да':'Нет',t.estimated_hours??'—']),
-  ]), 'Задачи');
+  // Sheet 4 — Task list
+  const wsTasks = XLSX.utils.aoa_to_sheet([
+    ['Задача','Описание','Проект','Исполнитель','Автор','Статус','Приоритет','Создана','Срок','Завершена','Просрочена','Оценка (ч)','Факт (ч)'],
+    ...data.tasks.map(t => [
+      t.title, t.description ?? '', t.project, t.assignee, t.creator,
+      SL[t.status]||t.status, PL[t.priority]||t.priority,
+      t.created_at, t.due_date, t.completed_at,
+      t.is_overdue ? 'Да' : 'Нет',
+      t.estimated_hours ?? '—',
+      t.actual_hours ?? '—',
+    ]),
+  ]);
+  setColWidths(wsTasks, [32, 48, 20, 22, 22, 12, 12, 12, 12, 12, 10, 11, 10]);
+  wsTasks['!freeze'] = { xSplit: 0, ySplit: 1 };
+  wsTasks['!autofilter'] = { ref: wsTasks['!ref'] };
+  XLSX.utils.book_append_sheet(wb, wsTasks, 'Задачи');
 
   XLSX.writeFile(wb, `отчёт_${new Date().toLocaleDateString('ru')}.xlsx`);
 }
