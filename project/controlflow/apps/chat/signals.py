@@ -1,5 +1,8 @@
+import logging
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(pre_save, sender='tasks.Task')
@@ -58,15 +61,21 @@ def task_post_save(sender, instance, created, **kwargs):
                 related_task=instance,
             )
 
-        # Смена статуса — уведомляем всех участников компании
+        # Смена статуса — уведомляем всех активных участников компании
         if old_status and instance.status != old_status and instance.company_id:
             from django.contrib.auth import get_user_model
             User = get_user_model()
             label = STATUS_LABELS.get(instance.status, instance.status)
-            members = User.objects.filter(
-                company_memberships__company_id=instance.company_id
-            ).distinct()
-            Notification.objects.bulk_create([
+            members = list(User.objects.filter(
+                company_memberships__company_id=instance.company_id,
+                company_memberships__status='active',
+            ).distinct())
+            logger.info(
+                'status_changed signal: task=%s company=%s old=%s new=%s members=%s',
+                instance.pk, instance.company_id, old_status, instance.status,
+                [m.pk for m in members],
+            )
+            notifications = [
                 Notification(
                     recipient=member,
                     company_id=instance.company_id,
@@ -76,4 +85,6 @@ def task_post_save(sender, instance, created, **kwargs):
                     related_task=instance,
                 )
                 for member in members
-            ])
+            ]
+            created = Notification.objects.bulk_create(notifications)
+            logger.info('status_changed signal: created %d notifications', len(created))
