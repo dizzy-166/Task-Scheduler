@@ -4267,6 +4267,38 @@ body {
   gap: 2px;
 }
 .project-dropdown-item-wrapper .project-dropdown-item { flex: 1; }
+
+/* Project progress bar in dropdown */
+.project-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.project-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.project-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--border-color);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.project-progress-fill {
+  height: 100%;
+  background: #10B981;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+.project-progress-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
 .project-delete-btn {
   padding: 4px 6px;
   background: none;

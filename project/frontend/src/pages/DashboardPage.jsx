@@ -785,6 +785,7 @@ const DashboardPage = () => {
             <ProjectSwitcher
               companyId={activeCompany.id}
               currentUserRole={currentUserRole}
+              allTasksList={allTasksList}
             />
           </div>
         )}

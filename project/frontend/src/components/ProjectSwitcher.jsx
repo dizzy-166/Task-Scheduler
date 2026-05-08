@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import useProjectStore from '../store/projectStore';
 
-const ProjectSwitcher = ({ companyId, currentUserRole }) => {
+const ProjectSwitcher = ({ companyId, currentUserRole, allTasksList = [] }) => {
   const { projects, activeProject, fetchProjects, setActiveProject, createProject, deleteProject } =
     useProjectStore();
 
@@ -98,31 +98,50 @@ const ProjectSwitcher = ({ companyId, currentUserRole }) => {
 
             {projects.length > 0 && <div className="project-dropdown-divider" />}
 
-            {projects.map(project => (
-              <div key={project.id} className="project-dropdown-item-wrapper">
-                <button
-                  className={`project-dropdown-item ${activeProject?.id === project.id ? 'active' : ''}`}
-                  onClick={() => handleSelect(project)}
-                >
-                  <span className="project-status-dot" style={{ background: project.status === 'active' ? '#4CAF50' : '#9E9E9E' }} />
-                  <span>{project.name}</span>
-                  {activeProject?.id === project.id && (
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path d="M2 7l4 4 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                    </svg>
-                  )}
-                </button>
-                {canManage && (
+            {projects.map(project => {
+              const projTasks = allTasksList.filter(t =>
+                t.project === project.id || t.projectId === project.id || t.project_id === project.id ||
+                (t.projectName && t.projectName === project.name)
+              );
+              const total = projTasks.length;
+              const done  = projTasks.filter(t => t.status === 'done').length;
+              const pct   = total > 0 ? Math.round((done / total) * 100) : null;
+              return (
+                <div key={project.id} className="project-dropdown-item-wrapper">
                   <button
-                    className="project-delete-btn"
-                    onClick={e => { e.stopPropagation(); setShowDeleteConfirm(project); setOpen(false); }}
-                    title="Удалить проект"
+                    className={`project-dropdown-item ${activeProject?.id === project.id ? 'active' : ''}`}
+                    onClick={() => handleSelect(project)}
                   >
-                    ×
+                    <span className="project-status-dot" style={{ background: project.status === 'active' ? '#4CAF50' : '#9E9E9E' }} />
+                    <div className="project-item-body">
+                      <span>{project.name}</span>
+                      {pct !== null && (
+                        <div className="project-progress-wrap">
+                          <div className="project-progress-bar">
+                            <div className="project-progress-fill" style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="project-progress-label">{done}/{total}</span>
+                        </div>
+                      )}
+                    </div>
+                    {activeProject?.id === project.id && (
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
+                        <path d="M2 7l4 4 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                      </svg>
+                    )}
                   </button>
-                )}
-              </div>
-            ))}
+                  {canManage && (
+                    <button
+                      className="project-delete-btn"
+                      onClick={e => { e.stopPropagation(); setShowDeleteConfirm(project); setOpen(false); }}
+                      title="Удалить проект"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              );
+            })}
 
             {canManage && (
               <>
