@@ -48,6 +48,13 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete
   const [commentText,    setCommentText]    = useState('');
   const [commentLoading, setCommentLoading] = useState(false);
   const commentListRef = useRef(null);
+  const commentInputRef = useRef(null);
+
+  // @mention dropdown
+  const [mentionQuery,   setMentionQuery]   = useState('');
+  const [mentionVisible, setMentionVisible] = useState(false);
+  const [mentionIdx,     setMentionIdx]     = useState(0);
+  const mentionStartRef = useRef(-1);
 
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerStart,   setTimerStart]   = useState(null);
@@ -213,6 +220,7 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete
   const handleAddComment = async () => {
     if (!commentText.trim() || commentLoading) return;
     setCommentLoading(true);
+    setMentionVisible(false);
     try {
       const c = await taskService.addComment(task.id, commentText.trim());
       setComments(p => [...p, c]); setCommentText('');
@@ -223,8 +231,58 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete
     try { await taskService.deleteComment(task.id, id); setComments(p => p.filter(c => c.id !== id)); } catch {}
   };
 
+  const mentionSuggestions = mentionQuery
+    ? users.filter(u => u.full_name?.toLowerCase().includes(mentionQuery.toLowerCase())).slice(0, 6)
+    : users.slice(0, 6);
+
+  const insertMention = (user) => {
+    const before = commentText.slice(0, mentionStartRef.current);
+    const after  = commentText.slice(mentionStartRef.current + 1 + mentionQuery.length);
+    const inserted = `@${user.full_name} `;
+    setCommentText(before + inserted + after);
+    setMentionVisible(false);
+    setMentionQuery('');
+    commentInputRef.current?.focus();
+  };
+
+  const onCommentChange = (e) => {
+    const val = e.target.value;
+    setCommentText(val);
+    const pos = e.target.selectionStart;
+    // Find last @ before cursor
+    const before = val.slice(0, pos);
+    const atIdx = before.lastIndexOf('@');
+    if (atIdx !== -1 && !before.slice(atIdx + 1).includes(' ') && pos - atIdx <= 30) {
+      mentionStartRef.current = atIdx;
+      setMentionQuery(before.slice(atIdx + 1));
+      setMentionVisible(true);
+      setMentionIdx(0);
+    } else {
+      setMentionVisible(false);
+      setMentionQuery('');
+    }
+  };
+
   const onCommentKey = (e) => {
+    if (mentionVisible) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setMentionIdx(i => (i + 1) % mentionSuggestions.length); return; }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); setMentionIdx(i => (i - 1 + mentionSuggestions.length) % mentionSuggestions.length); return; }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        if (mentionSuggestions[mentionIdx]) { e.preventDefault(); insertMention(mentionSuggestions[mentionIdx]); return; }
+      }
+      if (e.key === 'Escape') { setMentionVisible(false); return; }
+    }
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); handleAddComment(); }
+  };
+
+  // Render comment text with highlighted @mentions
+  const renderCommentText = (text) => {
+    const parts = text.split(/(@[\wа-яёА-ЯЁ][^@\n]*?(?=\s@|\s*$))/);
+    return parts.map((p, i) =>
+      p.startsWith('@')
+        ? <mark key={i} className="comment-mention">{p}</mark>
+        : p
+    );
   };
 
   const handleAddSubtask = async () => {
@@ -472,16 +530,37 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete
                               </button>
                             )}
                           </div>
-                          <div className="tm-comment-text">{c.text}</div>
+                          <div className="tm-comment-text">{renderCommentText(c.text)}</div>
                         </div>
                       </div>
                     );
                   })
                 )}
               </div>
-              <div className="tm-comment-input-wrap">
-                <textarea className="tm-comment-input" placeholder="Написать комментарий… (Ctrl+Enter)"
-                  value={commentText} onChange={e => setCommentText(e.target.value)} onKeyDown={onCommentKey} rows={2} />
+              <div className="tm-comment-input-wrap" style={{ position: 'relative' }}>
+                {mentionVisible && mentionSuggestions.length > 0 && (
+                  <div className="mention-dropdown">
+                    {mentionSuggestions.map((u, i) => (
+                      <button
+                        key={u.id}
+                        className={`mention-item${i === mentionIdx ? ' mention-item--active' : ''}`}
+                        onMouseDown={e => { e.preventDefault(); insertMention(u); }}
+                      >
+                        <span className="mention-avatar">{u.full_name?.[0]}</span>
+                        <span>{u.full_name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <textarea
+                  ref={commentInputRef}
+                  className="tm-comment-input"
+                  placeholder="Написать комментарий… Используйте @ для упоминания (Ctrl+Enter)"
+                  value={commentText}
+                  onChange={onCommentChange}
+                  onKeyDown={onCommentKey}
+                  rows={2}
+                />
                 <button className="tm-comment-send" onClick={handleAddComment}
                   disabled={!commentText.trim() || commentLoading} title="Отправить (Ctrl+Enter)">
                   {commentLoading ? <span className="tm-comment-spinner" /> : (

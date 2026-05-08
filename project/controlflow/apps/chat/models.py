@@ -32,10 +32,11 @@ class ChatMessage(models.Model):
 
 class Notification(models.Model):
     TYPE_CHOICES = [
-        ('task_assigned',  'Назначена задача'),
-        ('status_changed', 'Изменён статус'),
-        ('deadline_soon',  'Скоро дедлайн'),
-        ('task_created',   'Создана задача'),
+        ('task_assigned',    'Назначена задача'),
+        ('status_changed',   'Изменён статус'),
+        ('deadline_soon',    'Скоро дедлайн'),
+        ('task_created',     'Создана задача'),
+        ('comment_mention',  'Упоминание в комментарии'),
     ]
 
     recipient    = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')

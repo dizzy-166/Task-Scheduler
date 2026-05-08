@@ -29,6 +29,10 @@ from .serializers import (
 from .permissions import CanManageTask
 from .filters import TaskFilter
 
+import re
+from django.contrib.auth import get_user_model
+from controlflow.apps.chat.models import Notification
+
 
 class TaskViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с задачами"""
@@ -432,6 +436,26 @@ class TaskViewSet(viewsets.ModelViewSet):
         if not text:
             return Response({'error': 'text required'}, status=400)
         comment = TaskComment.objects.create(task=task, author=request.user, text=text)
+
+        # Parse @mentions and notify mentioned users
+        User = get_user_model()
+        mentioned_names = re.findall(r'@([\w\s]+?)(?=\s@|\s*$|[^а-яёa-z\s])', text, re.IGNORECASE)
+        company = task.project.company if hasattr(task, 'project') and task.project else None
+        if company and mentioned_names:
+            members = User.objects.filter(company_memberships__company=company).exclude(id=request.user.id)
+            author_name = request.user.get_full_name() or request.user.email
+            for member in members:
+                full = member.get_full_name()
+                if any(full.lower() == m.strip().lower() for m in mentioned_names):
+                    Notification.objects.create(
+                        recipient=member,
+                        company=company,
+                        type='comment_mention',
+                        title=f'{author_name} упомянул вас в задаче «{task.title}»',
+                        body=text[:200],
+                        related_task=task,
+                    )
+
         return Response(TaskCommentSerializer(comment).data, status=201)
 
     @action(detail=True, methods=['delete'], url_path='comments/(?P<comment_id>[^/.]+)')
