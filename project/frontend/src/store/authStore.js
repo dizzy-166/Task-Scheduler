@@ -74,7 +74,7 @@ const useAuthStore = create(
       
       logout: async () => {
         const refresh = localStorage.getItem('refreshToken');
-        
+
         try {
           if (refresh) {
             await authAPI.logout(refresh);
@@ -84,6 +84,9 @@ const useAuthStore = create(
         } finally {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
+          localStorage.removeItem('project-storage');
+          localStorage.removeItem('company-storage');
+          localStorage.removeItem('activeView');
           set({ user: null, isAuthenticated: false });
         }
       },
@@ -111,6 +114,9 @@ const useAuthStore = create(
       forceLogout: () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        localStorage.removeItem('project-storage');
+        localStorage.removeItem('company-storage');
+        localStorage.removeItem('activeView');
         set({ user: null, isAuthenticated: false });
       },
 

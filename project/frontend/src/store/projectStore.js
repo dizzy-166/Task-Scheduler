@@ -15,7 +15,9 @@ const useProjectStore = create(
         try {
           const data = await projectService.getProjects();
           const projects = Array.isArray(data) ? data : (data.results || []);
-          set({ projects, isLoading: false });
+          const currentActive = get().activeProject;
+          const activeExists = currentActive && projects.some(p => p.id === currentActive.id);
+          set({ projects, activeProject: activeExists ? currentActive : null, isLoading: false });
           return projects;
         } catch (err) {
           set({ error: err.message, isLoading: false });
