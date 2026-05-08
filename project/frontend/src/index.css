@@ -335,12 +335,12 @@ h1, h2, h3, h4, h5, h6 {
   flex-shrink: 0;
 }
 .sidebar--collapsed {
-  width: 40px;
-  min-width: 40px;
+  width: 36px;
+  min-width: 36px;
 }
 .sidebar--collapsed .nav-item--btn {
-  margin: 2px 4px;
-  width: calc(100% - 8px);
+  margin: 2px 3px;
+  width: calc(100% - 6px);
   padding: 9px 0;
   justify-content: center;
   border-radius: 8px;
@@ -370,29 +370,25 @@ h1, h2, h3, h4, h5, h6 {
 
 .sidebar-header-mini {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8px 0 6px;
+  padding: 20px 0;
   border-bottom: 1px solid var(--border-color);
-  min-height: 60px;
-  gap: 6px;
   flex-shrink: 0;
 }
-.logo-mini {
+.logo-mini-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.logo-mini svg {
-  width: 24px;
-  height: 24px;
   border-radius: 6px;
+  transition: opacity 0.15s;
 }
-.sidebar-collapse-btn--expand {
-  width: 20px;
-  height: 20px;
-}
+.logo-mini-btn:hover { opacity: 0.75; }
+.logo-mini-btn svg { border-radius: 6px; display: block; }
 
 .sidebar-collapse-btn {
   flex-shrink: 0;
@@ -519,15 +515,15 @@ h1, h2, h3, h4, h5, h6 {
   flex-shrink: 0;
 }
 .sidebar--collapsed .sidebar-footer {
-  padding: 8px 4px;
+  padding: 8px 3px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 .sidebar--collapsed .user-avatar {
-  width: 32px;
-  height: 32px;
-  font-size: 12px;
+  width: 30px;
+  height: 30px;
+  font-size: 11px;
 }
 .sidebar--collapsed .logout-btn { display: none; }
 
