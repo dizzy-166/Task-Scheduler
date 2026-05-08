@@ -19,6 +19,7 @@ import AIGenerateModal from '../components/AIGenerateModal';
 import NotificationBell from '../components/NotificationBell';
 import OnboardingTutorial from '../components/OnboardingTutorial';
 import Toast from '../components/Toast';
+import GlobalSearch from '../components/GlobalSearch';
 import { taskService } from '../api/taskService';
 import companyAPI from '../api/companyService';
 import kanbanService from '../api/kanbanService';
@@ -115,6 +116,19 @@ const DashboardPage = () => {
     kanbanBoardRef.current.style.cursor = '';
     kanbanBoardRef.current.style.userSelect = '';
   };
+
+  // Global search
+  const [showSearch, setShowSearch] = useState(false);
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(s => !s);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // Toast notifications
   const [toasts, setToasts] = useState([]);
@@ -893,6 +907,13 @@ const DashboardPage = () => {
             </span>
           </div>
           <div className="header-actions">
+            <button className="search-trigger-btn" onClick={() => setShowSearch(true)} title="Поиск (Ctrl+K)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <span className="search-trigger-label">Поиск</span>
+              <kbd className="search-trigger-kbd">Ctrl+K</kbd>
+            </button>
             <NotificationBell />
             <button className="theme-toggle-btn" onClick={toggleTheme} title="Сменить тему">
               {theme === 'light' ? (
@@ -1602,6 +1623,15 @@ const DashboardPage = () => {
         <OnboardingTutorial
           userId={user?.id}
           onDone={() => setShowTutorial(false)}
+        />
+      )}
+
+      {showSearch && (
+        <GlobalSearch
+          allTasksList={allTasksList}
+          onNavigate={changeView}
+          onTaskClick={(task) => { handleTaskClick(task); }}
+          onClose={() => setShowSearch(false)}
         />
       )}
 
