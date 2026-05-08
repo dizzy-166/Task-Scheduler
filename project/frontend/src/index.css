@@ -841,16 +841,19 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Kanban Board */
 .kanban-board {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
   gap: 20px;
   overflow-x: auto;
+  padding-bottom: 12px;
 }
 
 .kanban-column {
   background: var(--kanban-column-bg);
   border-radius: 12px;
-  min-width: 280px;
+  flex: 0 0 280px;
+  width: 280px;
 }
 
 .column-header {
@@ -1165,10 +1168,6 @@ h1, h2, h3, h4, h5, h6 {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
-  .kanban-board {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (max-width: 640px) {
@@ -1189,11 +1188,7 @@ h1, h2, h3, h4, h5, h6 {
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
-  .kanban-board {
-    grid-template-columns: 1fr;
-  }
-  
+
   .view-tabs {
     width: 100%;
   }
@@ -2299,10 +2294,12 @@ body {
 
 /* Kanban */
 .kanban-board {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
   gap: 20px;
   overflow-x: auto;
+  padding-bottom: 12px;
 }
 
 .kanban-column {
@@ -2740,10 +2737,6 @@ body {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
-  .kanban-board {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (max-width: 640px) {
@@ -2767,11 +2760,7 @@ body {
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
-  .kanban-board {
-    grid-template-columns: 1fr;
-  }
-  
+
   .form-row {
     grid-template-columns: 1fr;
   }
