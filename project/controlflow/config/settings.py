@@ -106,6 +106,7 @@ DATABASES = {
         'OPTIONS': {
             'connect_timeout': 10,
             'sslmode': config('DB_SSLMODE', default='prefer'),
+            'options': config('DB_OPTIONS', default=''),
         },
     }
 }

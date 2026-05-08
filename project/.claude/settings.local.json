@@ -15,7 +15,8 @@
       "Bash(python manage.py startapp chat)",
       "Bash(python manage.py makemigrations chat)",
       "Bash(python manage.py migrate)",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "PowerShell(head -30)"
     ]
   }
 }

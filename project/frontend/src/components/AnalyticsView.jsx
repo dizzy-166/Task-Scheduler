@@ -116,9 +116,10 @@ export default function AnalyticsView() {
     setAiLoading(true);
     setAiError(null);
     try {
-      const s = data?.summary || data || {};
-      const byUser = data?.by_user || [];
-      const byProject = data?.by_project || [];
+      const report = await taskService.getReport();
+      const s = report?.summary || {};
+      const byUser = report?.by_user || [];
+      const byProject = report?.by_project || [];
       const companyName = activeCompany?.name || 'Компания';
 
       let prompt = `Проанализируй состояние задач компании "${companyName}".\n\n📊 ОБЩАЯ СТАТИСТИКА:\n`;
