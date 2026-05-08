@@ -1072,6 +1072,25 @@ h1, h2, h3, h4, h5, h6 {
   color: #34a853;
 }
 
+/* Deadline badges on kanban cards */
+.deadline-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.deadline-badge--overdue {
+  background: rgba(239,68,68,0.15);
+  color: #EF4444;
+}
+.deadline-badge--soon {
+  background: rgba(245,158,11,0.15);
+  color: #D97706;
+}
+
 /* List View */
 .list-view {
   background: var(--bg-secondary);

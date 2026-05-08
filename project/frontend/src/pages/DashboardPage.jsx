@@ -759,6 +759,21 @@ const DashboardPage = () => {
 
   const allTasksList = columns.flatMap(c => tasks[c.id] || []);
 
+  const getDeadlineBadge = (task) => {
+    if (!task.dueDate || task.status === 'done' || task.status === 'cancelled') return null;
+    const now = new Date();
+    const due = new Date(task.dueDate);
+    const diffMs = due - now;
+    if (diffMs < 0) return { label: 'Просрочено', cls: 'deadline-badge--overdue' };
+    const diffDays = diffMs / 86400000;
+    if (diffDays <= 2) {
+      const hours = Math.floor(diffMs / 3600000);
+      const label = hours < 24 ? `${hours}ч` : `${Math.ceil(diffDays)}д`;
+      return { label, cls: 'deadline-badge--soon' };
+    }
+    return null;
+  };
+
   const PRIORITY_STRIP = {
     Критический: '#EF4444',
     Высокий:     '#F59E0B',
@@ -1151,9 +1166,18 @@ const DashboardPage = () => {
                             </div>
                             <span>{task.assignee}</span>
                           </div>
-                          <div className="task-time">
-                            <span>{formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
-                          </div>
+                          {(() => {
+                            const badge = getDeadlineBadge(task);
+                            if (badge) return (
+                              <span className={`deadline-badge ${badge.cls}`}>{badge.label}</span>
+                            );
+                            if (task.dueDate || task.estimatedHours) return (
+                              <div className="task-time">
+                                <span>{formatTimeLeft(task.dueDate, task.estimatedHours)}</span>
+                              </div>
+                            );
+                            return null;
+                          })()}
                         </div>
                       </div>
                     ))}
