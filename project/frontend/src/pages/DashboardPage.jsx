@@ -18,6 +18,7 @@ import GanttView from '../components/GanttView';
 import AIGenerateModal from '../components/AIGenerateModal';
 import NotificationBell from '../components/NotificationBell';
 import OnboardingTutorial from '../components/OnboardingTutorial';
+import Toast from '../components/Toast';
 import { taskService } from '../api/taskService';
 import companyAPI from '../api/companyService';
 import kanbanService from '../api/kanbanService';
@@ -114,6 +115,14 @@ const DashboardPage = () => {
     kanbanBoardRef.current.style.cursor = '';
     kanbanBoardRef.current.style.userSelect = '';
   };
+
+  // Toast notifications
+  const [toasts, setToasts] = useState([]);
+  const showToast = (message, type = 'success') => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, message, type }]);
+  };
+  const removeToast = (id) => setToasts(prev => prev.filter(t => t.id !== id));
 
   const [taskScope, setTaskScope] = useState('all');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -283,8 +292,10 @@ const DashboardPage = () => {
     try {
       if (editingColumn) {
         await kanbanService.updateColumn(editingColumn.id, columnForm);
+        showToast(`Колонка «${columnForm.name}» обновлена`);
       } else {
         await kanbanService.createColumn(columnForm);
+        showToast(`Колонка «${columnForm.name}» создана`);
       }
       await loadColumns();
       setShowColumnModal(false);
@@ -300,6 +311,7 @@ const DashboardPage = () => {
     if (!confirm(`Удалить колонку "${col.name}"? Задачи останутся без колонки.`)) return;
     await kanbanService.deleteColumn(col.id);
     await loadColumns();
+    showToast(`Колонка «${col.name}» удалена`, 'error');
   };
 
   // ── Tasks ────────────────────────────────────────────────────────────────────
@@ -526,9 +538,10 @@ const DashboardPage = () => {
     try {
       await taskService.updateTaskStatus(taskId, targetCol?.status_key || taskToMove.status, targetColId);
       await loadStats();
+      showToast(`«${taskToMove.title}» → ${targetCol?.name || 'колонка'}`);
     } catch {
       await loadTasks(taskScope, columns);
-      alert('Не удалось переместить задачу. Попробуйте еще раз.');
+      showToast('Не удалось переместить задачу', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -665,7 +678,8 @@ const DashboardPage = () => {
       await loadAllData();
       setIsTaskModalOpen(false);
       setSelectedTask(null);
-    } catch { alert('Не удалось удалить задачу.'); }
+      showToast('Задача удалена', 'error');
+    } catch { showToast('Не удалось удалить задачу', 'error'); }
     finally { setIsUpdating(false); }
   };
 
@@ -1378,7 +1392,7 @@ const DashboardPage = () => {
       <TaskModal
         isOpen={isTaskModalOpen}
         onClose={() => { setIsTaskModalOpen(false); setSelectedTask(null); }}
-        onTaskCreated={async () => { await loadAllData(); setIsTaskModalOpen(false); setSelectedTask(null); }}
+        onTaskCreated={async (task) => { await loadAllData(); setIsTaskModalOpen(false); setSelectedTask(null); showToast(task?.title ? `Задача «${task.title}» создана` : 'Задача создана'); }}
         onTaskUpdated={async () => { await loadAllData(); }}
         onTaskDelete={handleDeleteTask}
         task={selectedTask}
@@ -1580,6 +1594,8 @@ const DashboardPage = () => {
           onDone={() => setShowTutorial(false)}
         />
       )}
+
+      <Toast toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };
