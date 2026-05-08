@@ -106,9 +106,6 @@ const DashboardPage = () => {
     return next;
   });
 
-  // Always points to the latest loadTasks (updated every render, fixes stale closure in polling)
-  const loadTasksRef = useRef(null);
-
   // Drag-to-scroll on kanban board
   const kanbanBoardRef = useRef(null);
   const dragScrollRef = useRef({ active: false, startX: 0, scrollLeft: 0 });
@@ -335,21 +332,29 @@ const DashboardPage = () => {
   }, [chatToast]);
 
   // ── Task polling for real-time sync ─────────────────────────────────────────
+  // pollTick is incremented by the interval; the second effect responds to each
+  // tick with a fresh loadTasks (no stale closure — setPollTick is always stable)
+  const [pollTick, setPollTick] = useState(0);
+
   useEffect(() => {
     if (activeView !== 'kanban' && activeView !== 'list') return;
     if (!activeProject) return;
 
-    // Use ref so the interval always calls the latest loadTasks (avoids stale closure)
-    const poll = () => {
-      if (document.visibilityState === 'visible' && loadTasksRef.current) {
-        loadTasksRef.current();
-      }
+    const tick = () => {
+      if (document.visibilityState === 'visible') setPollTick(n => n + 1);
     };
-    const id = setInterval(poll, 15000);
-    const onVisibility = () => { if (document.visibilityState === 'visible') poll(); };
+    const id = setInterval(tick, 10000);
+    const onVisibility = () => { if (document.visibilityState === 'visible') tick(); };
     document.addEventListener('visibilitychange', onVisibility);
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisibility); };
   }, [activeView, activeProject?.id]);
+
+  useEffect(() => {
+    if (pollTick === 0) return; // skip initial mount
+    if (activeView !== 'kanban' && activeView !== 'list') return;
+    loadTasks(); // called with current-render's loadTasks — columns and scope are fresh
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pollTick]);
 
   // ── Columns ─────────────────────────────────────────────────────────────────
   const loadColumns = async () => {
@@ -478,8 +483,6 @@ const DashboardPage = () => {
       throw err;
     }
   };
-  loadTasksRef.current = loadTasks; // update ref every render so polling never uses stale closure
-
   const loadStats = async () => {
     try {
       const data = await taskService.getStats();
