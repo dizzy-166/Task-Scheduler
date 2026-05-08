@@ -853,6 +853,8 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--kanban-column-bg);
   border-radius: 12px;
   flex-shrink: 0;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .column-header {
@@ -882,20 +884,22 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .column-tasks {
-  padding: 16px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   max-height: calc(100vh - 200px);
   overflow-y: auto;
 }
 
 .task-card {
   background: var(--task-card-bg);
-  padding: 16px;
+  padding: 12px;
   border-radius: 10px;
   border: 1px solid var(--border-color);
   transition: all 0.2s;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .task-card:hover {
@@ -911,7 +915,9 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
 }
 
 .task-header h4 {
@@ -920,6 +926,8 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
   margin: 0;
   flex: 1;
+  min-width: 0;
+  word-break: break-word;
   line-height: 1.4;
   letter-spacing: -0.1px;
 }
@@ -929,6 +937,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 12px;
   font-size: 11px;
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .priority-high {
@@ -2340,10 +2349,10 @@ body {
 }
 
 .column-tasks {
-  padding: 16px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   max-height: calc(100vh - 300px);
   overflow-y: auto;
   min-height: 200px;
@@ -2351,12 +2360,14 @@ body {
 
 .task-card {
   background: var(--task-card-bg);
-  padding: 16px;
+  padding: 12px;
   border-radius: 10px;
   border: 1px solid var(--border-color);
   transition: all 0.2s;
   cursor: grab;
   user-select: none;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .task-card:hover {
@@ -2376,7 +2387,9 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
 }
 
 .task-header h4 {
@@ -2385,6 +2398,8 @@ body {
   color: var(--text-primary);
   margin: 0;
   flex: 1;
+  min-width: 0;
+  word-break: break-word;
   line-height: 1.4;
   letter-spacing: -0.1px;
 }
@@ -2394,6 +2409,7 @@ body {
   border-radius: 12px;
   font-size: 11px;
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .priority-critical { background: #ffebee; color: #d32f2f; }
