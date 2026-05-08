@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 
 const PRIO_COLOR = {
   Критический: '#EF4444',
@@ -24,23 +24,34 @@ function diffDays(a, b) {
 
 export default function GanttView({ allTasks, onTaskClick }) {
   const today = startOfDay(new Date());
+  const outerRef = useRef(null);
 
   const { minDate, maxDate, dayWidth } = useMemo(() => {
     const dated = allTasks.filter(t => t.dueDate || t.createdAt);
     if (!dated.length) {
-      return { minDate: addDays(today, -3), maxDate: addDays(today, 30), dayWidth: 30 };
+      return { minDate: addDays(today, -7), maxDate: addDays(today, 30), dayWidth: 30 };
     }
     const allMs = dated.flatMap(t => [
       t.createdAt ? startOfDay(new Date(t.createdAt)).getTime() : null,
       t.dueDate   ? startOfDay(new Date(t.dueDate)).getTime()   : null,
     ]).filter(Boolean);
 
-    const min = addDays(new Date(Math.min(...allMs)), -3);
-    const max = addDays(new Date(Math.max(...allMs)), 5);
-    const span = Math.max(diffDays(min, max), 14);
-    const dw   = span <= 30 ? 38 : span <= 90 ? 20 : 11;
+    // Не уходим дальше 30 дней в прошлое — иначе чарт стартует слишком далеко влево
+    const rawMin = addDays(new Date(Math.min(...allMs)), -3);
+    const min    = new Date(Math.max(rawMin.getTime(), addDays(today, -30).getTime()));
+    const max    = addDays(new Date(Math.max(...allMs)), 5);
+    const span   = Math.max(diffDays(min, max), 14);
+    const dw     = span <= 30 ? 38 : span <= 90 ? 20 : 11;
     return { minDate: min, maxDate: max, dayWidth: dw };
   }, [allTasks]);
+
+  // Автоскролл к «сегодня» при смене набора задач
+  useEffect(() => {
+    if (!outerRef.current) return;
+    const todayPx = Math.max(0, diffDays(minDate, today)) * dayWidth;
+    const scrollTarget = Math.max(0, todayPx - 120);
+    outerRef.current.scrollLeft = scrollTarget;
+  }, [allTasks.length, dayWidth]);
 
   const totalDays  = Math.max(diffDays(minDate, maxDate), 14);
   const totalWidth = totalDays * dayWidth;
@@ -106,7 +117,7 @@ export default function GanttView({ allTasks, onTaskClick }) {
   }
 
   return (
-    <div className="gantt-outer">
+    <div className="gantt-outer" ref={outerRef}>
 
       {/* ── Sticky header ── */}
       <div className="gantt-header-row" style={{ minWidth: LABEL_W + totalWidth }}>
