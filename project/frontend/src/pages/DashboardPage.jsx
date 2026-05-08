@@ -20,6 +20,7 @@ import NotificationBell from '../components/NotificationBell';
 import OnboardingTutorial from '../components/OnboardingTutorial';
 import Toast from '../components/Toast';
 import GlobalSearch from '../components/GlobalSearch';
+import KanbanSkeleton from '../components/KanbanSkeleton';
 import { taskService } from '../api/taskService';
 import companyAPI from '../api/companyService';
 import kanbanService from '../api/kanbanService';
@@ -952,8 +953,7 @@ const DashboardPage = () => {
           </div>
         ) : loading ? (
           <div className="loading-container">
-            <div className="spinner-large"></div>
-            <p>Загрузка...</p>
+            <KanbanSkeleton columns={4} cardsPerCol={3} />
           </div>
         ) : error ? (
           <div className="error-container">
@@ -1074,6 +1074,8 @@ const DashboardPage = () => {
                 )}
               </div>
             </div>
+
+            {isUpdating && columns.length === 0 && <KanbanSkeleton columns={4} cardsPerCol={3} />}
 
             <div
               className="kanban-board"
