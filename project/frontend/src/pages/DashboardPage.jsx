@@ -90,7 +90,8 @@ const DashboardPage = () => {
     return !localStorage.getItem(`tutorial_done_${user.id}`);
   });
 
-  const [activeView, setActiveView] = useState('home');
+  const [activeView, setActiveView] = useState(() => localStorage.getItem('activeView') || 'home');
+  const changeView = (view) => { setActiveView(view); localStorage.setItem('activeView', view); };
   const [taskScope, setTaskScope] = useState('all');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -775,7 +776,7 @@ const DashboardPage = () => {
               <button
                 key={view}
                 className={`nav-item nav-item--btn${activeView === view ? ' active' : ''}`}
-                onClick={() => setActiveView(view)}
+                onClick={() => changeView(view)}
               >
                 {icon}
                 <span style={{ flex: 1 }}>{label}</span>
@@ -1527,7 +1528,7 @@ const DashboardPage = () => {
       {chatToast && (
         <div
           className="chat-toast"
-          onClick={() => { setActiveView('chat'); setChatToast(null); setChatUnread(0); }}
+          onClick={() => { changeView('chat'); setChatToast(null); setChatUnread(0); }}
         >
           <div className="chat-toast-header">
             <svg className="chat-toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
