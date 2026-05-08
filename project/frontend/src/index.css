@@ -1515,6 +1515,22 @@ h1, h2, h3, h4, h5, h6 {
   border: 2px dashed var(--text-accent);
 }
 
+/* Card drag animation */
+.task-card {
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: grab;
+}
+.task-card:active { cursor: grabbing; }
+.task-card--dragging {
+  opacity: 0.4 !important;
+  transform: scale(0.97) !important;
+  box-shadow: none !important;
+}
+.kanban-column.drag-over .column-tasks {
+  background: var(--kanban-drag-over-bg);
+  border-radius: 8px;
+}
+
 .column-tasks {
   min-height: 400px;
   transition: background-color 0.2s ease;

@@ -454,15 +454,24 @@ const DashboardPage = () => {
   };
 
   // ── Drag & drop ──────────────────────────────────────────────────────────────
+  const [draggingTaskId, setDraggingTaskId] = useState(null);
+
   const onDragStart = (e, task, sourceColId) => {
     e.dataTransfer.setData('taskId', task.id);
     e.dataTransfer.setData('sourceColumn', sourceColId);
     e.dataTransfer.effectAllowed = 'move';
-    e.currentTarget.style.opacity = '0.5';
+    setDraggingTaskId(task.id);
+    // Delay opacity so the ghost snapshot is taken first
+    requestAnimationFrame(() => {
+      e.currentTarget.style.opacity = '0.4';
+      e.currentTarget.style.transform = 'scale(0.97)';
+    });
   };
 
   const onDragEnd = (e) => {
-    e.currentTarget.style.opacity = '1';
+    e.currentTarget.style.opacity = '';
+    e.currentTarget.style.transform = '';
+    setDraggingTaskId(null);
     document.querySelectorAll('.kanban-column').forEach(el => {
       el.classList.remove('drag-over');
       el.classList.remove('col-drag-over');
@@ -1047,7 +1056,7 @@ const DashboardPage = () => {
                     {(tasks[col.id] || []).map(task => (
                       <div
                         key={task.id}
-                        className={`task-card ${col.status_key === 'done' ? 'completed' : ''}`}
+                        className={`task-card ${col.status_key === 'done' ? 'completed' : ''}${draggingTaskId === task.id ? ' task-card--dragging' : ''}`}
                         style={{ borderLeft: `3px solid ${PRIORITY_STRIP[task.priority] || '#6B7280'}` }}
                         draggable={!isUpdating}
                         onDragStart={e => onDragStart(e, task, col.id)}
