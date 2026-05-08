@@ -106,6 +106,9 @@ const DashboardPage = () => {
     return next;
   });
 
+  // Always points to the latest loadTasks (updated every render, fixes stale closure in polling)
+  const loadTasksRef = useRef(null);
+
   // Drag-to-scroll on kanban board
   const kanbanBoardRef = useRef(null);
   const dragScrollRef = useRef({ active: false, startX: 0, scrollLeft: 0 });
@@ -336,14 +339,16 @@ const DashboardPage = () => {
     if (activeView !== 'kanban' && activeView !== 'list') return;
     if (!activeProject) return;
 
+    // Use ref so the interval always calls the latest loadTasks (avoids stale closure)
     const poll = () => {
-      if (document.visibilityState === 'visible') loadTasks();
+      if (document.visibilityState === 'visible' && loadTasksRef.current) {
+        loadTasksRef.current();
+      }
     };
-    const id = setInterval(poll, 20000);
+    const id = setInterval(poll, 15000);
     const onVisibility = () => { if (document.visibilityState === 'visible') poll(); };
     document.addEventListener('visibilitychange', onVisibility);
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisibility); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeView, activeProject?.id]);
 
   // ── Columns ─────────────────────────────────────────────────────────────────
@@ -473,6 +478,7 @@ const DashboardPage = () => {
       throw err;
     }
   };
+  loadTasksRef.current = loadTasks; // update ref every render so polling never uses stale closure
 
   const loadStats = async () => {
     try {
