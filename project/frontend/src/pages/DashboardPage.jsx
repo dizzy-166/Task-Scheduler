@@ -130,6 +130,23 @@ const DashboardPage = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // Persistent project stats cache: { [projectName]: { total, done } }
+  // Accumulates across project switches so sidebar always shows counts
+  const [projectStats, setProjectStats] = useState({});
+  const updateProjectStats = (tasksList) => {
+    const counts = {};
+    tasksList.forEach(t => {
+      const name = t.projectName || t.project_name || '';
+      if (!name) return;
+      if (!counts[name]) counts[name] = { total: 0, done: 0 };
+      counts[name].total++;
+      if (t.status === 'done') counts[name].done++;
+    });
+    if (Object.keys(counts).length > 0) {
+      setProjectStats(prev => ({ ...prev, ...counts }));
+    }
+  };
+
   // Toast notifications
   const [toasts, setToasts] = useState([]);
   const showToast = (message, type = 'success') => {
@@ -402,6 +419,7 @@ const DashboardPage = () => {
         tasksList = normalizeTaskResponse(data);
       }
       organizeTasks(tasksList, cols);
+      updateProjectStats(tasksList);
       return tasksList;
     } catch (err) {
       console.error('Ошибка загрузки задач:', err);
@@ -799,7 +817,7 @@ const DashboardPage = () => {
             <ProjectSwitcher
               companyId={activeCompany.id}
               currentUserRole={currentUserRole}
-              allTasksList={allTasksList}
+              projectStats={projectStats}
             />
           </div>
         )}

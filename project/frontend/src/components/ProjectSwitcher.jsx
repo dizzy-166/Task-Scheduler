@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import useProjectStore from '../store/projectStore';
 
-const ProjectSwitcher = ({ companyId, currentUserRole, allTasksList = [] }) => {
+const ProjectSwitcher = ({ companyId, currentUserRole, projectStats = {} }) => {
   const { projects, activeProject, fetchProjects, setActiveProject, createProject, deleteProject } =
     useProjectStore();
 
@@ -99,12 +99,9 @@ const ProjectSwitcher = ({ companyId, currentUserRole, allTasksList = [] }) => {
             {projects.length > 0 && <div className="project-dropdown-divider" />}
 
             {projects.map(project => {
-              const projTasks = allTasksList.filter(t =>
-                t.project === project.id || t.projectId === project.id || t.project_id === project.id ||
-                (t.projectName && t.projectName === project.name)
-              );
-              const total = projTasks.length;
-              const done  = projTasks.filter(t => t.status === 'done').length;
+              const stats = projectStats[project.name];
+              const total = stats?.total ?? 0;
+              const done  = stats?.done  ?? 0;
               const pct   = total > 0 ? Math.round((done / total) * 100) : null;
               return (
                 <div key={project.id} className="project-dropdown-item-wrapper">
