@@ -440,7 +440,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         # Parse @mentions and notify mentioned users
         User = get_user_model()
         mentioned_names = re.findall(r'@([\w\s]+?)(?=\s@|\s*$|[^а-яёa-z\s])', text, re.IGNORECASE)
-        company = task.project.company if hasattr(task, 'project') and task.project else None
+        company = task.company
         if company and mentioned_names:
             members = User.objects.filter(company_memberships__company=company).exclude(id=request.user.id)
             author_name = request.user.get_full_name() or request.user.email
