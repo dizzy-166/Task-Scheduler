@@ -888,8 +888,6 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
 }
 
 .task-card {
@@ -958,8 +956,12 @@ h1, h2, h3, h4, h5, h6 {
 .task-description {
   font-size: 13px;
   color: var(--text-secondary);
-  margin-bottom: 16px;
-  line-height: 1.55;
+  margin-bottom: 12px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .task-footer {
@@ -2353,9 +2355,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: calc(100vh - 300px);
-  overflow-y: auto;
-  min-height: 200px;
+  min-height: 80px;
 }
 
 .task-card {
@@ -2420,8 +2420,12 @@ body {
 .task-description {
   font-size: 13px;
   color: var(--text-secondary);
-  margin-bottom: 16px;
-  line-height: 1.55;
+  margin-bottom: 12px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .task-footer {
