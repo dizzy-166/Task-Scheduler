@@ -231,9 +231,10 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete
     try { await taskService.deleteComment(task.id, id); setComments(p => p.filter(c => c.id !== id)); } catch {}
   };
 
+  const otherUsers = users.filter(u => String(u.id) !== String(user?.id));
   const mentionSuggestions = mentionQuery
-    ? users.filter(u => u.full_name?.toLowerCase().includes(mentionQuery.toLowerCase())).slice(0, 6)
-    : users.slice(0, 6);
+    ? otherUsers.filter(u => u.full_name?.toLowerCase().includes(mentionQuery.toLowerCase())).slice(0, 6)
+    : otherUsers.slice(0, 6);
 
   const insertMention = (user) => {
     const before = commentText.slice(0, mentionStartRef.current);
