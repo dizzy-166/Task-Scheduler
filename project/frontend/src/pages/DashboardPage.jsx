@@ -158,6 +158,24 @@ const DashboardPage = () => {
     }
   };
 
+  // Kanban / list filters
+  const [filterAssignee, setFilterAssignee] = useState('');
+  const [filterPriority, setFilterPriority] = useState('');
+  const [filterOverdue, setFilterOverdue] = useState(false);
+
+  const applyFilters = (taskList) => {
+    const now = new Date();
+    return taskList.filter(t => {
+      if (filterAssignee && t.assignee !== filterAssignee) return false;
+      if (filterPriority && t.priority !== filterPriority) return false;
+      if (filterOverdue && (!t.dueDate || new Date(t.dueDate) >= now || t.status === 'done')) return false;
+      return true;
+    });
+  };
+
+  const hasActiveFilters = filterAssignee || filterPriority || filterOverdue;
+  const clearFilters = () => { setFilterAssignee(''); setFilterPriority(''); setFilterOverdue(false); };
+
   // Toast notifications
   const [toasts, setToasts] = useState([]);
   const showToast = (message, type = 'success') => {
@@ -782,6 +800,10 @@ const DashboardPage = () => {
     Низкий:      '#6B7280',
   };
 
+  const uniqueAssignees = [...new Set(
+    allTasksList.map(t => t.assignee).filter(a => a && a !== 'Не назначен')
+  )].sort();
+
   // ── Icon nav items ───────────────────────────────────────────────────────────
   const NAV_ITEMS = [
     {
@@ -1075,6 +1097,37 @@ const DashboardPage = () => {
               </div>
             </div>
 
+            {/* Filter bar */}
+            <div className="kanban-filter-bar">
+              <select
+                className="filter-select"
+                value={filterAssignee}
+                onChange={e => setFilterAssignee(e.target.value)}
+              >
+                <option value="">Все исполнители</option>
+                {uniqueAssignees.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+              <select
+                className="filter-select"
+                value={filterPriority}
+                onChange={e => setFilterPriority(e.target.value)}
+              >
+                <option value="">Все приоритеты</option>
+                {['Критический', 'Высокий', 'Средний', 'Низкий'].map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <button
+                className={`filter-toggle-btn${filterOverdue ? ' active' : ''}`}
+                onClick={() => setFilterOverdue(v => !v)}
+              >
+                Просроченные
+              </button>
+              {hasActiveFilters && (
+                <button className="filter-clear-btn" onClick={clearFilters}>
+                  × Сбросить
+                </button>
+              )}
+            </div>
+
             {isUpdating && columns.length === 0 && <KanbanSkeleton columns={4} cardsPerCol={3} />}
 
             <div
@@ -1121,7 +1174,9 @@ const DashboardPage = () => {
                         className="task-count"
                         style={{ background: `${col.color}22`, color: col.color }}
                       >
-                        {(tasks[col.id] || []).length}
+                        {hasActiveFilters
+                          ? `${applyFilters(tasks[col.id] || []).length}/${(tasks[col.id] || []).length}`
+                          : (tasks[col.id] || []).length}
                       </span>
                     </div>
                     {canManageColumns && (
@@ -1149,7 +1204,7 @@ const DashboardPage = () => {
                   </div>
 
                   <div className="column-tasks">
-                    {(tasks[col.id] || []).map(task => (
+                    {applyFilters(tasks[col.id] || []).map(task => (
                       <div
                         key={task.id}
                         className={`task-card ${col.status_key === 'done' ? 'completed' : ''}${draggingTaskId === task.id ? ' task-card--dragging' : ''}`}
@@ -1230,7 +1285,7 @@ const DashboardPage = () => {
           };
 
           const q = listSearch.toLowerCase();
-          const filtered = allTasksList
+          const filtered = applyFilters(allTasksList)
             .filter(t =>
               !q ||
               t.title?.toLowerCase().includes(q) ||
@@ -1272,6 +1327,20 @@ const DashboardPage = () => {
                     onChange={e => setListSearch(e.target.value)}
                   />
                   {listSearch && <button className="lv-search-clear" onClick={() => setListSearch('')}>✕</button>}
+                </div>
+                <div className="kanban-filter-bar lv-filter-bar">
+                  <select className="filter-select" value={filterAssignee} onChange={e => setFilterAssignee(e.target.value)}>
+                    <option value="">Все исполнители</option>
+                    {uniqueAssignees.map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                  <select className="filter-select" value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
+                    <option value="">Все приоритеты</option>
+                    {['Критический', 'Высокий', 'Средний', 'Низкий'].map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                  <button className={`filter-toggle-btn${filterOverdue ? ' active' : ''}`} onClick={() => setFilterOverdue(v => !v)}>
+                    Просроченные
+                  </button>
+                  {hasActiveFilters && <button className="filter-clear-btn" onClick={clearFilters}>× Сбросить</button>}
                 </div>
                 <span className="lv-count">{filtered.length} задач</span>
               </div>
