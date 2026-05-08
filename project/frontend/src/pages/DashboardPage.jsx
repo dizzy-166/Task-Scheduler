@@ -331,6 +331,21 @@ const DashboardPage = () => {
     return () => clearTimeout(t);
   }, [chatToast]);
 
+  // ── Task polling for real-time sync ─────────────────────────────────────────
+  useEffect(() => {
+    if (activeView !== 'kanban' && activeView !== 'list') return;
+    if (!activeProject) return;
+
+    const poll = () => {
+      if (document.visibilityState === 'visible') loadTasks();
+    };
+    const id = setInterval(poll, 20000);
+    const onVisibility = () => { if (document.visibilityState === 'visible') poll(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisibility); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeView, activeProject?.id]);
+
   // ── Columns ─────────────────────────────────────────────────────────────────
   const loadColumns = async () => {
     try {
