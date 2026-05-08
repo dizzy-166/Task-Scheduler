@@ -95,6 +95,16 @@ const DashboardPage = () => {
   const [activeView, setActiveView] = useState(() => localStorage.getItem('activeView') || 'home');
   const changeView = (view) => { setActiveView(view); localStorage.setItem('activeView', view); };
 
+  // Collapsible sidebar
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => localStorage.getItem('sidebarCollapsed') === '1'
+  );
+  const toggleSidebar = () => setSidebarCollapsed(v => {
+    const next = !v;
+    localStorage.setItem('sidebarCollapsed', next ? '1' : '0');
+    return next;
+  });
+
   // Drag-to-scroll on kanban board
   const kanbanBoardRef = useRef(null);
   const dragScrollRef = useRef({ active: false, startX: 0, scrollLeft: 0 });
@@ -794,7 +804,7 @@ const DashboardPage = () => {
 
   // ── Sidebar JSX (inline, NOT a nested component) ────────────────────────────
   const sidebarJSX = (
-    <aside className="sidebar">
+    <aside className={`sidebar${sidebarCollapsed ? ' sidebar--collapsed' : ''}`}>
       <div className="sidebar-header">
         <div className="logo">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -803,16 +813,32 @@ const DashboardPage = () => {
             <rect x="7" y="14.5" width="13" height="3.5" rx="1.75" fill="white" fillOpacity="0.7"/>
             <rect x="7" y="20"   width="8"  height="3.5" rx="1.75" fill="white" fillOpacity="0.4"/>
           </svg>
-          <span>Поток</span>
+          {!sidebarCollapsed && <span>Поток</span>}
         </div>
+        {!sidebarCollapsed && (
+          <button className="sidebar-collapse-btn" onClick={toggleSidebar} title="Свернуть">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+        )}
       </div>
 
       <nav className="sidebar-nav">
-        <div className="sidebar-nav-section">
-          <CompanySwitcher />
-        </div>
+        {sidebarCollapsed && (
+          <button className="sidebar-expand-btn" onClick={toggleSidebar} title="Развернуть">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        )}
+        {!sidebarCollapsed && (
+          <div className="sidebar-nav-section">
+            <CompanySwitcher />
+          </div>
+        )}
 
-        {activeCompany && (
+        {activeCompany && !sidebarCollapsed && (
           <div className="sidebar-nav-section">
             <ProjectSwitcher
               companyId={activeCompany.id}
@@ -822,7 +848,7 @@ const DashboardPage = () => {
           </div>
         )}
 
-        {activeCompany && (
+        {activeCompany && !sidebarCollapsed && (
           <div className="sidebar-nav-section sidebar-nav-filters">
             <a
               href="#"
@@ -850,17 +876,21 @@ const DashboardPage = () => {
 
         {activeCompany && (
           <div className="sidebar-nav-section sidebar-nav-views">
-            <div className="sidebar-nav-label">Разделы</div>
+            {!sidebarCollapsed && <div className="sidebar-nav-label">Разделы</div>}
             {NAV_ITEMS.map(({ view, label, icon }) => (
               <button
                 key={view}
-                className={`nav-item nav-item--btn${activeView === view ? ' active' : ''}`}
+                className={`nav-item nav-item--btn${activeView === view ? ' active' : ''}${sidebarCollapsed ? ' nav-item--icon-only' : ''}`}
                 onClick={() => changeView(view)}
+                title={sidebarCollapsed ? label : undefined}
               >
                 {icon}
-                <span style={{ flex: 1 }}>{label}</span>
-                {view === 'chat' && chatUnread > 0 && (
+                {!sidebarCollapsed && <span style={{ flex: 1 }}>{label}</span>}
+                {!sidebarCollapsed && view === 'chat' && chatUnread > 0 && (
                   <span className="chat-unread-badge">{chatUnread > 99 ? '99+' : chatUnread}</span>
+                )}
+                {sidebarCollapsed && view === 'chat' && chatUnread > 0 && (
+                  <span className="chat-unread-dot" />
                 )}
               </button>
             ))}
@@ -869,28 +899,32 @@ const DashboardPage = () => {
       </nav>
 
       <div className="sidebar-footer">
-        <button className="user-info-sidebar" onClick={() => setShowProfileModal(true)} title="Редактировать профиль">
+        <button className="user-info-sidebar" onClick={() => setShowProfileModal(true)} title={sidebarCollapsed ? (user?.full_name || user?.email) : 'Редактировать профиль'}>
           <div className="user-avatar">
             {user?.first_name?.[0]}{user?.last_name?.[0]}
           </div>
-          <div className="user-details-sidebar">
-            <div className="user-name">{user?.full_name || user?.email}</div>
-            <div className="user-role">{user?.role || 'Пользователь'}</div>
-          </div>
+          {!sidebarCollapsed && (
+            <div className="user-details-sidebar">
+              <div className="user-name">{user?.full_name || user?.email}</div>
+              <div className="user-role">{user?.role || 'Пользователь'}</div>
+            </div>
+          )}
         </button>
-        <button onClick={async () => { await logout(); navigate('/login'); }} className="logout-btn">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M7 1H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M13 13l4-4-4-4M17 9H7" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-          </svg>
-          <span>Выйти</span>
-        </button>
+        {!sidebarCollapsed && (
+          <button onClick={async () => { await logout(); navigate('/login'); }} className="logout-btn">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M7 1H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M13 13l4-4-4-4M17 9H7" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+            </svg>
+            <span>Выйти</span>
+          </button>
+        )}
       </div>
     </aside>
   );
 
   // ── Single return (no nested component definitions) ──────────────────────────
   return (
-    <div className="dashboard">
+    <div className={`dashboard${sidebarCollapsed ? ' dashboard--sidebar-collapsed' : ''}`}>
       {sidebarJSX}
 
       <main className="main-content">

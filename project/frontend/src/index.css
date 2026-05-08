@@ -329,12 +329,81 @@ h1, h2, h3, h4, h5, h6 {
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  transition: background-color 0.3s, border-color 0.3s;
+  transition: width 0.22s ease, background-color 0.3s, border-color 0.3s;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.sidebar--collapsed {
+  width: 64px;
+}
+.dashboard--sidebar-collapsed .main-content {
+  max-width: calc(100vw - 64px);
 }
 
 .sidebar-header {
-  padding: 24px;
+  padding: 16px;
   border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72px;
+}
+.sidebar-collapse-btn {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.sidebar-collapse-btn:hover { background: var(--sidebar-hover-bg); color: var(--text-primary); }
+.sidebar--collapsed .sidebar-header { justify-content: center; padding: 16px 8px; }
+.sidebar--collapsed .sidebar-header .logo { justify-content: center; }
+.sidebar--collapsed .sidebar-collapse-btn { display: none; }
+
+/* Show toggle on hover when collapsed */
+.sidebar--collapsed:hover .sidebar-collapse-btn {
+  display: flex;
+  position: absolute;
+  left: 48px;
+  z-index: 10;
+}
+
+.sidebar-expand-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 32px;
+  margin: 8px auto 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.sidebar-expand-btn:hover { background: var(--sidebar-hover-bg); color: var(--text-accent); }
+
+.nav-item--icon-only {
+  justify-content: center;
+  padding: 10px 0;
+  position: relative;
+}
+.chat-unread-dot {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  background: #EF4444;
+  border-radius: 50%;
 }
 
 .logo {
