@@ -867,38 +867,7 @@ const DashboardPage = () => {
                 Задачи с ИИ
               </button>
             )}
-            <button className="btn-new-task" onClick={() => setIsTaskModalOpen(true)}>
-              <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-              Новая задача
-            </button>
-          </div>
-        </header>
-
-        {/* ── Home ── */}
-        {activeView === 'home' && (
-          <HomeView
-            stats={stats}
-            allTasks={allTasksList}
-            user={user}
-            onTaskClick={handleTaskClick}
-            activeCompany={activeCompany}
-          />
-        )}
-
-        {/* ── Kanban ── */}
-        {activeView === 'kanban' && (
-          <div className="kanban-wrapper">
-            <div className="kanban-toolbar">
-              {canManageColumns && (
-                <button
-                  className="btn-secondary btn-small"
-                  onClick={() => { setEditingColumn(null); setColumnForm({ name: '', color: '#6B7280' }); setShowColumnModal(true); }}
-                >
-                  + Добавить колонку
-                </button>
-              )}
+            {activeView === 'kanban' && (
               <div className="kanban-zoom-controls">
                 <button
                   className="kanban-zoom-btn"
@@ -931,7 +900,40 @@ const DashboardPage = () => {
                   </button>
                 )}
               </div>
-            </div>
+            )}
+            <button className="btn-new-task" onClick={() => setIsTaskModalOpen(true)}>
+              <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+                <path d="M9 3v12M3 9h12" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+              Новая задача
+            </button>
+          </div>
+        </header>
+
+        {/* ── Home ── */}
+        {activeView === 'home' && (
+          <HomeView
+            stats={stats}
+            allTasks={allTasksList}
+            user={user}
+            onTaskClick={handleTaskClick}
+            activeCompany={activeCompany}
+          />
+        )}
+
+        {/* ── Kanban ── */}
+        {activeView === 'kanban' && (
+          <div className="kanban-wrapper">
+            {canManageColumns && (
+              <div className="kanban-toolbar">
+                <button
+                  className="btn-secondary btn-small"
+                  onClick={() => { setEditingColumn(null); setColumnForm({ name: '', color: '#6B7280' }); setShowColumnModal(true); }}
+                >
+                  + Добавить колонку
+                </button>
+              </div>
+            )}
 
             <div className="kanban-board">
               {columns.map(col => (

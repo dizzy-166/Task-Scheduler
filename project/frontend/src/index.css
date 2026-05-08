@@ -4283,7 +4283,6 @@ body {
 .kanban-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   padding: 0 4px;
 }
