@@ -586,6 +586,73 @@ h1, h2, h3, h4, h5, h6 {
   color: #ffffff;
 }
 
+/* ── Active Timer Widget ─────────────────────────────────────────────────────── */
+.active-timer-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1200;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 10px 12px 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+  min-width: 210px;
+  max-width: 280px;
+}
+.atw-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+  flex-shrink: 0;
+  animation: atw-pulse 1.6s ease-in-out infinite;
+}
+@keyframes atw-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.85); }
+}
+.atw-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.atw-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.atw-time {
+  font-size: 17px;
+  font-weight: 700;
+  color: #10B981;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+}
+.atw-stop {
+  background: #EF4444;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  padding: 7px 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.atw-stop:hover { background: #DC2626; }
+
 .main-content {
   flex: 1;
   display: flex;

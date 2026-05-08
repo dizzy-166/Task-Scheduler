@@ -30,7 +30,7 @@ function fmtElapsed(ms) {
 }
 
 // ── TaskModal ─────────────────────────────────────────────────────────────────
-const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete, task, mode = 'create' }) => {
+const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete, onTimerChange, task, mode = 'create' }) => {
   const { user } = useAuthStore();
 
   const [formData, setFormData] = useState({
@@ -149,8 +149,10 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete
         const startMs = new Date(data.started_at).getTime();
         setTimerStart(startMs); setTimerRunning(true);
         setTimerDisplay(fmtElapsed(Date.now() - startMs));
+        onTimerChange?.({ id: taskId, title: task.title, startedAt: startMs });
       } else {
         setTimerRunning(false); setTimerStart(null); setTimerDisplay('00:00:00');
+        onTimerChange?.(null);
       }
     } catch { setTimerRunning(false); }
   };
@@ -204,8 +206,14 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete
   const handleStartTimer = async () => {
     try {
       const data = await taskService.startTimer(task.id);
-      if (data.started_at) { setTimerStart(new Date(data.started_at).getTime()); setTimerRunning(true); }
-    } catch {}
+      if (data.started_at) {
+        const startMs = new Date(data.started_at).getTime();
+        setTimerStart(startMs); setTimerRunning(true);
+        onTimerChange?.({ id: task.id, title: task.title, startedAt: startMs });
+      }
+    } catch (err) {
+      console.error('Timer start failed:', err);
+    }
   };
 
   const handleStopTimer = async () => {
@@ -214,7 +222,10 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete
       const data = await taskService.stopTimer(task.id);
       setTimerRunning(false); setTimerStart(null); setTimerDisplay('00:00:00');
       if (data.actual_hours !== undefined) setActualHours(data.actual_hours);
-    } catch {}
+      onTimerChange?.(null);
+    } catch (err) {
+      console.error('Timer stop failed:', err);
+    }
   };
 
   const handleAddComment = async () => {

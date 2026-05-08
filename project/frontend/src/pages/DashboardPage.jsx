@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import useAuthStore from '../store/authStore';
 import useThemeStore from '../store/themeStore';
 import useCompanyStore from '../store/companyStore';
@@ -183,6 +183,48 @@ const DashboardPage = () => {
     setToasts(prev => [...prev, { id, message, type }]);
   };
   const removeToast = (id) => setToasts(prev => prev.filter(t => t.id !== id));
+
+  const [activeTimer, setActiveTimer] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('activeTimer') || 'null'); } catch { return null; }
+  });
+  const [widgetDisplay, setWidgetDisplay] = useState('00:00:00');
+  const widgetIntervalRef = useRef(null);
+
+  const handleTimerChange = useCallback((timerInfo) => {
+    if (timerInfo) {
+      localStorage.setItem('activeTimer', JSON.stringify(timerInfo));
+      setActiveTimer(timerInfo);
+    } else {
+      localStorage.removeItem('activeTimer');
+      setActiveTimer(null);
+    }
+  }, []);
+
+  const handleWidgetStopTimer = useCallback(async () => {
+    if (!activeTimer) return;
+    try {
+      await taskService.stopTimer(activeTimer.id);
+      handleTimerChange(null);
+    } catch (err) { console.error('Widget stop timer failed:', err); }
+  }, [activeTimer, handleTimerChange]);
+
+  useEffect(() => {
+    function fmtW(ms) {
+      const s = Math.floor(ms / 1000);
+      const pad = n => String(n).padStart(2, '0');
+      return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
+    }
+    if (activeTimer?.startedAt) {
+      setWidgetDisplay(fmtW(Date.now() - activeTimer.startedAt));
+      widgetIntervalRef.current = setInterval(
+        () => setWidgetDisplay(fmtW(Date.now() - activeTimer.startedAt)), 1000
+      );
+    } else {
+      clearInterval(widgetIntervalRef.current);
+      setWidgetDisplay('00:00:00');
+    }
+    return () => clearInterval(widgetIntervalRef.current);
+  }, [activeTimer]);
 
   const [taskScope, setTaskScope] = useState('all');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -1627,9 +1669,26 @@ const DashboardPage = () => {
         onTaskCreated={async (task) => { await loadAllData(); setIsTaskModalOpen(false); setSelectedTask(null); showToast(task?.title ? `Задача «${task.title}» создана` : 'Задача создана'); }}
         onTaskUpdated={async () => { await loadAllData(); }}
         onTaskDelete={handleDeleteTask}
+        onTimerChange={handleTimerChange}
         task={selectedTask}
         mode={selectedTask ? 'view' : 'create'}
       />
+
+      {/* Active timer floating widget */}
+      {activeTimer && (
+        <div className="active-timer-widget">
+          <span className="atw-dot" />
+          <div className="atw-info">
+            <span className="atw-title">{activeTimer.title}</span>
+            <span className="atw-time">{widgetDisplay}</span>
+          </div>
+          <button className="atw-stop" onClick={handleWidgetStopTimer} title="Остановить таймер">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="6" width="12" height="12" rx="1"/>
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Invite modal */}
       {isInviteModalOpen && (
