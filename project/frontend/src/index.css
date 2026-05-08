@@ -986,12 +986,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .task-count {
-  background: var(--border-color);
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-weight: 600;
+  min-width: 22px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .column-tasks {
@@ -2488,12 +2489,13 @@ body {
 }
 
 .task-count {
-  background: var(--border-color);
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-weight: 600;
+  min-width: 22px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .column-tasks {

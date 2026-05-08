@@ -1117,7 +1117,12 @@ const DashboardPage = () => {
                     <div className="column-header-left">
                       <span className="column-color-dot" style={{ background: col.color }} />
                       <h3>{col.name}</h3>
-                      <span className="task-count">{(tasks[col.id] || []).length}</span>
+                      <span
+                        className="task-count"
+                        style={{ background: `${col.color}22`, color: col.color }}
+                      >
+                        {(tasks[col.id] || []).length}
+                      </span>
                     </div>
                     {canManageColumns && (
                       <div className="column-header-actions">
