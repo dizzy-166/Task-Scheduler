@@ -1244,19 +1244,30 @@ const DashboardPage = () => {
                       </div>
                     ))}
                     {(tasks[col.id] || []).length === 0 && (
-                      <div className="empty-column"><p>Нет задач</p></div>
+                      <div className="empty-column">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.3">
+                          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+                        </svg>
+                        <p>{hasActiveFilters ? 'Нет задач по фильтру' : 'Нет задач'}</p>
+                      </div>
                     )}
                   </div>
                 </div>
               ))}
 
               {columns.length === 0 && (
-                <div className="empty-state">
-                  <p>Нет колонок. Создайте первую колонку.</p>
+                <div className="empty-state-illus">
+                  <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                    <rect x="8" y="20" width="18" height="44" rx="4" fill="var(--border-color)"/>
+                    <rect x="31" y="12" width="18" height="52" rx="4" fill="var(--border-color)" fillOpacity="0.7"/>
+                    <rect x="54" y="28" width="18" height="36" rx="4" fill="var(--border-color)" fillOpacity="0.4"/>
+                  </svg>
+                  <h3>Доска пустая</h3>
+                  <p>Создайте первую колонку, чтобы начать работу с задачами</p>
                   {canManageColumns && (
                     <button
                       className="btn-primary"
-                      style={{ marginTop: 12 }}
                       onClick={() => { setEditingColumn(null); setColumnForm({ name: '', color: '#6B7280' }); setShowColumnModal(true); }}
                     >
                       + Добавить колонку
@@ -1411,8 +1422,20 @@ const DashboardPage = () => {
                   </tbody>
                 </table>
                 {filtered.length === 0 && (
-                  <div className="lv-empty">
-                    {listSearch ? `Ничего не найдено по «${listSearch}»` : 'Нет задач'}
+                  <div className="empty-state-illus" style={{ padding: '48px 24px' }}>
+                    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.35">
+                      <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                      <rect x="9" y="3" width="6" height="4" rx="1"/>
+                      <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+                    </svg>
+                    <p style={{ marginTop: 12 }}>
+                      {listSearch || hasActiveFilters ? 'Ничего не найдено по заданным фильтрам' : 'Нет задач — создайте первую!'}
+                    </p>
+                    {!listSearch && !hasActiveFilters && (
+                      <button className="btn-primary" style={{ marginTop: 12 }} onClick={() => { setSelectedTask(null); setIsTaskModalOpen(true); }}>
+                        + Создать задачу
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
