@@ -31,7 +31,7 @@ from .filters import TaskFilter
 
 import re
 from django.contrib.auth import get_user_model
-from controlflow.apps.chat.models import Notification
+from apps.chat.models import Notification
 
 
 class TaskViewSet(viewsets.ModelViewSet):
