@@ -92,6 +92,29 @@ const DashboardPage = () => {
 
   const [activeView, setActiveView] = useState(() => localStorage.getItem('activeView') || 'home');
   const changeView = (view) => { setActiveView(view); localStorage.setItem('activeView', view); };
+
+  // Drag-to-scroll on kanban board
+  const kanbanBoardRef = useRef(null);
+  const dragScrollRef = useRef({ active: false, startX: 0, scrollLeft: 0 });
+  const onKanbanMouseDown = (e) => {
+    if (e.target.closest('.kanban-column')) return;
+    dragScrollRef.current = { active: true, startX: e.pageX, scrollLeft: kanbanBoardRef.current.scrollLeft };
+    kanbanBoardRef.current.style.cursor = 'grabbing';
+    kanbanBoardRef.current.style.userSelect = 'none';
+  };
+  const onKanbanMouseMove = (e) => {
+    if (!dragScrollRef.current.active) return;
+    e.preventDefault();
+    const dx = e.pageX - dragScrollRef.current.startX;
+    kanbanBoardRef.current.scrollLeft = dragScrollRef.current.scrollLeft - dx;
+  };
+  const onKanbanMouseUp = () => {
+    if (!dragScrollRef.current.active) return;
+    dragScrollRef.current.active = false;
+    kanbanBoardRef.current.style.cursor = '';
+    kanbanBoardRef.current.style.userSelect = '';
+  };
+
   const [taskScope, setTaskScope] = useState('all');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -940,7 +963,14 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            <div className="kanban-board">
+            <div
+              className="kanban-board"
+              ref={kanbanBoardRef}
+              onMouseDown={onKanbanMouseDown}
+              onMouseMove={onKanbanMouseMove}
+              onMouseUp={onKanbanMouseUp}
+              onMouseLeave={onKanbanMouseUp}
+            >
               {columns.map(col => (
                 <div
                   key={col.id}
