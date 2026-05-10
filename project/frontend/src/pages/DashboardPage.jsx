@@ -1098,6 +1098,7 @@ const DashboardPage = () => {
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
               <span className="search-trigger-label">Поиск</span>
+              <span className="search-trigger-sep" aria-hidden="true" />
               <kbd className="search-trigger-kbd">Ctrl+K</kbd>
             </button>
             <div className="whats-new-wrap" ref={whatsNewRef}>

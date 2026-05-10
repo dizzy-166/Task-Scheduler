@@ -7790,28 +7790,59 @@ body {
 .search-trigger-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 7px;
+  padding: 6px 10px 6px 10px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--bg-primary);
+  border-radius: 10px;
+  background: var(--bg-secondary);
   color: var(--text-secondary);
   cursor: pointer;
   font-size: 13px;
-  transition: border-color 0.15s, color 0.15s;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  box-shadow: 0 1px 3px var(--shadow-color);
+  transition: border-color 0.18s, color 0.18s, box-shadow 0.18s, background 0.18s;
+  white-space: nowrap;
 }
-.search-trigger-btn:hover { border-color: var(--text-accent); color: var(--text-accent); }
-.search-trigger-label { font-size: 13px; }
-.search-trigger-kbd {
-  font-size: 11px;
-  padding: 1px 5px;
-  border: 1px solid var(--border-color);
-  border-radius: 3px;
+.search-trigger-btn svg {
+  flex-shrink: 0;
+  opacity: 0.65;
+  transition: opacity 0.18s;
+}
+.search-trigger-btn:hover {
+  border-color: var(--text-accent);
+  color: var(--text-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--text-accent) 12%, transparent), 0 1px 4px var(--shadow-color);
   background: var(--bg-secondary);
+}
+.search-trigger-btn:hover svg { opacity: 1; }
+.search-trigger-label {
+  font-size: 13px;
+  font-weight: 450;
+}
+.search-trigger-sep {
+  width: 1px;
+  height: 14px;
+  background: var(--border-color);
+  flex-shrink: 0;
+}
+.search-trigger-kbd {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 2px 6px;
+  border: 1px solid var(--border-color);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--bg-primary);
   color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  line-height: 1.4;
 }
 @media (max-width: 700px) {
-  .search-trigger-label, .search-trigger-kbd { display: none; }
+  .search-trigger-label, .search-trigger-kbd, .search-trigger-sep { display: none; }
 }
 
 /* ── Global Search (Ctrl+K) ── */
