@@ -8,7 +8,7 @@ const TYPE_ICON = {
   task_created:   '✅',
 };
 
-export default function NotificationBell() {
+export default function NotificationBell({ onTaskClick }) {
   const [data,    setData]    = useState({ results: [], unread: 0 });
   const [open,    setOpen]    = useState(false);
   const ref = useRef(null);
@@ -82,8 +82,14 @@ export default function NotificationBell() {
             {data.results.map(n => (
               <div
                 key={n.id}
-                className={`notif-item${n.is_read ? '' : ' notif-item--unread'}`}
-                onClick={() => !n.is_read && handleMark(n.id)}
+                className={`notif-item${n.is_read ? '' : ' notif-item--unread'}${n.related_task ? ' notif-item--clickable' : ''}`}
+                onClick={() => {
+                  if (!n.is_read) handleMark(n.id);
+                  if (n.related_task && onTaskClick) {
+                    setOpen(false);
+                    onTaskClick({ id: n.related_task });
+                  }
+                }}
               >
                 <span className="notif-icon">{TYPE_ICON[n.type] || '📌'}</span>
                 <div className="notif-content">
