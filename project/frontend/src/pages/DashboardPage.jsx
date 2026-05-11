@@ -1263,6 +1263,16 @@ const DashboardPage = () => {
         {/* ── Kanban ── */}
         {activeView === 'kanban' && (
           <div className="kanban-wrapper">
+            <div className="kanban-view-tabs">
+              <button className="kanban-view-tab kanban-view-tab--active">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>
+                Канбан
+              </button>
+              <button className="kanban-view-tab" onClick={() => changeView('archive')}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                Архив
+              </button>
+            </div>
             <div className="kanban-toolbar">
               {canManageColumns && (
                 <button
@@ -1429,14 +1439,14 @@ const DashboardPage = () => {
                             {col.status_key === 'done' && (
                               <button
                                 className="task-archive-btn"
-                                title="Отправить в архив"
                                 onClick={e => { e.stopPropagation(); handleArchiveTask(task.id); }}
                               >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                                   <polyline points="21 8 21 21 3 21 3 8"/>
                                   <rect x="1" y="3" width="22" height="5"/>
                                   <line x1="10" y1="12" x2="14" y2="12"/>
                                 </svg>
+                                В архив
                               </button>
                             )}
                             <span className={`priority-badge ${getPriorityColor(task.priority)}`}>
@@ -1815,6 +1825,16 @@ const DashboardPage = () => {
         {/* ── Archive ── */}
         {activeView === 'archive' && (
           <div className="archive-view">
+            <div className="kanban-view-tabs" style={{ marginBottom: 20 }}>
+              <button className="kanban-view-tab" onClick={() => changeView('kanban')}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>
+                Канбан
+              </button>
+              <button className="kanban-view-tab kanban-view-tab--active">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                Архив
+              </button>
+            </div>
             <div className="archive-view-header">
               <h2>Архив задач</h2>
               {!archivedLoading && (

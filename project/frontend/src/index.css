@@ -8048,6 +8048,40 @@ body {
 .toast-icon { flex-shrink: 0; display: flex; }
 .toast-message { line-height: 1.4; }
 
+/* ── Kanban / Archive view tab strip ───────────────────────────────────────── */
+.kanban-view-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 0;
+}
+
+.kanban-view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.kanban-view-tab:hover {
+  color: var(--text-primary);
+}
+
+.kanban-view-tab--active {
+  color: var(--accent-color);
+  border-bottom-color: var(--accent-color);
+}
+
 /* ── Task action options (project delete modal) ─────────────────────────────── */
 .modal-delete-task-actions {
   display: flex;
@@ -8237,25 +8271,22 @@ body {
 .task-archive-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 5px;
-  border: none;
-  background: transparent;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
   color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.15s, background 0.15s, color 0.15s;
   flex-shrink: 0;
-  padding: 0;
-}
-
-.task-card:hover .task-archive-btn {
-  opacity: 1;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  white-space: nowrap;
 }
 
 .task-archive-btn:hover {
-  background: var(--bg-secondary);
+  border-color: var(--accent-color);
   color: var(--accent-color);
+  background: color-mix(in srgb, var(--accent-color) 8%, transparent);
 }
