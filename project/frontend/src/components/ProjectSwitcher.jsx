@@ -200,19 +200,22 @@ const ProjectSwitcher = ({ companyId, currentUserRole, projectStats = {} }) => {
       {showDeleteConfirm && (
         <div className="modal-overlay" onClick={() => setShowDeleteConfirm(null)}>
           <div className="modal-content modal-delete" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
+            <button className="modal-close modal-delete-close" onClick={() => setShowDeleteConfirm(null)}>×</button>
+            <div className="modal-delete-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                <path d="M10 11v6M14 11v6"/>
+                <path d="M9 6V4h6v2"/>
+              </svg>
+            </div>
+            <div className="modal-delete-body">
               <h3>Удалить проект?</h3>
-              <button className="modal-close" onClick={() => setShowDeleteConfirm(null)}>×</button>
+              <p>Вы собираетесь удалить проект <strong>{showDeleteConfirm.name}</strong>. Задачи проекта при этом не будут удалены.</p>
             </div>
-            <div className="modal-body">
-              <p>Удалить проект <strong>{showDeleteConfirm.name}</strong>?</p>
-              <p>Задачи проекта не будут удалены.</p>
-            </div>
-            <div className="modal-footer">
+            <div className="modal-delete-footer">
               <button className="btn-secondary" onClick={() => setShowDeleteConfirm(null)}>Отмена</button>
-              <button className="btn-danger" onClick={() => handleDelete(showDeleteConfirm.id)}>
-                Удалить
-              </button>
+              <button className="btn-danger" onClick={() => handleDelete(showDeleteConfirm.id)}>Удалить</button>
             </div>
           </div>
         </div>

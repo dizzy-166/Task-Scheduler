@@ -1443,7 +1443,9 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2799,7 +2801,9 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4085,31 +4089,80 @@ body {
   }
 }
 
-/* Delete Company Modal */
+/* Delete Modal */
 .modal-delete {
-  max-width: 450px;
+  max-width: 420px;
+  text-align: center;
+  position: relative;
+  border: 1px solid rgba(220, 53, 69, 0.18);
 }
 
-.modal-delete .modal-body {
-  padding: 20px 24px;
+.modal-delete-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
 }
 
-.modal-delete .modal-body p {
-  margin-bottom: 12px;
-  line-height: 1.5;
+.modal-delete-icon {
+  width: 72px;
+  height: 72px;
+  background: rgba(220, 53, 69, 0.1);
+  border: 2px solid rgba(220, 53, 69, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 36px auto 20px;
+  color: #dc3545;
+}
+
+.modal-delete-body {
+  padding: 0 32px 28px;
+}
+
+.modal-delete-body h3 {
+  font-size: 20px;
+  font-weight: 700;
   color: var(--text-primary);
+  margin: 0 0 12px;
+  letter-spacing: -0.3px;
 }
 
-.modal-delete .modal-body strong {
-  color: var(--error-color);
+.modal-delete-body p {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.modal-delete-body strong {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.modal-delete-footer {
+  display: flex;
+  gap: 10px;
+  padding: 18px 24px;
+  border-top: 1px solid var(--border-color);
+  border-radius: 0 0 16px 16px;
+}
+
+.modal-delete-footer .btn-secondary,
+.modal-delete-footer .btn-danger {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal-delete .error-message {
-  margin-top: 12px;
+  margin: 0 32px 16px;
   padding: 10px;
-  background: rgba(255, 59, 48, 0.1);
+  background: rgba(220, 53, 69, 0.1);
   border-radius: 8px;
-  color: var(--error-color);
+  color: #dc3545;
+  font-size: 13px;
 }
 
 /* Roles Panel - No Access Styles */
