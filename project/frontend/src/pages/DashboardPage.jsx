@@ -533,19 +533,23 @@ const DashboardPage = () => {
     setTasks(organized);
   };
 
+  // Pure HTTP fetch — no state updates, safe to call concurrently
+  const fetchTaskData = async (scope = taskScope) => {
+    if (scope === 'mine') {
+      const [assignedData, createdData] = await Promise.all([
+        taskService.getMyTasks(),
+        taskService.getCreatedByMe(),
+      ]);
+      return mergeTaskLists(normalizeTaskResponse(assignedData), normalizeTaskResponse(createdData));
+    } else {
+      const data = await taskService.getTasks();
+      return normalizeTaskResponse(data);
+    }
+  };
+
   const loadTasks = async (scope = taskScope, cols = columns) => {
     try {
-      let tasksList = [];
-      if (scope === 'mine') {
-        const [assignedData, createdData] = await Promise.all([
-          taskService.getMyTasks(),
-          taskService.getCreatedByMe(),
-        ]);
-        tasksList = mergeTaskLists(normalizeTaskResponse(assignedData), normalizeTaskResponse(createdData));
-      } else {
-        const data = await taskService.getTasks();
-        tasksList = normalizeTaskResponse(data);
-      }
+      const tasksList = await fetchTaskData(scope);
       organizeTasks(tasksList, cols);
       updateProjectStats(tasksList);
       return tasksList;
@@ -588,8 +592,11 @@ const DashboardPage = () => {
     try {
       const cols = await loadColumns();
       if (gen !== loadGenRef.current) return;
-      const tasksList = await loadTasks(taskScope, cols);
+      const tasksList = await fetchTaskData(taskScope);
+      // Guard BEFORE any state writes — prevents stale response from overwriting fresh data
       if (gen !== loadGenRef.current) return;
+      organizeTasks(tasksList, cols);
+      updateProjectStats(tasksList);
       if (taskScope === 'all') await loadStats();
       else computeStatsFromTasks(tasksList);
     } catch (err) {
