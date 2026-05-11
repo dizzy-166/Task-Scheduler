@@ -122,6 +122,9 @@ const DashboardPage = () => {
     return next;
   });
 
+  // Generation counter — prevents stale loadAllData responses from overwriting newer results
+  const loadGenRef = useRef(0);
+
   // Drag-to-scroll on kanban board
   const kanbanBoardRef = useRef(null);
   const dragScrollRef = useRef({ active: false, startX: 0, scrollLeft: 0 });
@@ -579,17 +582,21 @@ const DashboardPage = () => {
   };
 
   const loadAllData = async () => {
+    const gen = ++loadGenRef.current;
     setLoading(true);
     setError(null);
     try {
       const cols = await loadColumns();
+      if (gen !== loadGenRef.current) return;
       const tasksList = await loadTasks(taskScope, cols);
+      if (gen !== loadGenRef.current) return;
       if (taskScope === 'all') await loadStats();
       else computeStatsFromTasks(tasksList);
     } catch (err) {
+      if (gen !== loadGenRef.current) return;
       setError('Не удалось загрузить данные. Проверьте подключение к серверу.');
     } finally {
-      setLoading(false);
+      if (gen === loadGenRef.current) setLoading(false);
     }
   };
 
