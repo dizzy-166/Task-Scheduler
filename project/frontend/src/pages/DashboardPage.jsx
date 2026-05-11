@@ -128,7 +128,6 @@ const DashboardPage = () => {
   // Always-current ref — bypasses stale-closure issues in async callbacks
   const activeProjectRef = useRef(activeProject);
   activeProjectRef.current = activeProject;
-  console.log('[render] activeProject=', activeProject?.id ?? null, activeProject?.name ?? null);
 
   // Drag-to-scroll on kanban board
   const kanbanBoardRef = useRef(null);
@@ -547,7 +546,6 @@ const DashboardPage = () => {
     // never a stale value from a previous render's closure.
     const project = activeProjectRef.current;
     const projectParams = project?.id ? { project: project.id } : {};
-    console.log('[fetchTaskData] project=', project?.id ?? null, 'scope=', scope);
     if (scope === 'mine') {
       const [assignedData, createdData] = await Promise.all([
         taskService.getMyTasks(),
