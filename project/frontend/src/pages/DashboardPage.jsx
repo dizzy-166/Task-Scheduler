@@ -125,6 +125,10 @@ const DashboardPage = () => {
   // Generation counter — prevents stale loadAllData responses from overwriting newer results
   const loadGenRef = useRef(0);
 
+  // Always-current ref — bypasses stale-closure issues in async callbacks
+  const activeProjectRef = useRef(activeProject);
+  activeProjectRef.current = activeProject;
+
   // Drag-to-scroll on kanban board
   const kanbanBoardRef = useRef(null);
   const dragScrollRef = useRef({ active: false, startX: 0, scrollLeft: 0 });
@@ -538,21 +542,24 @@ const DashboardPage = () => {
   // Passes activeProject.id as explicit query param so the backend always
   // filters correctly regardless of localStorage/interceptor timing.
   const fetchTaskData = async (scope = taskScope) => {
-    const projectParams = activeProject?.id ? { project: activeProject.id } : {};
+    // Read from ref so we always get the project that is current at call-time,
+    // never a stale value from a previous render's closure.
+    const project = activeProjectRef.current;
+    const projectParams = project?.id ? { project: project.id } : {};
     if (scope === 'mine') {
       const [assignedData, createdData] = await Promise.all([
         taskService.getMyTasks(),
         taskService.getCreatedByMe(),
       ]);
       const tasks = mergeTaskLists(normalizeTaskResponse(assignedData), normalizeTaskResponse(createdData));
-      return activeProject?.id
-        ? tasks.filter(t => String(t.project) === String(activeProject.id))
+      return project?.id
+        ? tasks.filter(t => String(t.project) === String(project.id))
         : tasks;
     } else {
       const data = await taskService.getTasks(projectParams);
       const tasks = normalizeTaskResponse(data);
-      return activeProject?.id
-        ? tasks.filter(t => String(t.project) === String(activeProject.id))
+      return project?.id
+        ? tasks.filter(t => String(t.project) === String(project.id))
         : tasks;
     }
   };
