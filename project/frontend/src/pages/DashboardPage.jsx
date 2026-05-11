@@ -316,6 +316,13 @@ const DashboardPage = () => {
   // Chat notifications
   const [chatUnread, setChatUnread] = useState(0);
   const [chatToast,  setChatToast]  = useState(null);
+  const [mentionToasts, setMentionToasts] = useState([]);
+
+  const handleNewNotifications = (notifications) => {
+    const items = notifications.map(n => ({ ...n, _tid: Date.now() + Math.random() }));
+    setMentionToasts(prev => [...prev, ...items]);
+  };
+  const removeMentionToast = (tid) => setMentionToasts(prev => prev.filter(t => t._tid !== tid));
   const chatLastIdsRef = useRef({});
 
   const currentUserRole =
@@ -1212,7 +1219,7 @@ const DashboardPage = () => {
                 </div>
               )}
             </div>
-            <NotificationBell onTaskClick={handleTaskClick} />
+            <NotificationBell onTaskClick={handleTaskClick} onNewNotifications={handleNewNotifications} />
             <button className="theme-toggle-btn" onClick={toggleTheme} title="Сменить тему">
               {theme === 'light' ? (
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2115,6 +2122,21 @@ const DashboardPage = () => {
         <ProfileModal onClose={() => setShowProfileModal(false)} onProfileUpdated={loadAllData} />
       )}
 
+      {/* Mention / notification pop-up toasts (bottom-left) */}
+      {mentionToasts.length > 0 && (
+        <div className="mention-toast-stack">
+          {mentionToasts.map(n => (
+            <MentionToast
+              key={n._tid}
+              notif={n}
+              onClose={() => removeMentionToast(n._tid)}
+              onTaskClick={n.related_task ? () => { removeMentionToast(n._tid); handleTaskClick({ id: n.related_task }); } : null}
+              onChatClick={n.type === 'chat_mention' && !n.related_task ? () => { removeMentionToast(n._tid); changeView('chat'); } : null}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Chat toast notification */}
       {chatToast && (
         <div
@@ -2155,5 +2177,32 @@ const DashboardPage = () => {
     </div>
   );
 };
+
+function MentionToast({ notif, onClose, onTaskClick, onChatClick }) {
+  const handleClick = onTaskClick || onChatClick || onClose;
+  const isMention = notif.type === 'comment_mention' || notif.type === 'chat_mention';
+
+  useEffect(() => {
+    const t = setTimeout(onClose, 6000);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div className="mention-toast" onClick={handleClick}>
+      <div className="mention-toast-header">
+        <span className="mention-toast-icon">
+          {isMention ? (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/>
+            </svg>
+          ) : '📌'}
+        </span>
+        <span className="mention-toast-title">{notif.title}</span>
+        <button className="mention-toast-close" onClick={e => { e.stopPropagation(); onClose(); }}>✕</button>
+      </div>
+      {notif.body && <div className="mention-toast-body">{notif.body}</div>}
+    </div>
+  );
+}
 
 export default DashboardPage;

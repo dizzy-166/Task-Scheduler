@@ -8,13 +8,34 @@ const TYPE_ICON = {
   task_created:   '✅',
 };
 
-export default function NotificationBell({ onTaskClick }) {
+const MENTION_TYPES = new Set(['comment_mention', 'chat_mention']);
+
+export default function NotificationBell({ onTaskClick, onNewNotifications }) {
   const [data,    setData]    = useState({ results: [], unread: 0 });
   const [open,    setOpen]    = useState(false);
   const ref = useRef(null);
+  const lastNotifIdRef = useRef(null);
+  const onNewNotifRef = useRef(onNewNotifications);
+  useEffect(() => { onNewNotifRef.current = onNewNotifications; }, [onNewNotifications]);
 
   const load = () =>
-    chatService.getNotifications().then(setData).catch(() => {});
+    chatService.getNotifications().then(newData => {
+      setData(newData);
+      const results = newData?.results;
+      if (!results?.length) return;
+      const maxId = Math.max(...results.map(n => n.id));
+      if (lastNotifIdRef.current === null) {
+        lastNotifIdRef.current = maxId;
+        return;
+      }
+      if (maxId > lastNotifIdRef.current) {
+        const fresh = results.filter(
+          n => n.id > lastNotifIdRef.current && MENTION_TYPES.has(n.type)
+        );
+        lastNotifIdRef.current = maxId;
+        if (fresh.length) onNewNotifRef.current?.(fresh);
+      }
+    }).catch(() => {});
 
   useEffect(() => {
     load();
