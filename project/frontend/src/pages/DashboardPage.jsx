@@ -426,6 +426,7 @@ const DashboardPage = () => {
   useEffect(() => {
     if (pollTick === 0) return; // skip initial mount
     if (activeView !== 'kanban' && activeView !== 'list') return;
+    if (loading) return; // loadAllData is in progress — don't overwrite with poll results
     loadTasks(); // called with current-render's loadTasks — columns and scope are fresh
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pollTick]);
@@ -592,6 +593,7 @@ const DashboardPage = () => {
     const gen = ++loadGenRef.current;
     setLoading(true);
     setError(null);
+    setTasks({});  // Clear stale tasks immediately so previous project's data never lingers
     try {
       const cols = await loadColumns();
       if (gen !== loadGenRef.current) return;
