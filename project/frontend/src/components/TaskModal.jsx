@@ -235,10 +235,16 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete
     if (!commentText.trim() || commentLoading) return;
     setCommentLoading(true);
     setMentionVisible(false);
+    const textToSend = commentText.trim();
+    setCommentText('');
     try {
-      const c = await taskService.addComment(task.id, commentText.trim());
-      setComments(p => [...p, c]); setCommentText('');
-    } catch {} finally { setCommentLoading(false); }
+      await taskService.addComment(task.id, textToSend);
+      await loadComments(task.id);
+    } catch {
+      setCommentText(textToSend);
+    } finally {
+      setCommentLoading(false);
+    }
   };
 
   const handleDeleteComment = async (id) => {
@@ -293,6 +299,7 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete
   // Render comment text with highlighted @mentions
   // Matches against known user names (longest first to avoid partial matches)
   const renderCommentText = (text) => {
+    if (!text) return text ?? '';
     const names = users.map(u => u.full_name).filter(Boolean).sort((a, b) => b.length - a.length);
     const parts = [];
     let i = 0, buf = '';
