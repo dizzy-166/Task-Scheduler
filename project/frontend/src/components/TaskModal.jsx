@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { taskService } from '../api/taskService';
 import companyAPI from '../api/companyService';
 import useAuthStore from '../store/authStore';
+import useProjectStore from '../store/projectStore';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const PRIORITY_COLOR = { low: '#6B7280', medium: '#3B82F6', high: '#F59E0B', critical: '#EF4444' };
@@ -32,6 +33,7 @@ function fmtElapsed(ms) {
 // ── TaskModal ─────────────────────────────────────────────────────────────────
 const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete, onTimerChange, task, mode = 'create' }) => {
   const { user } = useAuthStore();
+  const { activeProject } = useProjectStore();
 
   const [formData, setFormData] = useState({
     title: '', description: '', assignee_id: '',
@@ -173,6 +175,7 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete
         estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null,
         due_date:        formData.due_date ? new Date(formData.due_date).toISOString() : null,
         assignee:        formData.assignee_id || null,
+        project:         activeProject?.id || null,
       });
       if (onTaskCreated) onTaskCreated(newTask);
       onClose(); resetForm();
