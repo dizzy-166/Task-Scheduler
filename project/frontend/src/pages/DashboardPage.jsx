@@ -544,10 +544,16 @@ const DashboardPage = () => {
         taskService.getMyTasks(),
         taskService.getCreatedByMe(),
       ]);
-      return mergeTaskLists(normalizeTaskResponse(assignedData), normalizeTaskResponse(createdData));
+      const tasks = mergeTaskLists(normalizeTaskResponse(assignedData), normalizeTaskResponse(createdData));
+      return activeProject?.id
+        ? tasks.filter(t => String(t.project) === String(activeProject.id))
+        : tasks;
     } else {
       const data = await taskService.getTasks(projectParams);
-      return normalizeTaskResponse(data);
+      const tasks = normalizeTaskResponse(data);
+      return activeProject?.id
+        ? tasks.filter(t => String(t.project) === String(activeProject.id))
+        : tasks;
     }
   };
 
