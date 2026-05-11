@@ -128,6 +128,7 @@ const DashboardPage = () => {
   // Always-current ref — bypasses stale-closure issues in async callbacks
   const activeProjectRef = useRef(activeProject);
   activeProjectRef.current = activeProject;
+  console.log('[render] activeProject=', activeProject?.id ?? null, activeProject?.name ?? null);
 
   // Drag-to-scroll on kanban board
   const kanbanBoardRef = useRef(null);
