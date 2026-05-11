@@ -35,7 +35,7 @@ class TaskListSerializer(serializers.ModelSerializer):
             'assignee_name', 'assignee', 'creator_name', 'creator',
             'status', 'status_display', 'priority', 'priority_display',
             'due_date', 'estimated_hours', 'actual_hours', 'created_at',
-            'kanban_column',
+            'kanban_column', 'archived_at', 'completed_at',
         ]
 
     def get_assignee_name(self, obj):

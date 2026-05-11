@@ -56,17 +56,27 @@ class TaskViewSet(viewsets.ModelViewSet):
         company_id = self.get_company_id()
         project_id = self.get_project_id()
         queryset = Task.objects.filter(deleted_at__isnull=True)
-        
+
         # Всегда загружаем связанные объекты для производительности
         queryset = queryset.select_related(
             'project', 'assignee', 'creator', 'company', 'parent_task'
         )
-        
+
         # Исключаем задачи из удалённых компаний
         queryset = queryset.exclude(
             django_models.Q(company__isnull=False) & django_models.Q(company__deleted_at__isnull=False)
         )
-        
+
+        # Архивный раздел показывает только архивные задачи; всё остальное их скрывает
+        if self.action == 'archived':
+            # Авто-архивируем задачи со статусом done, завершённые 7+ дней назад
+            self._auto_archive(queryset)
+            queryset = queryset.filter(archived_at__isnull=False)
+        else:
+            # Авто-архивируем ДО фильтрации чтобы они исчезли с доски
+            self._auto_archive(queryset)
+            queryset = queryset.filter(archived_at__isnull=True)
+
         # Для my_tasks и created_by_me ищем по всем компаниям пользователя
         if self.action in ['my_tasks', 'created_by_me']:
             user_companies = user.company_memberships.filter(
@@ -74,13 +84,12 @@ class TaskViewSet(viewsets.ModelViewSet):
             ).values_list('company_id', flat=True)
             queryset = queryset.filter(company_id__in=user_companies)
         elif company_id:
-            # Если указана компания - фильтруем по ней
             queryset = queryset.filter(company_id=company_id)
 
         # Фильтрация по проекту (если выбран конкретный проект)
-        if project_id and self.action not in ['my_tasks', 'created_by_me', 'stats', 'report']:
+        if project_id and self.action not in ['my_tasks', 'created_by_me', 'stats', 'report', 'archived']:
             queryset = queryset.filter(project_id=project_id)
-        
+
         # Суперпользователь видит всё
         if user.is_superuser:
             return queryset
@@ -116,12 +125,21 @@ class TaskViewSet(viewsets.ModelViewSet):
         
         if has_view_all:
             return queryset
-        
+
         # Иначе только свои задачи
         return queryset.filter(
             django_models.Q(assignee_id=user.id) |
             django_models.Q(creator_id=user.id)
         )
+
+    def _auto_archive(self, base_queryset):
+        """Авто-архивирует завершённые задачи, которые уже 7+ дней в статусе done."""
+        cutoff = timezone.now() - timedelta(days=7)
+        base_queryset.filter(
+            status='done',
+            archived_at__isnull=True,
+            completed_at__lt=cutoff,
+        ).update(archived_at=timezone.now())
     
     def get_serializer_class(self):
         """Выбор сериализатора в зависимости от действия"""
@@ -129,7 +147,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             return TaskCreateSerializer
         elif self.action in ['update', 'partial_update']:
             return TaskUpdateSerializer
-        elif self.action in ['list', 'my_tasks', 'created_by_me', 'overdue']:
+        elif self.action in ['list', 'my_tasks', 'created_by_me', 'overdue', 'archived']:
             return TaskListSerializer
         return TaskDetailSerializer
     
@@ -755,6 +773,29 @@ class TaskViewSet(viewsets.ModelViewSet):
             'by_project':   by_project,
             'tasks':        tasks,
         })
+
+    @action(detail=True, methods=['post'])
+    def archive(self, request, pk=None):
+        task = self.get_object()
+        if task.archived_at:
+            return Response({'detail': 'Задача уже в архиве'}, status=status.HTTP_400_BAD_REQUEST)
+        task.archive()
+        return Response({'detail': 'Задача архивирована'})
+
+    @action(detail=True, methods=['post'])
+    def unarchive(self, request, pk=None):
+        task = self.get_object()
+        if not task.archived_at:
+            return Response({'detail': 'Задача не в архиве'}, status=status.HTTP_400_BAD_REQUEST)
+        task.unarchive()
+        return Response({'detail': 'Задача восстановлена из архива'})
+
+    @action(detail=False, methods=['get'])
+    def archived(self, request):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        serializer = TaskListSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class KanbanColumnViewSet(viewsets.ModelViewSet):

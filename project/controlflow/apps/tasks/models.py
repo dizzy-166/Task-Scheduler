@@ -159,6 +159,9 @@ class Task(models.Model):
         blank=True
     )
     
+    # Архив
+    archived_at = models.DateTimeField('Архивирован', null=True, blank=True, db_index=True)
+
     # Мягкое удаление
     deleted_at = models.DateTimeField('Удалён', null=True, blank=True, db_index=True)
     
@@ -181,6 +184,7 @@ class Task(models.Model):
             models.Index(fields=['due_date']),
             models.Index(fields=['deleted_at']),
             models.Index(fields=['parent_task']),
+            models.Index(fields=['archived_at']),
         ]
     
     def __str__(self):
@@ -211,14 +215,20 @@ class Task(models.Model):
         return f'{hours}ч'
     
     def soft_delete(self):
-        """Мягкое удаление"""
         self.deleted_at = timezone.now()
         self.save(update_fields=['deleted_at'])
-    
+
     def restore(self):
-        """Восстановление"""
         self.deleted_at = None
         self.save(update_fields=['deleted_at'])
+
+    def archive(self):
+        self.archived_at = timezone.now()
+        self.save(update_fields=['archived_at'])
+
+    def unarchive(self):
+        self.archived_at = None
+        self.save(update_fields=['archived_at'])
 
 
 class TaskTimer(models.Model):

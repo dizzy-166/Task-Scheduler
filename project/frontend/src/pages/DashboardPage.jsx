@@ -262,6 +262,9 @@ const DashboardPage = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, [showWhatsNew]);
 
+  const [archivedTasks, setArchivedTasks] = useState([]);
+  const [archivedLoading, setArchivedLoading] = useState(false);
+
   const [taskScope, setTaskScope] = useState('all');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -408,6 +411,14 @@ const DashboardPage = () => {
     const t = setTimeout(() => setChatToast(null), 5000);
     return () => clearTimeout(t);
   }, [chatToast]);
+
+  // ── Load archived tasks when switching to archive view ──────────────────────
+  useEffect(() => {
+    if (activeView === 'archive' && activeCompany) {
+      loadArchivedTasks();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeView, activeCompany?.id, activeProject?.id]);
 
   // ── Task polling for real-time sync ─────────────────────────────────────────
   // pollTick is incremented by the interval; the second effect responds to each
@@ -638,6 +649,42 @@ const DashboardPage = () => {
       setError('Не удалось загрузить задачи. Попробуйте снова.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ── Archive ──────────────────────────────────────────────────────────────────
+  const loadArchivedTasks = async () => {
+    setArchivedLoading(true);
+    try {
+      const project = activeProjectRef.current;
+      const params = project?.id ? { project: project.id } : {};
+      const data = await taskService.getArchivedTasks(params);
+      const list = Array.isArray(data) ? data : (data.results || []);
+      setArchivedTasks(list);
+    } catch {
+      setArchivedTasks([]);
+    } finally {
+      setArchivedLoading(false);
+    }
+  };
+
+  const handleArchiveTask = async (taskId) => {
+    try {
+      await taskService.archiveTask(taskId);
+      await loadAllData();
+      showToast('Задача отправлена в архив');
+    } catch {
+      showToast('Не удалось архивировать задачу', 'error');
+    }
+  };
+
+  const handleUnarchiveTask = async (taskId) => {
+    try {
+      await taskService.unarchiveTask(taskId);
+      setArchivedTasks(prev => prev.filter(t => t.id !== taskId));
+      showToast('Задача восстановлена из архива');
+    } catch {
+      showToast('Не удалось восстановить задачу', 'error');
     }
   };
 
@@ -960,6 +1007,10 @@ const DashboardPage = () => {
     {
       view: 'gantt', label: 'Диаграмма Ганта',
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="8" height="3" rx="1"/><rect x="7" y="10" width="10" height="3" rx="1"/><rect x="5" y="15" width="12" height="3" rx="1"/><line x1="3" y1="3" x2="3" y2="21" strokeWidth="1.2"/></svg>,
+    },
+    {
+      view: 'archive', label: 'Архив',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>,
     },
     {
       view: 'chat', label: 'Чат',
@@ -1374,9 +1425,24 @@ const DashboardPage = () => {
                       >
                         <div className="task-header">
                           <h4>{task.title}</h4>
-                          <span className={`priority-badge ${getPriorityColor(task.priority)}`}>
-                            {task.priority}
-                          </span>
+                          <div className="task-header-actions">
+                            {col.status_key === 'done' && (
+                              <button
+                                className="task-archive-btn"
+                                title="Отправить в архив"
+                                onClick={e => { e.stopPropagation(); handleArchiveTask(task.id); }}
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                  <polyline points="21 8 21 21 3 21 3 8"/>
+                                  <rect x="1" y="3" width="22" height="5"/>
+                                  <line x1="10" y1="12" x2="14" y2="12"/>
+                                </svg>
+                              </button>
+                            )}
+                            <span className={`priority-badge ${getPriorityColor(task.priority)}`}>
+                              {task.priority}
+                            </span>
+                          </div>
                         </div>
                         {task.description && <p className="task-description">{task.description}</p>}
                         <div className="task-footer">
@@ -1744,6 +1810,86 @@ const DashboardPage = () => {
         {/* ── Gantt ── */}
         {activeView === 'gantt' && (
           <GanttView allTasks={allTasksList} onTaskClick={handleTaskClick} />
+        )}
+
+        {/* ── Archive ── */}
+        {activeView === 'archive' && (
+          <div className="archive-view">
+            <div className="archive-view-header">
+              <h2>Архив задач</h2>
+              {!archivedLoading && (
+                <span className="archive-count-badge">{archivedTasks.length} задач</span>
+              )}
+            </div>
+            {archivedLoading ? (
+              <div className="loading-container" style={{ minHeight: 200 }}>
+                <div className="spinner" />
+              </div>
+            ) : archivedTasks.length === 0 ? (
+              <div className="empty-state-illus" style={{ padding: '64px 24px' }}>
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.3">
+                  <polyline points="21 8 21 21 3 21 3 8"/>
+                  <rect x="1" y="3" width="22" height="5"/>
+                  <line x1="10" y1="12" x2="14" y2="12"/>
+                </svg>
+                <p style={{ marginTop: 16 }}>Архив пуст</p>
+                <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 6 }}>
+                  Завершённые задачи попадают сюда автоматически или вручную
+                </p>
+              </div>
+            ) : (
+              <div className="archive-list">
+                {archivedTasks.map(task => {
+                  const STATUS_LABEL = { new: 'Новая', in_progress: 'В работе', review: 'На проверке', done: 'Завершена', cancelled: 'Отменена' };
+                  const STATUS_COLOR = { new: '#6B7280', in_progress: '#3B82F6', review: '#F59E0B', done: '#10B981', cancelled: '#EF4444' };
+                  const PRIO_COLOR = { critical: '#EF4444', high: '#F59E0B', medium: '#3B82F6', low: '#6B7280' };
+                  const statusColor = STATUS_COLOR[task.status] || '#6B7280';
+                  const prioColor = PRIO_COLOR[task.priority] || '#6B7280';
+                  const archivedDate = task.archived_at
+                    ? new Date(task.archived_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })
+                    : null;
+                  return (
+                    <div key={task.id} className="archive-item">
+                      <div className="archive-item-left" style={{ borderLeft: `3px solid ${prioColor}` }}>
+                        <div className="archive-item-title">{task.title}</div>
+                        {task.description && <div className="archive-item-desc">{task.description}</div>}
+                        <div className="archive-item-meta">
+                          {task.project_name && (
+                            <span className="archive-meta-chip archive-meta-project">{task.project_name}</span>
+                          )}
+                          <span className="archive-meta-chip" style={{ background: statusColor + '22', color: statusColor }}>
+                            {STATUS_LABEL[task.status] || task.status}
+                          </span>
+                          {task.assignee_name && (
+                            <span className="archive-meta-chip archive-meta-assignee">
+                              <span className="lv-avatar" style={{ width: 18, height: 18, fontSize: 10 }}>{task.assignee_name[0]}</span>
+                              {task.assignee_name}
+                            </span>
+                          )}
+                          {archivedDate && (
+                            <span className="archive-meta-chip archive-meta-date">
+                              Архивирована {archivedDate}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        className="archive-restore-btn"
+                        onClick={() => handleUnarchiveTask(task.id)}
+                        title="Восстановить из архива"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <polyline points="1 4 1 10 7 10"/>
+                          <path d="M3.51 15a9 9 0 1 0 .49-5.51"/>
+                        </svg>
+                        Восстановить
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         )}
 
         {/* ── Chat ── */}

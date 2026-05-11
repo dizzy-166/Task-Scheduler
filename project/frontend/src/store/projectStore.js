@@ -54,9 +54,9 @@ const useProjectStore = create(
         }
       },
 
-      deleteProject: async (id) => {
+      deleteProject: async (id, taskAction = 'keep') => {
         try {
-          await projectService.deleteProject(id);
+          await projectService.deleteProject(id, taskAction);
           set(state => ({
             projects: state.projects.filter(p => p.id !== id),
             activeProject: state.activeProject?.id === id ? null : state.activeProject,

@@ -66,6 +66,18 @@ class TaskService {
     return api.post('/tasks/ai-bulk-create/', data).then(r => r.data);
   }
 
+  archiveTask(id) {
+    return api.post(`/tasks/${id}/archive/`).then(r => r.data);
+  }
+
+  unarchiveTask(id) {
+    return api.post(`/tasks/${id}/unarchive/`).then(r => r.data);
+  }
+
+  getArchivedTasks(params = {}) {
+    return api.get('/tasks/archived/', { params }).then(r => r.data);
+  }
+
   getComments(taskId) {
     return api.get(`/tasks/${taskId}/comments/`).then(r => r.data);
   }

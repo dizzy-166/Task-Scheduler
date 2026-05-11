@@ -54,9 +54,12 @@ const ProjectSwitcher = ({ companyId, currentUserRole, projectStats = {} }) => {
     }
   };
 
+  const [taskAction, setTaskAction] = useState('archive');
+
   const handleDelete = async (id) => {
-    await deleteProject(id);
+    await deleteProject(id, taskAction);
     setShowDeleteConfirm(null);
+    setTaskAction('archive');
   };
 
   const canManage = currentUserRole === 'owner' || currentUserRole === 'admin';
@@ -211,11 +214,37 @@ const ProjectSwitcher = ({ companyId, currentUserRole, projectStats = {} }) => {
             </div>
             <div className="modal-delete-body">
               <h3>Удалить проект?</h3>
-              <p>Вы собираетесь удалить проект <strong>{showDeleteConfirm.name}</strong>. Задачи проекта при этом не будут удалены.</p>
+              <p>Вы собираетесь удалить проект <strong>{showDeleteConfirm.name}</strong>. Что сделать с задачами проекта?</p>
+              <div className="modal-delete-task-actions">
+                <label className={`task-action-option ${taskAction === 'archive' ? 'selected' : ''}`}>
+                  <input type="radio" name="taskAction" value="archive" checked={taskAction === 'archive'} onChange={() => setTaskAction('archive')} />
+                  <span className="task-action-icon">📦</span>
+                  <div>
+                    <strong>Архивировать</strong>
+                    <span>Задачи сохранятся в архиве</span>
+                  </div>
+                </label>
+                <label className={`task-action-option ${taskAction === 'delete' ? 'selected' : ''}`}>
+                  <input type="radio" name="taskAction" value="delete" checked={taskAction === 'delete'} onChange={() => setTaskAction('delete')} />
+                  <span className="task-action-icon">🗑</span>
+                  <div>
+                    <strong>Удалить</strong>
+                    <span>Задачи будут удалены без возможности восстановления</span>
+                  </div>
+                </label>
+                <label className={`task-action-option ${taskAction === 'keep' ? 'selected' : ''}`}>
+                  <input type="radio" name="taskAction" value="keep" checked={taskAction === 'keep'} onChange={() => setTaskAction('keep')} />
+                  <span className="task-action-icon">📋</span>
+                  <div>
+                    <strong>Оставить</strong>
+                    <span>Задачи останутся без проекта</span>
+                  </div>
+                </label>
+              </div>
             </div>
             <div className="modal-delete-footer">
               <button className="btn-secondary" onClick={() => setShowDeleteConfirm(null)}>Отмена</button>
-              <button className="btn-danger" onClick={() => handleDelete(showDeleteConfirm.id)}>Удалить</button>
+              <button className="btn-danger" onClick={() => handleDelete(showDeleteConfirm.id)}>Удалить проект</button>
             </div>
           </div>
         </div>

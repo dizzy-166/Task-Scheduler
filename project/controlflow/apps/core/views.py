@@ -62,4 +62,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         self._require_admin('удалять проекты')
+        from django.utils import timezone
+        action = self.request.data.get('task_action', 'keep')
+        if action == 'archive':
+            instance.tasks.filter(deleted_at__isnull=True, archived_at__isnull=True).update(
+                archived_at=timezone.now()
+            )
+        elif action == 'delete':
+            instance.tasks.filter(deleted_at__isnull=True).update(
+                deleted_at=timezone.now()
+            )
         instance.soft_delete()
