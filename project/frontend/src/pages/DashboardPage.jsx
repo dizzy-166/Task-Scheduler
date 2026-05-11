@@ -533,8 +533,11 @@ const DashboardPage = () => {
     setTasks(organized);
   };
 
-  // Pure HTTP fetch — no state updates, safe to call concurrently
+  // Pure HTTP fetch — no state updates, safe to call concurrently.
+  // Passes activeProject.id as explicit query param so the backend always
+  // filters correctly regardless of localStorage/interceptor timing.
   const fetchTaskData = async (scope = taskScope) => {
+    const projectParams = activeProject?.id ? { project: activeProject.id } : {};
     if (scope === 'mine') {
       const [assignedData, createdData] = await Promise.all([
         taskService.getMyTasks(),
@@ -542,7 +545,7 @@ const DashboardPage = () => {
       ]);
       return mergeTaskLists(normalizeTaskResponse(assignedData), normalizeTaskResponse(createdData));
     } else {
-      const data = await taskService.getTasks();
+      const data = await taskService.getTasks(projectParams);
       return normalizeTaskResponse(data);
     }
   };
