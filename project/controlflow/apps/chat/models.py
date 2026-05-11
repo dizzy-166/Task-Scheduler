@@ -37,6 +37,7 @@ class Notification(models.Model):
         ('deadline_soon',    'Скоро дедлайн'),
         ('task_created',     'Создана задача'),
         ('comment_mention',  'Упоминание в комментарии'),
+        ('chat_mention',     'Упоминание в чате'),
     ]
 
     recipient    = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')

@@ -68,6 +68,25 @@ class ChatMessagesView(APIView):
             text=text,
             reply_to_id=reply_to_id or None,
         )
+
+        # Parse @mentions and notify mentioned users (not in direct messages)
+        if '@' in text and channel_type != 'direct':
+            from apps.companies.models import CompanyMember
+            members = CompanyMember.objects.filter(
+                company_id=company_id, status='active'
+            ).select_related('user').exclude(user=request.user)
+            author_name = request.user.full_name or request.user.email
+            for m in members:
+                full = m.user.full_name or m.user.email
+                if full and f'@{full}' in text:
+                    Notification.objects.create(
+                        recipient=m.user,
+                        company_id=company_id,
+                        type='chat_mention',
+                        title=f'{author_name} упомянул вас в чате',
+                        body=text[:200],
+                    )
+
         msg.refresh_from_db()
         return Response(ChatMessageSerializer(
             ChatMessage.objects.select_related('sender', 'reply_to', 'reply_to__sender').get(pk=msg.pk)

@@ -456,15 +456,16 @@ class TaskViewSet(viewsets.ModelViewSet):
         comment = TaskComment.objects.create(task=task, author=request.user, text=text)
 
         # Parse @mentions and notify mentioned users
-        User = get_user_model()
-        mentioned_names = re.findall(r'@([\w\s]+?)(?=\s@|\s*$|[^а-яёa-z\s])', text, re.IGNORECASE)
         company = task.company
-        if company and mentioned_names:
-            members = User.objects.filter(company_memberships__company=company).exclude(id=request.user.id)
-            author_name = request.user.get_full_name() or request.user.email
+        if company and '@' in text:
+            User = get_user_model()
+            members = User.objects.filter(
+                company_memberships__company=company, company_memberships__status='active'
+            ).exclude(id=request.user.id)
+            author_name = request.user.full_name or request.user.email
             for member in members:
-                full = member.get_full_name()
-                if any(full.lower() == m.strip().lower() for m in mentioned_names):
+                full = member.full_name or member.email
+                if full and f'@{full}' in text:
                     Notification.objects.create(
                         recipient=member,
                         company=company,
