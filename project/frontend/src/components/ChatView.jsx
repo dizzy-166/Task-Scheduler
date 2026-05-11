@@ -102,7 +102,7 @@ function ContextMenu({ menu, myId, onClose, onCopy, onReply, onEdit, onDelete })
   );
 }
 
-function Message({ m, myId, onReply, onContextMenu, isNew, isEditing, editText, onEditChange, onEditSave, onEditCancel }) {
+function Message({ m, myId, members, onReply, onContextMenu, isNew, isEditing, editText, onEditChange, onEditSave, onEditCancel }) {
   const [hover, setHover] = useState(false);
   const hideTimer = useRef(null);
   const editRef   = useRef(null);
@@ -153,7 +153,7 @@ function Message({ m, myId, onReply, onContextMenu, isNew, isEditing, editText, 
           </div>
         ) : (
           <div className="ch-bubble">
-            <span className="ch-text">{m.text}</span>
+            <span className="ch-text">{renderMentionText(m.text, members)}</span>
             <span className="ch-time">
               {m.edited_at && <span className="ch-edited">ред.&nbsp;</span>}
               {fmtTime(m.created_at)}
@@ -178,6 +178,29 @@ function Message({ m, myId, onReply, onContextMenu, isNew, isEditing, editText, 
   );
 }
 
+// ── Render message text with @mention highlights ──────────────────────────────
+function renderMentionText(text, membersList) {
+  const names = membersList.map(m => m.name).filter(Boolean).sort((a, b) => b.length - a.length);
+  const parts = [];
+  let i = 0, buf = '';
+  while (i < text.length) {
+    if (text[i] === '@') {
+      const matched = names.find(name => text.startsWith(name, i + 1));
+      if (matched) {
+        if (buf) { parts.push(buf); buf = ''; }
+        parts.push(<mark key={i} className="comment-mention">@{matched}</mark>);
+        i += 1 + matched.length;
+      } else {
+        buf += '@'; i++;
+      }
+    } else {
+      buf += text[i++];
+    }
+  }
+  if (buf) parts.push(buf);
+  return parts.length > 0 ? parts : text;
+}
+
 // ── main component ────────────────────────────────────────────────────────────
 export default function ChatView() {
   const { user }          = useAuthStore();
@@ -192,6 +215,12 @@ export default function ChatView() {
   const [sending,   setSending]   = useState(false);
   const [newCount,  setNewCount]  = useState(0);
   const [newIds,    setNewIds]    = useState(new Set());
+
+  // @mention state
+  const [mentionQuery,   setMentionQuery]   = useState('');
+  const [mentionVisible, setMentionVisible] = useState(false);
+  const [mentionIdx,     setMentionIdx]     = useState(0);
+  const mentionStartRef = useRef(-1);
 
   // Edit & context menu
   const [editingId, setEditingId] = useState(null);
@@ -288,6 +317,38 @@ export default function ChatView() {
     return () => clearInterval(id);
   }, [loadMessages]);
 
+  // ── @mention helpers ──────────────────────────────────────────────────────
+  const mentionCandidates = members.filter(m => String(m.id) !== String(user?.id));
+  const mentionSuggestions = mentionQuery
+    ? mentionCandidates.filter(m => m.name?.toLowerCase().includes(mentionQuery.toLowerCase())).slice(0, 6)
+    : mentionCandidates.slice(0, 6);
+
+  const insertMention = (member) => {
+    const before = text.slice(0, mentionStartRef.current);
+    const after  = text.slice(mentionStartRef.current + 1 + mentionQuery.length);
+    setText(before + `@${member.name} ` + after);
+    setMentionVisible(false);
+    setMentionQuery('');
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  const onTextChange = (e) => {
+    const val = e.target.value;
+    setText(val);
+    const pos = e.target.selectionStart;
+    const before = val.slice(0, pos);
+    const atIdx = before.lastIndexOf('@');
+    if (atIdx !== -1 && !before.slice(atIdx + 1).includes(' ') && pos - atIdx <= 30) {
+      mentionStartRef.current = atIdx;
+      setMentionQuery(before.slice(atIdx + 1));
+      setMentionVisible(true);
+      setMentionIdx(0);
+    } else {
+      setMentionVisible(false);
+      setMentionQuery('');
+    }
+  };
+
   // ── send ──────────────────────────────────────────────────────────────────
   const send = async () => {
     if (!text.trim() || sending) return;
@@ -333,9 +394,19 @@ export default function ChatView() {
     setCtxMenu({ x: e.clientX, y: e.clientY, msg });
   };
 
-  const onKey = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } };
+  const onKey = (e) => {
+    if (mentionVisible) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setMentionIdx(i => (i + 1) % mentionSuggestions.length); return; }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); setMentionIdx(i => (i - 1 + mentionSuggestions.length) % mentionSuggestions.length); return; }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        if (mentionSuggestions[mentionIdx]) { e.preventDefault(); insertMention(mentionSuggestions[mentionIdx]); return; }
+      }
+      if (e.key === 'Escape') { setMentionVisible(false); return; }
+    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); setMentionVisible(false); send(); }
+  };
 
-  const selectChannel = (ch) => { setChannel(ch); setReplyTo(null); setText(''); setEditingId(null); setCtxMenu(null); };
+  const selectChannel = (ch) => { setChannel(ch); setReplyTo(null); setText(''); setEditingId(null); setCtxMenu(null); setMentionVisible(false); };
 
   const grouped = groupByDate(messages);
   const myId    = user?.id;
@@ -404,6 +475,7 @@ export default function ChatView() {
                   key={item.data.id}
                   m={item.data}
                   myId={myId}
+                  members={members}
                   onReply={setReplyTo}
                   onContextMenu={handleContextMenu}
                   isNew={newIds.has(item.data.id)}
@@ -435,17 +507,31 @@ export default function ChatView() {
               onCancel={() => setReplyTo(null)}
             />
           )}
-          <div className="ch-input-row">
+          <div className="ch-input-row" style={{ position: 'relative' }}>
+            {mentionVisible && mentionSuggestions.length > 0 && (
+              <div className="mention-dropdown mention-dropdown--chat">
+                {mentionSuggestions.map((m, i) => (
+                  <button
+                    key={m.id}
+                    className={`mention-item${i === mentionIdx ? ' mention-item--active' : ''}`}
+                    onMouseDown={e => { e.preventDefault(); insertMention(m); }}
+                  >
+                    <span className="mention-avatar">{m.name?.[0]}</span>
+                    <span>{m.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             <textarea
               ref={inputRef}
               className="ch-input"
               value={text}
-              onChange={e => setText(e.target.value)}
+              onChange={onTextChange}
               onKeyDown={onKey}
-              placeholder={`Написать в ${channel.type === 'direct' ? channel.name : '#' + channel.name}…`}
+              placeholder={`Написать в ${channel.type === 'direct' ? channel.name : '#' + channel.name}… (@ для упоминания)`}
               rows={1}
             />
-            <button className="ch-send-btn" onClick={send} disabled={!text.trim() || sending} title="Отправить (Enter)">
+            <button className="ch-send-btn" onClick={() => { setMentionVisible(false); send(); }} disabled={!text.trim() || sending} title="Отправить (Enter)">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="22" y1="2" x2="11" y2="13"/>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"/>

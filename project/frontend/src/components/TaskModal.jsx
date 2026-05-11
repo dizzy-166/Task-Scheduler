@@ -291,13 +291,27 @@ const TaskModal = ({ isOpen, onClose, onTaskCreated, onTaskUpdated, onTaskDelete
   };
 
   // Render comment text with highlighted @mentions
+  // Matches against known user names (longest first to avoid partial matches)
   const renderCommentText = (text) => {
-    const parts = text.split(/(@[\wа-яёА-ЯЁ][^@\n]*?(?=\s@|\s*$))/);
-    return parts.map((p, i) =>
-      p.startsWith('@')
-        ? <mark key={i} className="comment-mention">{p}</mark>
-        : p
-    );
+    const names = users.map(u => u.full_name).filter(Boolean).sort((a, b) => b.length - a.length);
+    const parts = [];
+    let i = 0, buf = '';
+    while (i < text.length) {
+      if (text[i] === '@') {
+        const matched = names.find(name => text.startsWith(name, i + 1));
+        if (matched) {
+          if (buf) { parts.push(buf); buf = ''; }
+          parts.push(<mark key={i} className="comment-mention">@{matched}</mark>);
+          i += 1 + matched.length;
+        } else {
+          buf += '@'; i++;
+        }
+      } else {
+        buf += text[i++];
+      }
+    }
+    if (buf) parts.push(buf);
+    return parts.length > 0 ? parts : text;
   };
 
   const handleAddSubtask = async () => {

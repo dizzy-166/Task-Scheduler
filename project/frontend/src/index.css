@@ -7717,7 +7717,7 @@ body {
   font-size: 14px;
 }
 
-/* ── @mention dropdown in TaskModal ── */
+/* ── @mention dropdown ── */
 .mention-dropdown {
   position: absolute;
   bottom: calc(100% + 4px);
@@ -7729,6 +7729,10 @@ body {
   box-shadow: 0 8px 24px rgba(0,0,0,0.18);
   z-index: 100;
   overflow: hidden;
+}
+.mention-dropdown--chat {
+  right: 52px;
+  bottom: calc(100% + 6px);
 }
 .mention-item {
   display: flex;
