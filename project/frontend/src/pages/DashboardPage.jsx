@@ -546,6 +546,7 @@ const DashboardPage = () => {
     // never a stale value from a previous render's closure.
     const project = activeProjectRef.current;
     const projectParams = project?.id ? { project: project.id } : {};
+    console.log('[fetchTaskData] project=', project?.id ?? null, 'scope=', scope);
     if (scope === 'mine') {
       const [assignedData, createdData] = await Promise.all([
         taskService.getMyTasks(),
