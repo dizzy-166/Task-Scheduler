@@ -115,12 +115,15 @@ class TaskViewSet(viewsets.ModelViewSet):
         
         # Проверяем кастомное право 'tasks.view_all'
         from apps.users.models import UserRole
+        from django.utils import timezone as tz
         has_view_all = UserRole.objects.filter(
             user=user,
             role__context_type='company',
             role__context_id=company_id,
             role__permissions__permission__code='tasks.view_all',
             role__permissions__granted=True,
+        ).filter(
+            django_models.Q(expires_at__isnull=True) | django_models.Q(expires_at__gt=tz.now())
         ).exists()
         
         if has_view_all:
@@ -187,8 +190,10 @@ class TaskViewSet(viewsets.ModelViewSet):
             role__context_id=company_id,
             role__permissions__permission__code=permission_code,
             role__permissions__granted=True,
+        ).filter(
+            django_models.Q(expires_at__isnull=True) | django_models.Q(expires_at__gt=timezone.now())
         ).exists()
-        
+
         return has_permission
     
     def perform_create(self, serializer):
@@ -795,6 +800,10 @@ class TaskViewSet(viewsets.ModelViewSet):
     def archived(self, request):
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = TaskListSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = TaskListSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -941,10 +950,16 @@ class AIBulkCreateTasksView(APIView):
 
     def post(self, request):
         from datetime import date, timedelta
+        from apps.companies.models import CompanyMember
 
         company_id = request.headers.get('X-Company-Id')
         if not company_id:
             return Response({'error': 'X-Company-Id required'}, status=400)
+
+        if not CompanyMember.objects.filter(
+            company_id=company_id, user=request.user, status='active'
+        ).exists():
+            return Response({'error': 'У вас нет доступа к этой компании'}, status=403)
 
         project_id = request.data.get('project_id') or None
         tasks_data = request.data.get('tasks', [])

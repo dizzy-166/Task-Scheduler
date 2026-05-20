@@ -1,0 +1,6 @@
+# Отладочные файлы с токенами — никогда не коммитить
+test_api_members.html
+
+# Environment files
+.env
+.env.local

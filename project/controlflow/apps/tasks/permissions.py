@@ -1,8 +1,9 @@
 # apps/tasks/permissions.py
 from rest_framework import permissions
+from django.db.models import Q
+from django.utils import timezone
 
-# Правильные импорты
-from apps.companies.models import CompanyMember  # CompanyMember в companies
+from apps.companies.models import CompanyMember
 from apps.users.models import UserRole
 
 
@@ -39,16 +40,16 @@ class CanManageTask(permissions.BasePermission):
         if membership.role == 'admin':
             return True
         
-        # Проверяем через кастомные роли
-        has_permission = UserRole.objects.filter(
+        # Проверяем через кастомные роли (только неистёкшие)
+        return UserRole.objects.filter(
             user=user,
             role__context_type='company',
             role__context_id=company_id,
             role__permissions__permission__code=permission_code,
             role__permissions__granted=True,
+        ).filter(
+            Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
         ).exists()
-        
-        return has_permission
     
     def has_permission(self, request, view):
         """Проверка на уровне запроса (list, create)"""
@@ -107,7 +108,7 @@ class CanManageTask(permissions.BasePermission):
             return False
 
         # Таймер, комментарии, подзадачи — разрешены любому участнику
-        if view.action in ['start_timer', 'stop_timer', 'comments', 'delete_comment', 'subtasks']:
+        if view.action in ['start_timer', 'stop_timer', 'active_timer', 'comments', 'delete_comment', 'subtasks']:
             return True
 
-        return True
+        return False

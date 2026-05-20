@@ -2,6 +2,7 @@ from rest_framework import viewsets, status, permissions, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.activity.utils import log_activity
@@ -36,19 +37,11 @@ class CompanyViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Получение компаний, где пользователь активный участник"""
         user = self.request.user
-        print(f"DEBUG: get_queryset called for user {user.email} (ID: {user.id})")
-        
-        queryset = Company.objects.filter(
+        return Company.objects.filter(
             memberships__user=user,
             memberships__status='active',
             deleted_at__isnull=True
         ).distinct().select_related('owner').prefetch_related('memberships')
-        
-        print(f"DEBUG: found {len(queryset)} companies for user")
-        for company in queryset:
-            print(f"DEBUG: company {company.name} (ID: {company.id})")
-        
-        return queryset
     
     def get_serializer_class(self):
         """Выбор сериализатора в зависимости от действия"""
@@ -215,54 +208,42 @@ class CompanyViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_path='members')
     def list_members(self, request, pk=None):
         """Получение списка активных участников компании"""
-        print(f"DEBUG: list_members called for company {pk}")
-        print(f"DEBUG: user {request.user.email} (ID: {request.user.id})")
-        
-        # Проверяем, что пользователь имеет доступ к компании
         membership = CompanyMember.objects.filter(
             company_id=pk,
             user=request.user,
             status='active'
         ).first()
-        
+
         if not membership:
-            print(f"DEBUG: user has no access to company {pk}")
             return Response(
                 {'error': 'У вас нет доступа к этой компании'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
+
         try:
             company = Company.objects.get(id=pk, deleted_at__isnull=True)
-            print(f"DEBUG: company found: {company.name} (ID: {company.id})")
         except Company.DoesNotExist:
-            print(f"DEBUG: company {pk} not found")
             return Response({'error': 'Компания не найдена'}, status=status.HTTP_404_NOT_FOUND)
-        
+
         members = CompanyMember.objects.filter(
             company=company,
             status='active'
         ).select_related('user', 'invited_by', 'company')
-        
-        print(f"DEBUG: found {len(members)} active members")
+
         serializer = CompanyMemberSerializer(members, many=True)
         return Response(serializer.data)
     
     @action(detail=True, methods=['get'], url_path='pending')
     def list_pending(self, request, pk=None):
         """Получение списка приглашенных участников"""
-        print(f"DEBUG: list_pending called for company {pk}")
-        
-        # Проверяем права доступа (только owner и admin могут видеть приглашенных)
         membership = CompanyMember.objects.filter(
             company_id=pk,
             user=request.user,
             status='active',
             role__in=['owner', 'admin']
         ).first()
-        
+
         if not membership:
-            print(f"DEBUG: user has no admin access to company {pk}")
             return Response(
                 {'error': 'У вас нет прав для просмотра приглашенных'},
                 status=status.HTTP_403_FORBIDDEN
@@ -383,13 +364,15 @@ class CompanyViewSet(viewsets.ModelViewSet):
         if not membership:
             return None, Response({'error': 'Нет доступа к компании'}, status=status.HTTP_403_FORBIDDEN)
         if membership.role not in ('owner', 'admin'):
-            # Проверяем кастомное разрешение roles.manage
+            # Проверяем кастомное разрешение roles.manage (только неистёкшие роли)
             has_perm = UserRole.objects.filter(
                 user=user,
                 role__context_type='company',
                 role__context_id=company_id,
                 role__permissions__permission__code='roles.manage',
                 role__permissions__granted=True,
+            ).filter(
+                Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
             ).exists()
             if not has_perm:
                 return None, Response({'error': 'Нет прав для управления ролями'}, status=status.HTTP_403_FORBIDDEN)

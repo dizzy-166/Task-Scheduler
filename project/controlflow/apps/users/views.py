@@ -1,5 +1,5 @@
 import logging
-import random
+import secrets
 
 from rest_framework import status, viewsets, generics
 from rest_framework.decorators import action
@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
-from django.db import models as django_models
+from django.db import models as django_models, transaction
 from django.db.models import Q
 
 logger = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ class RegisterView(generics.CreateAPIView):
             ip_address=request.META.get('REMOTE_ADDR')
         )
 
-        code = str(random.randint(100000, 999999))
+        code = str(secrets.randbelow(900000) + 100000)
         EmailVerificationToken.objects.create(user=user, token=code)
         try:
             send_verification_email(user, code)
@@ -145,7 +145,7 @@ class ResendVerificationView(generics.GenericAPIView):
         email = request.data.get('email', '').strip()
         user = User.objects.filter(email=email, is_active=True, is_verified=False).first()
         if user:
-            code = str(random.randint(100000, 999999))
+            code = str(secrets.randbelow(900000) + 100000)
             EmailVerificationToken.objects.create(user=user, token=code)
             try:
                 send_verification_email(user, code)
@@ -191,10 +191,11 @@ class ResetPasswordView(generics.GenericAPIView):
         if rt.is_expired:
             return Response({'detail': 'Ссылка устарела. Запросите сброс пароля заново.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        rt.is_used = True
-        rt.save(update_fields=['is_used'])
-        rt.user.set_password(password)
-        rt.user.save()
+        with transaction.atomic():
+            rt.user.set_password(password)
+            rt.user.save()
+            rt.is_used = True
+            rt.save(update_fields=['is_used'])
 
         return Response({'detail': 'Пароль успешно изменён. Войдите с новым паролем.'})
 

@@ -10,8 +10,10 @@
     <div id="result"></div>
 
     <script>
-        const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc3MjQzNTY4LCJpYXQiOjE3NzcyNDE3NjgsImp0aSI6IjdiNjM2NDNlZjBjZjRlY2U4NWY3N2NkNTZhMTEwYTdlIiwidXNlcl9pZCI6ImVjMGM5ZjBkLTRhZGUtNDU4Zi05NjYyLTBiOWUxNmNkYmQ0NiJ9.rX0IguKgH-SDnStuj7DMxL4Xeoc5bAZflnfwnG9gckc';
-        const companyId = '88c135b3-3ea4-457e-8da7-85205a9a632b';
+        // Вставьте ваш токен и ID компании вручную для локального тестирования.
+        // Никогда не коммитьте реальные токены в репозиторий.
+        const token = prompt('Введите Bearer-токен:') || '';
+        const companyId = prompt('Введите ID компании:') || '';
 
         async function testMembers() {
             try {
