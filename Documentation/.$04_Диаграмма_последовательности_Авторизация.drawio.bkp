@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1654" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- ЗАГОЛОВОК -->
+    <mxCell id="title" value="Диаграмма последовательности: Регистрация и авторизация пользователя" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="180" y="20" width="1260" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- ========== ОБЪЕКТЫ ========== -->
+    <mxCell id="obj_user" value="Пользователь" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="80" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="obj_fe" value="React Frontend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0050ef;strokeColor=#001DBC;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="80" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="obj_api" value="Django REST API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#007700;strokeColor=#005500;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="510" y="80" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="obj_db" value="PostgreSQL" style="shape=mxgraph.flowchart.database;whiteSpace=wrap;html=1;fillColor=#cc0000;strokeColor=#6F0000;fontColor=#ffffff;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="750" y="70" width="100" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="obj_email" value="Brevo Email API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="960" y="80" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="obj_jwt" value="SimpleJWT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1200" y="80" width="120" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ========== ЛИНИИ ЖИЗНИ ========== -->
+    <mxCell id="life_user" value="" style="endArrow=none;html=1;dashed=1;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="130" as="sourcePoint" />
+        <mxPoint x="130" y="1120" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="life_fe" value="" style="endArrow=none;html=1;dashed=1;strokeColor=#0050ef;strokeWidth=2;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="130" as="sourcePoint" />
+        <mxPoint x="350" y="1120" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="life_api" value="" style="endArrow=none;html=1;dashed=1;strokeColor=#007700;strokeWidth=2;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="585" y="130" as="sourcePoint" />
+        <mxPoint x="585" y="1120" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="life_db" value="" style="endArrow=none;html=1;dashed=1;strokeColor=#cc0000;strokeWidth=2;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="800" y="140" as="sourcePoint" />
+        <mxPoint x="800" y="1120" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="life_email" value="" style="endArrow=none;html=1;dashed=1;strokeColor=#d6b656;strokeWidth=2;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1030" y="130" as="sourcePoint" />
+        <mxPoint x="1030" y="1120" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="life_jwt" value="" style="endArrow=none;html=1;dashed=1;strokeColor=#b85450;strokeWidth=2;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1260" y="130" as="sourcePoint" />
+        <mxPoint x="1260" y="1120" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- ===== РАЗДЕЛ 1: РЕГИСТРАЦИЯ ===== -->
+    <mxCell id="lbl_reg" value="1. РЕГИСТРАЦИЯ" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fillColor=#e6f3ff;strokeColor=#6c8ebf;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="160" width="180" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- m1: User -> FE: Заполнить форму -->
+    <mxCell id="m1" value="Заполнить форму (email, пароль, имя)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#6c8ebf;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="205" as="sourcePoint" />
+        <mxPoint x="350" y="205" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m2: FE -> API: POST /auth/register/ -->
+    <mxCell id="m2" value="POST /api/v1/auth/register/ {email, password, name}" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#0050ef;fontSize=10;fontStyle=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="235" as="sourcePoint" />
+        <mxPoint x="585" y="235" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m3: API -> DB: INSERT users -->
+    <mxCell id="m3" value="INSERT users (is_verified=false)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#007700;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="585" y="265" as="sourcePoint" />
+        <mxPoint x="800" y="265" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m4: DB -> API: user_id -->
+    <mxCell id="m4" value="user_id" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#cc0000;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="800" y="295" as="sourcePoint" />
+        <mxPoint x="585" y="295" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m5: API -> DB: INSERT email_verification_tokens -->
+    <mxCell id="m5" value="INSERT email_verification_tokens" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#007700;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="585" y="325" as="sourcePoint" />
+        <mxPoint x="800" y="325" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m6: API -> Brevo: отправить письмо -->
+    <mxCell id="m6" value="Отправить письмо с ссылкой верификации" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#007700;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="585" y="355" as="sourcePoint" />
+        <mxPoint x="1030" y="355" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m7: API -> FE: 201 Created -->
+    <mxCell id="m7" value="201 Created" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#007700;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="585" y="385" as="sourcePoint" />
+        <mxPoint x="350" y="385" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m8: FE -> User: сообщение -->
+    <mxCell id="m8" value="«Проверьте почту для верификации»" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#0050ef;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="415" as="sourcePoint" />
+        <mxPoint x="130" y="415" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m9: User -> FE: клик по ссылке -->
+    <mxCell id="m9" value="Перейти по ссылке из письма (?token=...)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#6c8ebf;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="455" as="sourcePoint" />
+        <mxPoint x="350" y="455" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m10: FE -> API: GET /auth/verify-email/ -->
+    <mxCell id="m10" value="GET /api/v1/auth/verify-email/?token=..." style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#0050ef;fontSize=10;fontStyle=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="485" as="sourcePoint" />
+        <mxPoint x="585" y="485" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m11: API -> DB: UPDATE is_verified=true -->
+    <mxCell id="m11" value="UPDATE users SET is_verified=true" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#007700;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="585" y="515" as="sourcePoint" />
+        <mxPoint x="800" y="515" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m11b: API -> FE: 200 OK -->
+    <mxCell id="m11b" value="200 OK — Email подтверждён" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#007700;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="585" y="545" as="sourcePoint" />
+        <mxPoint x="350" y="545" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- ===== РАЗДЕЛ 2: ВХОД ===== -->
+    <mxCell id="lbl_login" value="2. ВХОД В СИСТЕМУ" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fillColor=#e6ffe6;strokeColor=#82b366;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="585" width="190" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- m12: User -> FE: ввести email/пароль -->
+    <mxCell id="m12" value="Ввести email и пароль" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#6c8ebf;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="630" as="sourcePoint" />
+        <mxPoint x="350" y="630" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m13: FE -> API: POST /auth/login/ -->
+    <mxCell id="m13" value="POST /api/v1/auth/login/ {email, password}" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#0050ef;fontSize=10;fontStyle=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="660" as="sourcePoint" />
+        <mxPoint x="585" y="660" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m14: API -> DB: SELECT user -->
+    <mxCell id="m14" value="SELECT * FROM users WHERE email=..." style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#007700;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="585" y="690" as="sourcePoint" />
+        <mxPoint x="800" y="690" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m15: DB -> API: user -->
+    <mxCell id="m15" value="user {id, password_hash, is_verified}" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#cc0000;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="800" y="720" as="sourcePoint" />
+        <mxPoint x="585" y="720" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m16: API -> JWT: generate tokens -->
+    <mxCell id="m16" value="generate(access_token, refresh_token)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#007700;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="585" y="750" as="sourcePoint" />
+        <mxPoint x="1260" y="750" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m17: JWT -> API: tokens -->
+    <mxCell id="m17" value="{access_token (15 мин), refresh_token (7 дней)}" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#b85450;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1260" y="780" as="sourcePoint" />
+        <mxPoint x="585" y="780" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m18: API -> DB: лог активности -->
+    <mxCell id="m18" value="INSERT activity_logs (action=login, ip_address)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#007700;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="585" y="810" as="sourcePoint" />
+        <mxPoint x="800" y="810" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m19: API -> FE: 200 + данные -->
+    <mxCell id="m19" value="200 OK {access_token, refresh_token, user}" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#007700;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="585" y="840" as="sourcePoint" />
+        <mxPoint x="350" y="840" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m20: FE -> User: редирект -->
+    <mxCell id="m20" value="Сохранить токены в localStorage, редирект на Dashboard" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#0050ef;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="870" as="sourcePoint" />
+        <mxPoint x="130" y="870" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- ===== РАЗДЕЛ 3: ОБНОВЛЕНИЕ ТОКЕНА ===== -->
+    <mxCell id="lbl_refresh" value="3. ОБНОВЛЕНИЕ ACCESS-ТОКЕНА" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fillColor=#fff3e6;strokeColor=#d6b656;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="910" width="270" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- m21: FE -> API: POST /auth/refresh/ -->
+    <mxCell id="m21" value="POST /api/v1/auth/refresh/ {refresh_token}" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#0050ef;fontSize=10;fontStyle=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="960" as="sourcePoint" />
+        <mxPoint x="585" y="960" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m22: API -> JWT: verify & generate -->
+    <mxCell id="m22" value="verify(refresh_token) → new access_token" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#007700;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="585" y="990" as="sourcePoint" />
+        <mxPoint x="1260" y="990" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m23: JWT -> API: new token -->
+    <mxCell id="m23" value="new access_token" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#b85450;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1260" y="1020" as="sourcePoint" />
+        <mxPoint x="585" y="1020" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m24: API -> FE: 200 OK -->
+    <mxCell id="m24" value="200 OK {access_token}" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#007700;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="585" y="1050" as="sourcePoint" />
+        <mxPoint x="350" y="1050" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+    <!-- m25: FE -> User: обновить токен в хранилище -->
+    <mxCell id="m25" value="Обновить access_token в localStorage" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=1;strokeColor=#0050ef;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="1080" as="sourcePoint" />
+        <mxPoint x="130" y="1080" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+
+  </root>
+</mxGraphModel>

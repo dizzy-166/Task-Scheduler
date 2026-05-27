@@ -1,0 +1,109 @@
+<mxfile host="Electron">
+  <diagram id="k2zcj6pX1ejrh1Agw9WA" name="Страница-1">
+    <mxGraphModel dx="2020" dy="1201" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;fontColor=#1a1a1a;" value="Архитектура системы Поток" vertex="1">
+          <mxGeometry height="40" width="800" x="427" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="layer_client" parent="1" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;swimlaneLine=1;" value="Слой клиента (Client)" vertex="1">
+          <mxGeometry height="280" width="340" x="80" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="browser" parent="layer_client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="Браузер" vertex="1">
+          <mxGeometry height="40" width="280" x="30" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="react" parent="layer_client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0050ef;strokeColor=#001DBC;fontColor=#ffffff;fontSize=11;fontStyle=1;" value="React 19 + Vite" vertex="1">
+          <mxGeometry height="40" width="280" x="30" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="zustand" parent="layer_client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="Zustand (State Management)" vertex="1">
+          <mxGeometry height="40" width="130" x="30" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="axios" parent="layer_client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="Axios (HTTP)" vertex="1">
+          <mxGeometry height="40" width="130" x="180" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="vercel" parent="layer_client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" value="Деплой: Vercel" vertex="1">
+          <mxGeometry height="40" width="280" x="30" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="layer_api" parent="1" style="swimlane;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;" value="Слой бэкенда (Backend API)" vertex="1">
+          <mxGeometry height="500" width="660" x="500" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="django" parent="layer_api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#007700;strokeColor=#005500;fontColor=#ffffff;fontSize=12;fontStyle=1;" value="Django 6.0.4 + Django REST Framework" vertex="1">
+          <mxGeometry height="45" width="600" x="30" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="mod_users" parent="layer_api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="apps/users&#xa;Пользователи, Роли&#xa;Права доступа" vertex="1">
+          <mxGeometry height="70" width="130" x="30" y="115" as="geometry" />
+        </mxCell>
+        <mxCell id="mod_companies" parent="layer_api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="apps/companies&#xa;Компании&#xa;Участники" vertex="1">
+          <mxGeometry height="70" width="130" x="175" y="115" as="geometry" />
+        </mxCell>
+        <mxCell id="mod_core" parent="layer_api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="apps/core&#xa;Проекты" vertex="1">
+          <mxGeometry height="70" width="130" x="320" y="115" as="geometry" />
+        </mxCell>
+        <mxCell id="mod_tasks" parent="layer_api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="apps/tasks&#xa;Задачи, Kanban&#xa;Таймер, AI" vertex="1">
+          <mxGeometry height="70" width="130" x="465" y="115" as="geometry" />
+        </mxCell>
+        <mxCell id="mod_activity" parent="layer_api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="apps/activity&#xa;Лог активности" vertex="1">
+          <mxGeometry height="60" width="130" x="30" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="mod_chat" parent="layer_api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="apps/chat&#xa;Чат, Уведомления" vertex="1">
+          <mxGeometry height="60" width="130" x="175" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="jwt" parent="layer_api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" value="SimpleJWT (Авторизация)" vertex="1">
+          <mxGeometry height="60" width="140" x="320" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="openapi" parent="layer_api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" value="drf-spectacular&#xa;(OpenAPI / Swagger)" vertex="1">
+          <mxGeometry height="60" width="120" x="475" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="gunicorn" parent="layer_api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" value="Gunicorn (WSGI Server)" vertex="1">
+          <mxGeometry height="40" width="280" x="30" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="whitenoise" parent="layer_api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="Whitenoise (Static Files)" vertex="1">
+          <mxGeometry height="40" width="260" x="330" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="render" parent="layer_api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" value="Деплой: Render (Web Service)" vertex="1">
+          <mxGeometry height="40" width="560" x="30" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="ws" parent="layer_api" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="WebSocket (django-channels) — Чат в реальном времени" vertex="1">
+          <mxGeometry height="40" width="560" x="30" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="layer_ext" parent="1" style="swimlane;startSize=30;fillColor=#ffe6cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" value="Внешние интеграции" vertex="1">
+          <mxGeometry height="500" width="330" x="1240" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="cerebras" parent="layer_ext" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;html=1;whiteSpace=wrap;fillColor=#ff8000;strokeColor=#d05010;fontColor=#000000;fontSize=10;fontStyle=1;" value="Cerebras API&#xa;(Llama 3.1 8B)&#xa;AI-генерация задач" vertex="1">
+          <mxGeometry height="80" width="270" x="30" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="brevo" parent="layer_ext" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=10;fontStyle=1;" value="Brevo (Email API)&#xa;Верификация, Сброс пароля" vertex="1">
+          <mxGeometry height="70" width="270" x="30" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="yandex_oauth" parent="layer_ext" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=10;" value="Yandex OAuth 2.0&#xa;Вход через Яндекс" vertex="1">
+          <mxGeometry height="60" width="270" x="30" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="google_oauth" parent="layer_ext" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=10;" value="Google OAuth 2.0&#xa;Вход через Google" vertex="1">
+          <mxGeometry height="60" width="270" x="30" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="layer_data" parent="1" style="swimlane;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;" value="Слой данных (Data)" vertex="1">
+          <mxGeometry height="200" width="660" x="500" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="postgres" parent="layer_data" style="shape=mxgraph.flowchart.database;whiteSpace=wrap;html=1;fillColor=#cc0000;strokeColor=#6F0000;fontColor=#ffffff;fontSize=11;fontStyle=1;" value="PostgreSQL 16&#xa;Основное хранилище данных&#xa;Транзакции, ACID, масштабируемость" vertex="1">
+          <mxGeometry height="120" width="200" x="30" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="render_db" parent="layer_data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="Render Managed PostgreSQL&#xa;(Production)" vertex="1">
+          <mxGeometry height="60" width="200" x="260" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="local_db" parent="layer_data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="Локальная БД&#xa;(Development)" vertex="1">
+          <mxGeometry height="60" width="160" x="480" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="layer_client" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#0050ef;fontColor=#0050ef;fontSize=10;fontStyle=1;" target="layer_api" value="HTTPS REST API">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="layer_api" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d6b656;fontColor=#d6b656;fontSize=10;" target="layer_ext" value="HTTP API">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="layer_api" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#9673a6;fontColor=#9673a6;fontSize=10;fontStyle=1;" target="layer_data" value="SQL / ORM">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,166 @@
+<mxfile host="Electron">
+  <diagram id="Q5CeDLpfSmKXOXNKonBB" name="Страница-1">
+    <mxGraphModel dx="3768" dy="1750" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=17;fontStyle=1;" value="Диаграмма деятельности: Жизненный цикл задачи в &quot;Поток&quot;" vertex="1">
+          <mxGeometry height="40" width="970" x="100" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lanes" parent="1" style="shape=pool;html=1;childLayout=stackLayout;horizontal=1;startSize=0;horizontalStack=1;resizeParent=1;resizeParent=1;resizeLast=1;strokeColor=#333333;" value="" vertex="1">
+          <mxGeometry height="1520" width="1090" x="40" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="lane_user" parent="lanes" style="swimlane;startSize=30;horizontal=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" value="Участник / Создатель" vertex="1">
+          <mxGeometry height="1520" width="270" as="geometry" />
+        </mxCell>
+        <mxCell id="start" parent="lane_user" style="ellipse;html=1;shape=mxgraph.flowchart.start_2;fillColor=#000000;fontSize=28;fontColor=#ffffff;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="40" width="40" x="100" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a_open" parent="lane_user" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="Открыть систему&#xa;ControlFlow" vertex="1">
+          <mxGeometry height="50" width="170" x="60" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_ai" parent="lane_user" style="rhombus;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="Использовать AI?" vertex="1">
+          <mxGeometry height="60" width="170" x="60" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="a_click_create" parent="lane_user" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="Нажать «+ Задача»" vertex="1">
+          <mxGeometry height="50" width="170" x="60" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="a_fill_form" parent="lane_user" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="Заполнить форму&#xa;(название, описание,&#xa;приоритет, дедлайн,&#xa;исполнитель, проект)" vertex="1">
+          <mxGeometry height="80" width="180" x="50" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="e_start_open" edge="1" parent="lane_user" source="start" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_open">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_open_dec" edge="1" parent="lane_user" source="a_open" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="dec_ai">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_dec_manual" edge="1" parent="lane_user" source="dec_ai" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_click_create" value="Нет">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_click_form" edge="1" parent="lane_user" source="a_click_create" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_fill_form">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lane_system" parent="lanes" style="swimlane;startSize=30;horizontal=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;" value="Система (Django API)" vertex="1">
+          <mxGeometry height="1520" width="310" x="270" as="geometry" />
+        </mxCell>
+        <mxCell id="a_validate" parent="lane_system" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="Валидация данных" vertex="1">
+          <mxGeometry height="50" width="190" x="60" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_valid" parent="lane_system" style="rhombus;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="Данные корректны?" vertex="1">
+          <mxGeometry height="60" width="190" x="60" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="a_error" parent="lane_system" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" value="Вернуть ошибку&#xa;валидации (400)" vertex="1">
+          <mxGeometry height="50" width="190" x="60" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="a_save_task" parent="lane_system" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" value="Сохранить задачу в БД&#xa;(status=new)" vertex="1">
+          <mxGeometry height="55" width="190" x="60" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_assignee" parent="lane_system" style="rhombus;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="Назначен&#xa;исполнитель?" vertex="1">
+          <mxGeometry height="65" width="190" x="60" y="890" as="geometry" />
+        </mxCell>
+        <mxCell id="a_notify" parent="lane_system" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="Создать уведомление&#xa;(task_assigned)&#xa;Записать лог активности" vertex="1">
+          <mxGeometry height="70" width="190" x="60" y="990" as="geometry" />
+        </mxCell>
+        <mxCell id="a_kanban" parent="lane_system" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="Поместить задачу&#xa;в колонку «К выполнению»" vertex="1">
+          <mxGeometry height="55" width="190" x="60" y="1090" as="geometry" />
+        </mxCell>
+        <mxCell id="a_auto_archive" parent="lane_system" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" value="Авто-архивирование&#xa;через 7 дней после done" vertex="1">
+          <mxGeometry height="65" width="190" x="60" y="1200" as="geometry" />
+        </mxCell>
+        <mxCell id="end" parent="lane_system" style="ellipse;html=1;shape=mxgraph.flowchart.terminate;fillColor=#000000;fontSize=28;fontColor=#ffffff;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="40" width="100" x="105" y="1420" as="geometry" />
+        </mxCell>
+        <mxCell id="e_val_dec" edge="1" parent="lane_system" source="a_validate" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="dec_valid">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_dec_err" edge="1" parent="lane_system" source="dec_valid" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_error" value="Нет">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_dec_save" edge="1" parent="lane_system" source="dec_valid" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_save_task" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_save_assign" edge="1" parent="lane_system" source="a_save_task" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="dec_assignee">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_assign_notif" edge="1" parent="lane_system" source="dec_assignee" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_notify" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_notif_kanban" edge="1" parent="lane_system" source="a_notify" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_kanban">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_dec_no_assign" edge="1" parent="lane_system" source="dec_assignee" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_kanban" value="Нет">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_archive_end" edge="1" parent="lane_system" source="a_auto_archive" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lane_assignee" parent="lanes" style="swimlane;startSize=30;horizontal=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;" value="Исполнитель" vertex="1">
+          <mxGeometry height="1520" width="270" x="580" as="geometry" />
+        </mxCell>
+        <mxCell id="a_see_notif" parent="lane_assignee" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="Получить уведомление&#xa;о назначении задачи" vertex="1">
+          <mxGeometry height="65" width="180" x="50" y="990" as="geometry" />
+        </mxCell>
+        <mxCell id="a_start_work" parent="lane_assignee" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="Перетащить задачу&#xa;в «В работе»" vertex="1">
+          <mxGeometry height="55" width="180" x="50" y="1110" as="geometry" />
+        </mxCell>
+        <mxCell id="a_timer_start" parent="lane_assignee" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="Запустить таймер" vertex="1">
+          <mxGeometry height="50" width="180" x="50" y="1210" as="geometry" />
+        </mxCell>
+        <mxCell id="dec_done" parent="lane_assignee" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="Задача&#xa;выполнена?" vertex="1">
+          <mxGeometry height="65" width="160" x="60" y="1300" as="geometry" />
+        </mxCell>
+        <mxCell id="a_review" parent="lane_assignee" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="Перенести в «На проверке»" vertex="1">
+          <mxGeometry height="50" width="180" x="50" y="1410" as="geometry" />
+        </mxCell>
+        <mxCell id="e_see_start" edge="1" parent="lane_assignee" source="a_see_notif" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_start_work">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_start_timer" edge="1" parent="lane_assignee" source="a_start_work" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_timer_start">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_timer_done" edge="1" parent="lane_assignee" source="a_timer_start" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="dec_done">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_done_review" edge="1" parent="lane_assignee" source="dec_done" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_review" value="Нет">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lane_ai" parent="lanes" style="swimlane;startSize=30;horizontal=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=12;" value="Cerebras AI" vertex="1">
+          <mxGeometry height="1520" width="240" x="850" as="geometry" />
+        </mxCell>
+        <mxCell id="a_ai_input" parent="lane_ai" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Ввести описание&#xa;проекта для AI" vertex="1">
+          <mxGeometry height="60" width="160" x="30" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="a_ai_process" parent="lane_ai" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Генерация задач&#xa;(Llama 3.1 8B)" vertex="1">
+          <mxGeometry height="60" width="160" x="30" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="a_ai_review" parent="lane_ai" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" value="Пользователь&#xa;просматривает задачи&#xa;и подтверждает" vertex="1">
+          <mxGeometry height="70" width="160" x="30" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ai_input_proc" edge="1" parent="lane_ai" source="a_ai_input" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_ai_process">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ai_proc_rev" edge="1" parent="lane_ai" source="a_ai_process" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_ai_review">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_dec_ai" edge="1" parent="lanes" source="dec_ai" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_ai_input" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_form_validate" edge="1" parent="lanes" source="a_fill_form" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_validate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ai_rev_validate" edge="1" parent="lanes" source="a_ai_review" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_validate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_notif_see" edge="1" parent="lanes" source="a_notify" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_see_notif">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_done_archive" edge="1" parent="lanes" source="dec_done" style="edgeStyle=orthogonalEdgeStyle;html=1;" target="a_auto_archive" value="Да">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_err_back" edge="1" parent="lanes" source="a_error" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;exitX=0;exitY=0.5;entryX=0;entryY=0.5;" target="a_fill_form" value="Исправить">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

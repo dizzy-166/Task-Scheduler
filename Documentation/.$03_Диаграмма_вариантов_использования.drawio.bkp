@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Заголовок -->
+    <mxCell id="title" value="Диаграмма вариантов использования — ControlFlow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="350" y="20" width="950" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- ========== АКТЁР: Незарегистрированный ========== -->
+    <mxCell id="a_guest" value="Незарегистрированный&#xa;пользователь" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="180" width="60" height="100" as="geometry" />
+    </mxCell>
+
+    <!-- ========== АКТЁР: Участник ========== -->
+    <mxCell id="a_member" value="Участник&#xa;(Member)" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="500" width="60" height="100" as="geometry" />
+    </mxCell>
+
+    <!-- ========== АКТЁР: Администратор ========== -->
+    <mxCell id="a_admin" value="Администратор&#xa;(Admin)" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="850" width="60" height="100" as="geometry" />
+    </mxCell>
+
+    <!-- ========== АКТЁР: Владелец ========== -->
+    <mxCell id="a_owner" value="Владелец&#xa;(Owner)" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1020" width="60" height="100" as="geometry" />
+    </mxCell>
+
+    <!-- ========== АКТЁР: AI ========== -->
+    <mxCell id="a_ai" value="Cerebras AI" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1530" y="650" width="60" height="100" as="geometry" />
+    </mxCell>
+
+    <!-- ========== ГРАНИЦА СИСТЕМЫ ========== -->
+    <mxCell id="sys_boundary" value="Система ControlFlow" style="swimlane;startSize=30;fillColor=none;strokeColor=#666666;strokeWidth=2;fontStyle=1;fontSize=14;align=center;" vertex="1" parent="1">
+      <mxGeometry x="160" y="80" width="1350" height="1100" as="geometry" />
+    </mxCell>
+
+    <!-- ===== БЛОК 1: Аутентификация ===== -->
+    <mxCell id="grp_auth" value="Аутентификация" style="swimlane;startSize=25;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="sys_boundary">
+      <mxGeometry x="30" y="50" width="400" height="310" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_register" value="Регистрация" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="grp_auth">
+      <mxGeometry x="30" y="40" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_login" value="Вход в систему" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="grp_auth">
+      <mxGeometry x="30" y="110" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_verify" value="Верификация email" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="grp_auth">
+      <mxGeometry x="220" y="40" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_reset" value="Сброс пароля" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="grp_auth">
+      <mxGeometry x="30" y="180" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_oauth" value="Вход через OAuth&#xa;(Yandex / Google)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="grp_auth">
+      <mxGeometry x="220" y="110" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_logout" value="Выход из системы" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="grp_auth">
+      <mxGeometry x="30" y="250" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ===== БЛОК 2: Управление задачами ===== -->
+    <mxCell id="grp_tasks" value="Управление задачами" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="sys_boundary">
+      <mxGeometry x="450" y="50" width="420" height="420" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_create_task" value="Создать задачу" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grp_tasks">
+      <mxGeometry x="20" y="40" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_edit_task" value="Редактировать задачу" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grp_tasks">
+      <mxGeometry x="20" y="110" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_delete_task" value="Удалить задачу" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grp_tasks">
+      <mxGeometry x="20" y="180" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_subtask" value="Создать подзадачу" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grp_tasks">
+      <mxGeometry x="230" y="40" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_comment" value="Добавить комментарий" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grp_tasks">
+      <mxGeometry x="230" y="110" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_timer" value="Трекинг времени (таймер)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grp_tasks">
+      <mxGeometry x="230" y="180" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_filter" value="Фильтрация / Поиск задач" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grp_tasks">
+      <mxGeometry x="20" y="255" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_kanban" value="Работа с Kanban-доской" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grp_tasks">
+      <mxGeometry x="230" y="255" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_gantt" value="Просмотр Gantt-диаграммы" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grp_tasks">
+      <mxGeometry x="20" y="345" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_archive" value="Архивирование задач" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grp_tasks">
+      <mxGeometry x="230" y="345" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ===== БЛОК 3: AI ===== -->
+    <mxCell id="grp_ai" value="AI-функциональность" style="swimlane;startSize=25;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="sys_boundary">
+      <mxGeometry x="890" y="50" width="340" height="230" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_ai_generate" value="AI-генерация задач&#xa;по описанию проекта" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="grp_ai">
+      <mxGeometry x="20" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_ai_analyze" value="AI-анализ состояния&#xa;и рекомендации" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="grp_ai">
+      <mxGeometry x="150" y="130" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_ai_bulk" value="Массовое создание&#xa;задач из AI" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="grp_ai">
+      <mxGeometry x="20" y="130" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <!-- ===== БЛОК 4: Коммуникация ===== -->
+    <mxCell id="grp_comm" value="Коммуникация" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="sys_boundary">
+      <mxGeometry x="450" y="490" width="420" height="220" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_chat_company" value="Чат компании" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="grp_comm">
+      <mxGeometry x="20" y="40" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_chat_project" value="Чат проекта" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="grp_comm">
+      <mxGeometry x="20" y="110" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_dm" value="Личные сообщения (DM)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="grp_comm">
+      <mxGeometry x="230" y="40" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_notif" value="Просмотр уведомлений" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="grp_comm">
+      <mxGeometry x="230" y="110" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ===== БЛОК 5: Аналитика ===== -->
+    <mxCell id="grp_analytics" value="Аналитика и отчётность" style="swimlane;startSize=25;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="sys_boundary">
+      <mxGeometry x="890" y="300" width="340" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_stats" value="Статистика по задачам" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="grp_analytics">
+      <mxGeometry x="20" y="40" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_report" value="Отчёт по участникам" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="grp_analytics">
+      <mxGeometry x="150" y="110" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_activity" value="Журнал активности" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="grp_analytics">
+      <mxGeometry x="20" y="110" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ===== БЛОК 6: Управление компанией ===== -->
+    <mxCell id="grp_company" value="Управление компанией и проектами" style="swimlane;startSize=25;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="sys_boundary">
+      <mxGeometry x="30" y="390" width="400" height="390" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_create_company" value="Создать компанию" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="grp_company">
+      <mxGeometry x="20" y="40" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_invite" value="Пригласить участника" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="grp_company">
+      <mxGeometry x="210" y="40" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_assign_role" value="Назначить роль участнику" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="grp_company">
+      <mxGeometry x="20" y="110" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_create_project" value="Создать проект" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="grp_company">
+      <mxGeometry x="210" y="110" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_kanban_cols" value="Настроить Kanban-колонки" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="grp_company">
+      <mxGeometry x="20" y="180" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_manage_roles" value="Управление ролями&#xa;и правами доступа" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="grp_company">
+      <mxGeometry x="210" y="180" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_delete_company" value="Удалить компанию" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="grp_company">
+      <mxGeometry x="20" y="300" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="uc_profile" value="Управление профилем" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="grp_company">
+      <mxGeometry x="210" y="300" width="160" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ===== СВЯЗИ ГОСТЯ ===== -->
+    <mxCell id="e_g1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6c8ebf;" edge="1" source="a_guest" target="uc_register" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_g2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6c8ebf;" edge="1" source="a_guest" target="uc_login" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_g3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6c8ebf;" edge="1" source="a_guest" target="uc_reset" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- ===== СВЯЗИ УЧАСТНИКА ===== -->
+    <mxCell id="e_m1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#82b366;" edge="1" source="a_member" target="uc_create_task" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_m2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#82b366;" edge="1" source="a_member" target="uc_timer" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_m3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#82b366;" edge="1" source="a_member" target="uc_chat_company" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_m4" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#82b366;" edge="1" source="a_member" target="uc_ai_generate" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_m5" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#82b366;" edge="1" source="a_member" target="uc_stats" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- ===== СВЯЗИ АДМИНИСТРАТОРА ===== -->
+    <mxCell id="e_a1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d6b656;" edge="1" source="a_admin" target="uc_invite" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_a2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d6b656;" edge="1" source="a_admin" target="uc_assign_role" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_a3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d6b656;" edge="1" source="a_admin" target="uc_create_project" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_a4" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d6b656;" edge="1" source="a_admin" target="uc_kanban_cols" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- ===== СВЯЗИ ВЛАДЕЛЬЦА ===== -->
+    <mxCell id="e_o1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b85450;" edge="1" source="a_owner" target="uc_create_company" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_o2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b85450;" edge="1" source="a_owner" target="uc_delete_company" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_o3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b85450;" edge="1" source="a_owner" target="uc_manage_roles" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- ===== СВЯЗИ AI ===== -->
+    <mxCell id="e_ai1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#9673a6;dashed=1;" edge="1" source="a_ai" target="uc_ai_generate" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_ai2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#9673a6;dashed=1;" edge="1" source="a_ai" target="uc_ai_analyze" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- ===== include: верификация email при регистрации ===== -->
+    <mxCell id="incl1" value="&lt;&lt;include&gt;&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;endArrow=open;fontSize=10;strokeColor=#888888;" edge="1" source="uc_register" target="uc_verify" parent="grp_auth">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

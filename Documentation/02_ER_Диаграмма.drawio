@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1800" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="1654" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Заголовок -->
+    <mxCell id="title" value="ER-диаграмма базы данных ControlFlow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=22;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="600" y="20" width="900" height="45" as="geometry" />
+    </mxCell>
+
+    <!-- ===== users ===== -->
+    <mxCell id="t_users" value="users" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="60" y="100" width="260" height="430" as="geometry" />
+    </mxCell>
+    <mxCell id="u_h" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;top=0;left=0;right=0;bottom=1;" vertex="1" parent="t_users">
+      <mxGeometry y="30" width="260" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="u_id" value="PK id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_users">
+      <mxGeometry y="60" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="u_email" value="email (varchar)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_users">
+      <mxGeometry y="88" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="u_fname" value="first_name (varchar)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_users">
+      <mxGeometry y="116" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="u_lname" value="last_name (varchar)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_users">
+      <mxGeometry y="144" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="u_phone" value="phone (varchar, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_users">
+      <mxGeometry y="172" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="u_avatar" value="avatar_url (text, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_users">
+      <mxGeometry y="200" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="u_manager" value="FK manager_id (UUID, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_users">
+      <mxGeometry y="228" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="u_verified" value="is_verified (boolean)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_users">
+      <mxGeometry y="256" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="u_yandex" value="yandex_id (varchar, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_users">
+      <mxGeometry y="284" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="u_google" value="google_id (varchar, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_users">
+      <mxGeometry y="312" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="u_deleted" value="deleted_at (timestamp, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_users">
+      <mxGeometry y="340" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="u_created" value="created_at (timestamp)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_users">
+      <mxGeometry y="368" width="260" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- ===== companies ===== -->
+    <mxCell id="t_companies" value="companies" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="400" y="100" width="240" height="250" as="geometry" />
+    </mxCell>
+    <mxCell id="c_h" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;top=0;left=0;right=0;bottom=1;" vertex="1" parent="t_companies">
+      <mxGeometry y="30" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="c_id" value="PK id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_companies">
+      <mxGeometry y="60" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="c_name" value="name (varchar)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_companies">
+      <mxGeometry y="88" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="c_desc" value="description (text, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_companies">
+      <mxGeometry y="116" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="c_owner" value="FK owner_id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_companies">
+      <mxGeometry y="144" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="c_deleted" value="deleted_at (timestamp, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_companies">
+      <mxGeometry y="172" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="c_created" value="created_at (timestamp)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_companies">
+      <mxGeometry y="200" width="240" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- ===== company_members ===== -->
+    <mxCell id="t_members" value="company_members" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="400" y="400" width="240" height="280" as="geometry" />
+    </mxCell>
+    <mxCell id="m_h" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;top=0;left=0;right=0;bottom=1;" vertex="1" parent="t_members">
+      <mxGeometry y="30" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="m_id" value="PK id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_members">
+      <mxGeometry y="60" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="m_company" value="FK company_id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_members">
+      <mxGeometry y="88" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="m_user" value="FK user_id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_members">
+      <mxGeometry y="116" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="m_role" value="role (owner/admin/member)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_members">
+      <mxGeometry y="144" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="m_status" value="status (invited/active/declined)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_members">
+      <mxGeometry y="172" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="m_invited" value="FK invited_by (UUID, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_members">
+      <mxGeometry y="200" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="m_joined" value="joined_at (timestamp, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_members">
+      <mxGeometry y="228" width="240" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- ===== projects ===== -->
+    <mxCell id="t_projects" value="projects" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="720" y="100" width="240" height="340" as="geometry" />
+    </mxCell>
+    <mxCell id="p_h" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;top=0;left=0;right=0;bottom=1;" vertex="1" parent="t_projects">
+      <mxGeometry y="30" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="p_id" value="PK id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_projects">
+      <mxGeometry y="60" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="p_name" value="name (varchar)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_projects">
+      <mxGeometry y="88" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="p_code" value="code (varchar, unique)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_projects">
+      <mxGeometry y="116" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="p_status" value="status (active/completed/...)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_projects">
+      <mxGeometry y="144" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="p_company" value="FK company_id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_projects">
+      <mxGeometry y="172" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="p_owner" value="FK owner_id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_projects">
+      <mxGeometry y="200" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="p_manager" value="FK manager_id (UUID, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_projects">
+      <mxGeometry y="228" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="p_start" value="start_date (date, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_projects">
+      <mxGeometry y="256" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="p_deadline" value="deadline (date, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_projects">
+      <mxGeometry y="284" width="240" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- ===== tasks ===== -->
+    <mxCell id="t_tasks" value="tasks" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="1040" y="80" width="260" height="530" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_h" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;top=0;left=0;right=0;bottom=1;" vertex="1" parent="t_tasks">
+      <mxGeometry y="30" width="260" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_id" value="PK id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="60" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_title" value="title (varchar)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="88" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_desc" value="description (text, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="116" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_company" value="FK company_id (UUID, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="144" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_project" value="FK project_id (UUID, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="172" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_creator" value="FK creator_id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="200" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_assignee" value="FK assignee_id (UUID, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="228" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_parent" value="FK parent_task_id (UUID, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="256" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_kanban" value="FK kanban_column_id (UUID, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="284" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_status" value="status (new/in_progress/review/done)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="312" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_priority" value="priority (low/medium/high/critical)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="340" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_due" value="due_date (timestamp, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="368" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_est" value="estimated_hours (decimal, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="396" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_arch" value="archived_at (timestamp, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="424" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_del" value="deleted_at (timestamp, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="452" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_created" value="created_at / updated_at" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_tasks">
+      <mxGeometry y="480" width="260" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- ===== kanban_columns ===== -->
+    <mxCell id="t_kanban" value="kanban_columns" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="720" y="500" width="240" height="240" as="geometry" />
+    </mxCell>
+    <mxCell id="kb_h" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;top=0;left=0;right=0;bottom=1;" vertex="1" parent="t_kanban">
+      <mxGeometry y="30" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="kb_id" value="PK id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_kanban">
+      <mxGeometry y="60" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="kb_company" value="FK company_id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_kanban">
+      <mxGeometry y="88" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="kb_name" value="name (varchar)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_kanban">
+      <mxGeometry y="116" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="kb_color" value="color (varchar #hex)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_kanban">
+      <mxGeometry y="144" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="kb_order" value="order (integer)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_kanban">
+      <mxGeometry y="172" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="kb_skey" value="status_key (varchar, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_kanban">
+      <mxGeometry y="200" width="240" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- ===== task_comments ===== -->
+    <mxCell id="t_comments" value="task_comments" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="1380" y="80" width="240" height="220" as="geometry" />
+    </mxCell>
+    <mxCell id="tc_h" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;top=0;left=0;right=0;bottom=1;" vertex="1" parent="t_comments">
+      <mxGeometry y="30" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="tc_id" value="PK id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_comments">
+      <mxGeometry y="60" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tc_task" value="FK task_id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_comments">
+      <mxGeometry y="88" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tc_author" value="FK author_id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_comments">
+      <mxGeometry y="116" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tc_text" value="text (text)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_comments">
+      <mxGeometry y="144" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tc_created" value="created_at / updated_at" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_comments">
+      <mxGeometry y="172" width="240" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- ===== task_timers ===== -->
+    <mxCell id="t_timers" value="task_timers" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="1380" y="350" width="240" height="190" as="geometry" />
+    </mxCell>
+    <mxCell id="tt_h" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;top=0;left=0;right=0;bottom=1;" vertex="1" parent="t_timers">
+      <mxGeometry y="30" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="tt_id" value="PK id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_timers">
+      <mxGeometry y="60" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tt_task" value="FK task_id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_timers">
+      <mxGeometry y="88" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tt_user" value="FK user_id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_timers">
+      <mxGeometry y="116" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="tt_started" value="started_at (timestamp)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_timers">
+      <mxGeometry y="144" width="240" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- ===== activity_logs ===== -->
+    <mxCell id="t_activity" value="activity_logs" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="60" y="600" width="260" height="260" as="geometry" />
+    </mxCell>
+    <mxCell id="al_h" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;top=0;left=0;right=0;bottom=1;" vertex="1" parent="t_activity">
+      <mxGeometry y="30" width="260" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="al_id" value="PK id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_activity">
+      <mxGeometry y="60" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="al_user" value="FK user_id (UUID, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_activity">
+      <mxGeometry y="88" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="al_action" value="action (varchar)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_activity">
+      <mxGeometry y="116" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="al_entity_type" value="entity_type (varchar, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_activity">
+      <mxGeometry y="144" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="al_entity_id" value="entity_id (varchar, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_activity">
+      <mxGeometry y="172" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="al_ip" value="ip_address (inet, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_activity">
+      <mxGeometry y="200" width="260" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="al_details" value="details (jsonb, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_activity">
+      <mxGeometry y="228" width="260" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- ===== notifications ===== -->
+    <mxCell id="t_notif" value="notifications" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="1380" y="610" width="240" height="280" as="geometry" />
+    </mxCell>
+    <mxCell id="nf_h" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;top=0;left=0;right=0;bottom=1;" vertex="1" parent="t_notif">
+      <mxGeometry y="30" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="nf_id" value="PK id (integer)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_notif">
+      <mxGeometry y="60" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="nf_recipient" value="FK recipient_id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_notif">
+      <mxGeometry y="88" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="nf_company" value="FK company_id (UUID)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_notif">
+      <mxGeometry y="116" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="nf_type" value="type (task_assigned/status_changed/...)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_notif">
+      <mxGeometry y="144" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="nf_title" value="title (varchar)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_notif">
+      <mxGeometry y="172" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="nf_read" value="is_read (boolean)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_notif">
+      <mxGeometry y="200" width="240" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="nf_task" value="FK related_task_id (UUID, null)" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;top=0;left=0;right=0;bottom=0;" vertex="1" parent="t_notif">
+      <mxGeometry y="228" width="240" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- ===== СВЯЗИ ===== -->
+    <!-- users.owner -> companies -->
+    <mxCell id="r1" value="1" style="edgeStyle=entityRelationEdgeStyle;endArrow=ERzeroToMany;startArrow=ERmandOne;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#6c8ebf;" edge="1" source="u_id" target="c_owner" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- companies -> company_members -->
+    <mxCell id="r2" value="1" style="edgeStyle=entityRelationEdgeStyle;endArrow=ERzeroToMany;startArrow=ERmandOne;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#82b366;" edge="1" source="c_id" target="m_company" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- users -> company_members -->
+    <mxCell id="r3" value="1" style="edgeStyle=entityRelationEdgeStyle;endArrow=ERzeroToMany;startArrow=ERmandOne;strokeColor=#6c8ebf;" edge="1" source="u_id" target="m_user" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- companies -> projects -->
+    <mxCell id="r4" value="1" style="edgeStyle=entityRelationEdgeStyle;endArrow=ERzeroToMany;startArrow=ERmandOne;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#d6b656;" edge="1" source="c_id" target="p_company" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- projects -> tasks -->
+    <mxCell id="r5" value="1" style="edgeStyle=entityRelationEdgeStyle;endArrow=ERzeroToMany;startArrow=ERmandOne;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#b85450;" edge="1" source="p_id" target="tk_project" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- tasks -> task_comments -->
+    <mxCell id="r6" value="1" style="edgeStyle=entityRelationEdgeStyle;endArrow=ERzeroToMany;startArrow=ERmandOne;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#b85450;" edge="1" source="tk_id" target="tc_task" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- tasks -> task_timers -->
+    <mxCell id="r7" value="1" style="edgeStyle=entityRelationEdgeStyle;endArrow=ERzeroToMany;startArrow=ERmandOne;strokeColor=#b85450;" edge="1" source="tk_id" target="tt_task" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- kanban_columns -> tasks -->
+    <mxCell id="r8" value="1" style="edgeStyle=entityRelationEdgeStyle;endArrow=ERzeroToMany;startArrow=ERmandOne;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#9673a6;" edge="1" source="kb_id" target="tk_kanban" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- tasks -> notifications -->
+    <mxCell id="r9" value="1" style="edgeStyle=entityRelationEdgeStyle;endArrow=ERzeroToMany;startArrow=ERmandOne;strokeColor=#d6b656;" edge="1" source="tk_id" target="nf_task" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

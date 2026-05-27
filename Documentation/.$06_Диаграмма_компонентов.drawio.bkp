@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Заголовок -->
+    <mxCell id="title" value="Диаграмма компонентов системы ControlFlow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="350" y="20" width="1000" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- =========================================== -->
+    <!-- FRONTEND BLOCK -->
+    <!-- =========================================== -->
+    <mxCell id="fe_block" value="Frontend (React 19 + Vite)" style="swimlane;startSize=35;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=14;swimlaneLine=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="80" width="660" height="550" as="geometry" />
+    </mxCell>
+
+    <!-- Pages -->
+    <mxCell id="fe_pages" value="pages/" style="swimlane;startSize=25;fillColor=#ebf4ff;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="fe_block">
+      <mxGeometry x="20" y="50" width="290" height="360" as="geometry" />
+    </mxCell>
+    <mxCell id="p_dashboard" value="DashboardPage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_pages">
+      <mxGeometry x="20" y="35" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="p_kanban" value="KanbanPage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_pages">
+      <mxGeometry x="20" y="75" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="p_tasks" value="TasksPage (таблица задач)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_pages">
+      <mxGeometry x="20" y="115" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="p_gantt" value="GanttPage (диаграмма Ганта)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_pages">
+      <mxGeometry x="20" y="155" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="p_analytics" value="AnalyticsPage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_pages">
+      <mxGeometry x="20" y="195" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="p_chat" value="ChatPage (WS Real-time)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_pages">
+      <mxGeometry x="20" y="235" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="p_ai" value="AIGeneratePage / AIAnalyzePage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_pages">
+      <mxGeometry x="20" y="275" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="p_auth" value="LoginPage / RegisterPage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_pages">
+      <mxGeometry x="20" y="315" width="240" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- Store -->
+    <mxCell id="fe_store" value="store/ (Zustand)" style="swimlane;startSize=25;fillColor=#ebf4ff;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="fe_block">
+      <mxGeometry x="330" y="50" width="295" height="250" as="geometry" />
+    </mxCell>
+    <mxCell id="s_auth" value="authStore (user, tokens)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_store">
+      <mxGeometry x="20" y="35" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="s_tasks" value="taskStore (tasks, filters)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_store">
+      <mxGeometry x="20" y="75" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="s_company" value="companyStore" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_store">
+      <mxGeometry x="20" y="115" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="s_notif" value="notificationStore" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_store">
+      <mxGeometry x="20" y="155" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="s_chat" value="chatStore (WS messages)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_store">
+      <mxGeometry x="20" y="195" width="240" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- API services -->
+    <mxCell id="fe_api" value="api/ (Axios services)" style="swimlane;startSize=25;fillColor=#ebf4ff;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="fe_block">
+      <mxGeometry x="330" y="320" width="295" height="210" as="geometry" />
+    </mxCell>
+    <mxCell id="a_auth_svc" value="authService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_api">
+      <mxGeometry x="20" y="35" width="110" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="a_task_svc" value="taskService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_api">
+      <mxGeometry x="150" y="35" width="110" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="a_company_svc" value="companyService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_api">
+      <mxGeometry x="20" y="80" width="110" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="a_project_svc" value="projectService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="fe_api">
+      <mxGeometry x="150" y="80" width="110" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="a_ai_svc" value="aiService (Cerebras)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="fe_api">
+      <mxGeometry x="20" y="130" width="240" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="a_ws_svc" value="webSocketService (чат)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="fe_api">
+      <mxGeometry x="20" y="170" width="240" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- Vercel label -->
+    <mxCell id="fe_deploy" value="Деплой: Vercel (CDN)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="fe_block">
+      <mxGeometry x="20" y="500" width="620" height="35" as="geometry" />
+    </mxCell>
+
+    <!-- =========================================== -->
+    <!-- BACKEND BLOCK -->
+    <!-- =========================================== -->
+    <mxCell id="be_block" value="Backend (Django 6 + DRF)" style="swimlane;startSize=35;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="760" y="80" width="700" height="800" as="geometry" />
+    </mxCell>
+
+    <!-- Config -->
+    <mxCell id="be_config" value="config/" style="swimlane;startSize=25;fillColor=#eaffea;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="be_block">
+      <mxGeometry x="20" y="50" width="300" height="140" as="geometry" />
+    </mxCell>
+    <mxCell id="cfg_settings" value="settings.py (env vars, installed apps)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="be_config">
+      <mxGeometry x="15" y="35" width="265" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="cfg_urls" value="urls.py (маршрутизация API v1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="be_config">
+      <mxGeometry x="15" y="75" width="265" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="cfg_wsgi" value="wsgi.py / Gunicorn" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="be_config">
+      <mxGeometry x="15" y="100" width="265" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- Apps -->
+    <mxCell id="be_apps" value="apps/" style="swimlane;startSize=25;fillColor=#eaffea;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="be_block">
+      <mxGeometry x="20" y="210" width="650" height="440" as="geometry" />
+    </mxCell>
+
+    <!-- users app -->
+    <mxCell id="app_users" value="users/" style="swimlane;startSize=22;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="be_apps">
+      <mxGeometry x="15" y="35" width="195" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="u_models" value="models.py&#xa;(User, Role, Permission,&#xa;UserRole, RolePermission,&#xa;VerificationToken)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="app_users">
+      <mxGeometry x="10" y="30" width="170" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="u_views" value="views.py (UserViewSet,&#xa;RegisterView, Auth views)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="app_users">
+      <mxGeometry x="10" y="110" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- companies app -->
+    <mxCell id="app_companies" value="companies/" style="swimlane;startSize=22;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="be_apps">
+      <mxGeometry x="230" y="35" width="195" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="co_models" value="models.py&#xa;(Company, CompanyMember)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="app_companies">
+      <mxGeometry x="10" y="30" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="co_views" value="views.py (CompanyViewSet)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="app_companies">
+      <mxGeometry x="10" y="90" width="170" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="co_perms" value="permissions.py (IsCompanyMember,&#xa;IsCompanyAdmin, IsCompanyOwner)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="app_companies">
+      <mxGeometry x="10" y="130" width="170" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- core app -->
+    <mxCell id="app_core" value="core/" style="swimlane;startSize=22;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="be_apps">
+      <mxGeometry x="440" y="35" width="195" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="cr_models" value="models.py (Project)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="app_core">
+      <mxGeometry x="10" y="30" width="170" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="cr_views" value="views.py (ProjectViewSet)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="app_core">
+      <mxGeometry x="10" y="70" width="170" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="cr_serial" value="serializers.py (ProjectSerializer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="app_core">
+      <mxGeometry x="10" y="110" width="170" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- tasks app -->
+    <mxCell id="app_tasks" value="tasks/" style="swimlane;startSize=22;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;" vertex="1" parent="be_apps">
+      <mxGeometry x="15" y="235" width="300" height="185" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_models2" value="models.py&#xa;(Task, KanbanColumn,&#xa;TaskComment, TaskTimer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="app_tasks">
+      <mxGeometry x="10" y="28" width="130" height="65" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_views2" value="views.py (TaskViewSet,&#xa;KanbanColumnViewSet,&#xa;AIAnalysisView,&#xa;AIGenerateTasksView)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="app_tasks">
+      <mxGeometry x="155" y="28" width="130" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_filters" value="filters.py (TaskFilter)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="app_tasks">
+      <mxGeometry x="10" y="108" width="130" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="tk_perms" value="permissions.py (CanManageTask)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="app_tasks">
+      <mxGeometry x="10" y="148" width="270" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- activity app -->
+    <mxCell id="app_activity" value="activity/" style="swimlane;startSize=22;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=1;" vertex="1" parent="be_apps">
+      <mxGeometry x="330" y="235" width="195" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="ac_models" value="models.py (ActivityLog)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" vertex="1" parent="app_activity">
+      <mxGeometry x="10" y="28" width="170" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="ac_utils" value="utils.py (log_activity)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" vertex="1" parent="app_activity">
+      <mxGeometry x="10" y="68" width="170" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- chat app -->
+    <mxCell id="app_chat" value="chat/" style="swimlane;startSize=22;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontStyle=1;" vertex="1" parent="be_apps">
+      <mxGeometry x="330" y="360" width="300" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="ch_models" value="models.py (ChatMessage, Notification)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="app_chat">
+      <mxGeometry x="10" y="25" width="275" height="28" as="geometry" />
+    </mxCell>
+
+    <!-- Render label -->
+    <mxCell id="be_deploy" value="Деплой: Render (Web Service) — Gunicorn + Whitenoise" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="be_block">
+      <mxGeometry x="20" y="680" width="655" height="35" as="geometry" />
+    </mxCell>
+
+    <!-- Middleware -->
+    <mxCell id="be_mw" value="SimpleJWT | drf-spectacular | django-cors-headers | django-filter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="be_block">
+      <mxGeometry x="20" y="730" width="655" height="35" as="geometry" />
+    </mxCell>
+
+    <!-- =========================================== -->
+    <!-- DATABASE BLOCK -->
+    <!-- =========================================== -->
+    <mxCell id="db_block" value="База данных (PostgreSQL 16)" style="swimlane;startSize=35;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="760" y="910" width="700" height="250" as="geometry" />
+    </mxCell>
+    <mxCell id="db_pg" value="" style="shape=mxgraph.flowchart.database;whiteSpace=wrap;html=1;fillColor=#cc0000;strokeColor=#6F0000;fontColor=#ffffff;fontSize=22;fontStyle=1;" vertex="1" parent="db_block">
+      <mxGeometry x="20" y="50" width="90" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="db_tables" value="Таблицы: users · companies · company_members · projects&#xa;tasks · kanban_columns · task_comments · task_timers&#xa;activity_logs · chat_messages · notifications&#xa;roles · permissions · role_permissions · user_roles&#xa;email_verification_tokens · password_reset_tokens" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=11;spacingLeft=10;" vertex="1" parent="db_block">
+      <mxGeometry x="130" y="50" width="550" height="140" as="geometry" />
+    </mxCell>
+    <mxCell id="db_render" value="Render Managed PostgreSQL (Production)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="db_block">
+      <mxGeometry x="20" y="200" width="655" height="35" as="geometry" />
+    </mxCell>
+
+    <!-- =========================================== -->
+    <!-- EXTERNAL BLOCK -->
+    <!-- =========================================== -->
+    <mxCell id="ext_block" value="Внешние сервисы" style="swimlane;startSize=35;fillColor=#ffe6cc;strokeColor=#d6b656;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="40" y="680" width="660" height="460" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_cerebras" value="Cerebras API&#xa;Llama 3.1 8B&#xa;AI-генерация и анализ задач" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="ext_block">
+      <mxGeometry x="20" y="50" width="280" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_brevo" value="Brevo Email API&#xa;Верификация email&#xa;Сброс пароля" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="ext_block">
+      <mxGeometry x="360" y="50" width="260" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_yandex" value="Yandex OAuth 2.0&#xa;Авторизация через Яндекс ID" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="ext_block">
+      <mxGeometry x="20" y="170" width="280" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_google" value="Google OAuth 2.0&#xa;Авторизация через Google" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="ext_block">
+      <mxGeometry x="360" y="170" width="260" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_vercel" value="Vercel CDN — хостинг фронтенда" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="ext_block">
+      <mxGeometry x="20" y="280" width="600" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_render" value="Render — хостинг бэкенда и базы данных" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="ext_block">
+      <mxGeometry x="20" y="350" width="600" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_ws" value="WebSocket (django-channels) — чат в реальном времени" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="ext_block">
+      <mxGeometry x="20" y="420" width="600" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- =========================================== -->
+    <!-- CONNECTIONS -->
+    <!-- =========================================== -->
+    <!-- FE -> BE (REST API) -->
+    <mxCell id="conn_fe_be" value="HTTP REST API (Axios)&#xa;Bearer JWT" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;strokeColor=#0050ef;fontColor=#0050ef;fontSize=11;fontStyle=1;strokeWidth=2;" edge="1" source="fe_block" target="be_block" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- FE -> BE (WebSocket) -->
+    <mxCell id="conn_fe_ws" value="WebSocket" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.6;entryDx=0;entryDy=0;strokeColor=#d6b656;fontColor=#d6b656;fontSize=10;dashed=1;strokeWidth=2;" edge="1" source="fe_block" target="be_block" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- BE -> DB -->
+    <mxCell id="conn_be_db" value="SQL / Django ORM" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#9673a6;fontColor=#9673a6;fontSize=11;fontStyle=1;strokeWidth=2;" edge="1" source="be_block" target="db_block" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- FE -> External (Cerebras - direct) -->
+    <mxCell id="conn_fe_ext" value="HTTPS (Cerebras API)&#xa;прямо из браузера" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#9673a6;fontColor=#9673a6;fontSize=10;dashed=1;strokeWidth=2;" edge="1" source="fe_block" target="ext_block" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- BE -> External (Brevo, OAuth) -->
+    <mxCell id="conn_be_ext" value="HTTPS (Brevo, OAuth)" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;strokeColor=#d6b656;fontColor=#d6b656;fontSize=10;dashed=1;strokeWidth=1;" edge="1" source="be_block" target="ext_block" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>
