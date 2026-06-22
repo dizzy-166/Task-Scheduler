@@ -879,13 +879,16 @@ class KanbanColumnViewSet(viewsets.ModelViewSet):
         return Response({'message': 'Порядок обновлён'})
 
 
-def _cerebras_generate(messages, api_key, temperature=0.6, max_tokens=1500):
+def _cerebras_generate(messages, api_key, temperature=0.6, max_tokens=3000):
     """Call Cerebras API (OpenAI-compatible) and return generated text."""
     payload = json.dumps({
-        'model': 'llama-3.1-8b',
+        'model': getattr(settings, 'CEREBRAS_MODEL', 'gpt-oss-120b'),
         'messages': messages,
         'temperature': temperature,
         'max_tokens': max_tokens,
+        # gpt-oss / glm — reasoning-модели: без low-усилия reasoning съедает
+        # весь бюджет токенов и content приходит пустым.
+        'reasoning_effort': 'low',
     }).encode('utf-8')
     req = urllib.request.Request(
         'https://api.cerebras.ai/v1/chat/completions',
@@ -893,10 +896,13 @@ def _cerebras_generate(messages, api_key, temperature=0.6, max_tokens=1500):
         headers={
             'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json',
+            # Cloudflare у Cerebras отдаёт 403 (код 1010) на дефолтный
+            # User-Agent "Python-urllib" — без явного UA запросы не доходят.
+            'User-Agent': 'controlflow/1.0',
         },
         method='POST',
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=60) as resp:
         result = json.loads(resp.read().decode('utf-8'))
     return result['choices'][0]['message']['content']
 
@@ -1012,7 +1018,7 @@ class AIAnalysisView(APIView):
         ]
 
         try:
-            text = _cerebras_generate(messages, api_key, temperature=0.4, max_tokens=1024)
+            text = _cerebras_generate(messages, api_key, temperature=0.4, max_tokens=3000)
             return Response({'analysis': text})
         except urllib.error.HTTPError as e:
             body = e.read().decode('utf-8')

@@ -219,6 +219,7 @@ CORS_ALLOW_HEADERS = [
 # AI
 GROQ_API_KEY = config('GROQ_API_KEY', default='')
 CEREBRAS_API_KEY = config('CEREBRAS_API_KEY', default='')
+CEREBRAS_MODEL = config('CEREBRAS_MODEL', default='gpt-oss-120b')
 
 # Email (Brevo)
 BREVO_API_KEY = config('BREVO_API_KEY', default='')
