@@ -156,46 +156,38 @@ class TaskViewSet(viewsets.ModelViewSet):
     
     def _check_permission(self, permission_code):
         """Проверка наличия разрешения у пользователя в текущей компании"""
-        user = self.request.user
+        from apps.companies.utils import has_company_permission
+
         company_id = self.get_company_id()
-        
         if not company_id:
             # Без компании разрешаем только личные действия
             return permission_code in ['tasks.create', 'tasks.edit_own']
-        
-        # Проверяем членство в компании
-        try:
-            from apps.companies.models import CompanyMember
-            membership = CompanyMember.objects.get(
-                company_id=company_id,
-                user=user,
-                status='active'
-            )
-        except CompanyMember.DoesNotExist:
-            return False
-        
-        # Владелец имеет все права
-        if membership.role == 'owner':
-            return True
-        
-        # Админ имеет все права
-        if membership.role == 'admin':
-            return True
-        
-        # Проверяем через кастомные роли
-        from apps.users.models import UserRole
-        has_permission = UserRole.objects.filter(
-            user=user,
-            role__context_type='company',
-            role__context_id=company_id,
-            role__permissions__permission__code=permission_code,
-            role__permissions__granted=True,
-        ).filter(
-            django_models.Q(expires_at__isnull=True) | django_models.Q(expires_at__gt=timezone.now())
-        ).exists()
 
-        return has_permission
-    
+        return has_company_permission(self.request.user, company_id, permission_code)
+
+    def _authorize_move(self, task):
+        """Кто вообще может двигать карточку: её исполнитель или power-роль
+        (owner/admin/tasks.edit_any). Вне компании — автор или исполнитель."""
+        user = self.request.user
+        if not self.get_company_id():
+            if task.assignee_id != user.id and task.creator_id != user.id:
+                raise PermissionDenied('У вас нет прав на изменение этой задачи')
+            return
+        if not self._check_permission('tasks.edit_any') and task.assignee_id != user.id:
+            raise PermissionDenied('Передвигать задачу может только её исполнитель')
+
+    def _authorize_done(self, task, target_status):
+        """Перевод в «Готово» (этап проверки → готово) — только power-роль или
+        право tasks.review_approve. Действует только в контексте компании."""
+        if not self.get_company_id():
+            return
+        if target_status == 'done' and task.status != 'done':
+            if not (self._check_permission('tasks.edit_any')
+                    or self._check_permission('tasks.review_approve')):
+                raise PermissionDenied(
+                    'Перевести задачу в «Готово» может только сотрудник с правом подтверждения'
+                )
+
     def perform_create(self, serializer):
         """Создание задачи с проверкой прав и логированием"""
         from apps.activity.utils import log_activity
@@ -234,10 +226,17 @@ class TaskViewSet(viewsets.ModelViewSet):
         # Проверяем право на редактирование
         has_edit_any = self._check_permission('tasks.edit_any')
         has_edit_own = self._check_permission('tasks.edit_own')
-        
+
         if not has_edit_any and not (has_edit_own and task.creator == self.request.user):
             raise PermissionDenied('У вас нет прав на редактирование этой задачи')
-        
+
+        # Смена статуса через PATCH подчиняется тем же правилам, что и канбан:
+        # двигать может только исполнитель, перевод в «Готово» — с правом подтверждения.
+        new_status = serializer.validated_data.get('status')
+        if new_status is not None and new_status != task.status:
+            self._authorize_move(task)
+            self._authorize_done(task, new_status)
+
         old_task = Task.objects.get(id=task.id)  # Копия для сравнения
         task = serializer.save()
         
@@ -282,33 +281,34 @@ class TaskViewSet(viewsets.ModelViewSet):
         from apps.activity.utils import log_activity
 
         task = self.get_object()
-        new_status = request.data.get('status')
+        req_status = request.data.get('status')
         column_id = request.data.get('column_id')
-
-        has_edit_any = self._check_permission('tasks.edit_any')
-        has_edit_own = self._check_permission('tasks.edit_own')
-        if not has_edit_any and not (has_edit_own and (task.creator == request.user or task.assignee == request.user)):
-            raise PermissionDenied('У вас нет прав на изменение статуса этой задачи')
-
         old_status = task.status
 
+        # ── Определяем целевую колонку и статус (без мутации задачи) ──────────
+        target_column = None
         if column_id:
             try:
-                column = KanbanColumn.objects.get(id=column_id)
-                task.kanban_column = column
-                if column.status_key:
-                    new_status = column.status_key
-                    task.status = new_status
-                elif not new_status:
-                    new_status = task.status
+                target_column = KanbanColumn.objects.get(id=column_id)
             except KanbanColumn.DoesNotExist:
                 return Response({'error': 'Колонка не найдена'}, status=status.HTTP_400_BAD_REQUEST)
-        elif new_status:
-            if new_status not in dict(Task.STATUS_CHOICES):
-                return Response({'error': 'Неверный статус'}, status=status.HTTP_400_BAD_REQUEST)
-            task.status = new_status
+            target_status = target_column.status_key or req_status or task.status
+        elif req_status:
+            target_status = req_status
         else:
             return Response({'error': 'Укажите status или column_id'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if target_status not in dict(Task.STATUS_CHOICES):
+            return Response({'error': 'Неверный статус'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ── Правила перемещения по колонкам ──────────────────────────────────
+        self._authorize_move(task)
+        self._authorize_done(task, target_status)
+
+        # ── Применяем изменения ──────────────────────────────────────────────
+        if target_column is not None:
+            task.kanban_column = target_column
+        task.status = target_status
 
         if task.status == 'done' and old_status != 'done':
             task.completed_at = timezone.now()
@@ -643,6 +643,11 @@ class TaskViewSet(viewsets.ModelViewSet):
         from django.db.models import Q, Avg, ExpressionWrapper, DurationField, F
         from django.db.models.functions import Coalesce
 
+        # Детальный отчёт по предприятию — только с правом analytics.view
+        # (owner/admin имеют его автоматически).
+        if not self._check_permission('analytics.view'):
+            raise PermissionDenied('Нет доступа к отчётам и аналитике')
+
         qs  = self.get_queryset()
         now = timezone.now()
 
@@ -958,6 +963,8 @@ class AIBulkCreateTasksView(APIView):
         from datetime import date, timedelta
         from apps.companies.models import CompanyMember
 
+        from apps.companies.utils import has_company_permission
+
         company_id = request.headers.get('X-Company-Id')
         if not company_id:
             return Response({'error': 'X-Company-Id required'}, status=400)
@@ -966,6 +973,10 @@ class AIBulkCreateTasksView(APIView):
             company_id=company_id, user=request.user, status='active'
         ).exists():
             return Response({'error': 'У вас нет доступа к этой компании'}, status=403)
+
+        # Массовое создание задач требует то же право, что и обычное создание.
+        if not has_company_permission(request.user, company_id, 'tasks.create'):
+            return Response({'error': 'У вас нет прав на создание задач'}, status=403)
 
         project_id = request.data.get('project_id') or None
         tasks_data = request.data.get('tasks', [])
@@ -997,6 +1008,13 @@ class AIAnalysisView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        from apps.companies.utils import has_company_permission
+
+        # AI-анализ строится на сводном отчёте предприятия — требует analytics.view.
+        company_id = request.headers.get('X-Company-Id')
+        if not company_id or not has_company_permission(request.user, company_id, 'analytics.view'):
+            return Response({'error': 'Нет доступа к аналитике'}, status=403)
+
         api_key = getattr(settings, 'CEREBRAS_API_KEY', None)
         if not api_key:
             return Response({'error': 'CEREBRAS_API_KEY не настроен'}, status=500)

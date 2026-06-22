@@ -7,19 +7,22 @@ const PERMISSION_LABELS = {
   'tasks.delete_any':'Удалять задачи',
   'tasks.assign':    'Назначать исполнителей',
   'tasks.view_all':  'Просматривать все задачи',
+  'tasks.review_approve': 'Подтверждать задачи (перевод в «Готово»)',
   'projects.create': 'Создавать проекты',
   'projects.edit':   'Редактировать проекты',
   'projects.delete': 'Удалять проекты',
   'members.invite':  'Приглашать участников',
   'members.remove':  'Удалять участников',
   'roles.manage':    'Управлять ролями',
+  'analytics.view':  'Просматривать аналитику и отчёты',
 };
 
 const RESOURCE_LABELS = {
-  tasks:    'Задачи',
-  projects: 'Проекты',
-  members:  'Участники',
-  roles:    'Роли',
+  tasks:     'Задачи',
+  projects:  'Проекты',
+  members:   'Участники',
+  roles:     'Роли',
+  analytics: 'Аналитика',
 };
 
 export default function RolesPanel({ companyId, members, currentUserRole, onClose, onRolesUpdated }) {

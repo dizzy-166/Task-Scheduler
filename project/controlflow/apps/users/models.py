@@ -108,16 +108,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         if context_id:
             query = query.filter(role__context_id=context_id)
         return query.exists()
-    
-    def has_permission(self, permission_code, context_type=None, context_id=None):
-        """Проверка разрешения через SQL функцию"""
-        from django.db import connection
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT has_permission(%s, %s, %s, %s)",
-                [self.id, permission_code, context_type, context_id]
-            )
-            return cursor.fetchone()[0]
 
 
 # ========== Permission ==========

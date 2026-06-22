@@ -38,30 +38,27 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return ProjectCreateSerializer
         return ProjectSerializer
 
-    def _require_admin(self, action_label):
+    def _require_permission(self, code, action_label):
+        """owner/admin или кастомное право `code` в текущей компании."""
+        from apps.companies.utils import company_membership, has_company_permission
+
         company_id = self.get_company_id()
-        user = self.request.user
-        from apps.companies.models import CompanyMember
-        try:
-            membership = CompanyMember.objects.get(
-                company_id=company_id, user=user, status='active'
-            )
-        except CompanyMember.DoesNotExist:
+        if company_membership(self.request.user, company_id) is None:
             raise PermissionDenied('Вы не являетесь участником этой компании')
-        if membership.role not in ['owner', 'admin']:
-            raise PermissionDenied(f'Только владелец или администратор может {action_label}')
+        if not has_company_permission(self.request.user, company_id, code):
+            raise PermissionDenied(f'Недостаточно прав, чтобы {action_label}')
         return company_id
 
     def perform_create(self, serializer):
-        company_id = self._require_admin('создавать проекты')
+        company_id = self._require_permission('projects.create', 'создавать проекты')
         serializer.save(owner=self.request.user, company_id=company_id)
 
     def perform_update(self, serializer):
-        self._require_admin('редактировать проекты')
+        self._require_permission('projects.edit', 'редактировать проекты')
         serializer.save()
 
     def perform_destroy(self, instance):
-        self._require_admin('удалять проекты')
+        self._require_permission('projects.delete', 'удалять проекты')
         from django.utils import timezone
         action = self.request.data.get('task_action', 'keep')
         if action == 'archive':

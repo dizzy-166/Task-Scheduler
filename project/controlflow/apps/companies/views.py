@@ -12,6 +12,7 @@ from apps.users.serializers import (
 )
 from .models import Company, CompanyMember
 from .permissions import IsCompanyOwnerOrAdmin
+from .utils import has_company_permission
 from .serializers import (
     CompanySerializer,
     CompanyDetailSerializer,
@@ -83,21 +84,25 @@ class CompanyViewSet(viewsets.ModelViewSet):
     def invite_member(self, request, pk=None):
         """Приглашение пользователя в компанию"""
         company = self.get_object()
-        
-        # Проверяем права
-        membership = CompanyMember.objects.filter(
-            company=company,
-            user=request.user,
-            status='active',
-            role__in=['owner', 'admin']
-        ).first()
-        
-        if not membership:
+
+        # owner/admin или кастомное право members.invite
+        if not has_company_permission(request.user, company.id, 'members.invite'):
             return Response(
                 {'error': 'У вас нет прав для приглашения участников'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
+
+        # Назначить роль admin/owner может только владелец или администратор —
+        # обладатель кастомного права members.invite не должен раздавать админку.
+        from .utils import company_membership
+        actor = company_membership(request.user, company.id)
+        is_admin = actor is not None and actor.role in ('owner', 'admin')
+        if request.data.get('role') in ('owner', 'admin') and not is_admin:
+            return Response(
+                {'error': 'Назначать администраторов может только владелец или администратор'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         serializer = InviteMemberSerializer(
             data=request.data,
             context={'company': company}
@@ -144,6 +149,24 @@ class CompanyViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED
         )
     
+    @action(detail=True, methods=['get'], url_path='my_permissions')
+    def my_permissions(self, request, pk=None):
+        """Эффективные права текущего пользователя в компании (для фронта).
+
+        owner/admin получают все коды; остальные — объединение прав их
+        активных кастомных ролей.
+        """
+        from .utils import company_membership, company_permission_codes
+
+        membership = company_membership(request.user, pk)
+        if membership is None:
+            return Response({'error': 'Нет доступа к компании'}, status=status.HTTP_403_FORBIDDEN)
+
+        return Response({
+            'role': membership.role,
+            'permissions': sorted(company_permission_codes(request.user, pk)),
+        })
+
     @action(detail=False, methods=['get'], url_path='invites')
     def my_invites(self, request):
         """Получение приглашений текущего пользователя"""
@@ -236,14 +259,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_path='pending')
     def list_pending(self, request, pk=None):
         """Получение списка приглашенных участников"""
-        membership = CompanyMember.objects.filter(
-            company_id=pk,
-            user=request.user,
-            status='active',
-            role__in=['owner', 'admin']
-        ).first()
-
-        if not membership:
+        if not has_company_permission(request.user, pk, 'members.invite'):
             return Response(
                 {'error': 'У вас нет прав для просмотра приглашенных'},
                 status=status.HTTP_403_FORBIDDEN
@@ -318,20 +334,14 @@ class CompanyViewSet(viewsets.ModelViewSet):
     def remove_member(self, request, pk=None, user_id=None):
         """Удаление участника из компании"""
         company = self.get_object()
-        
-        current_membership = CompanyMember.objects.filter(
-            company=company,
-            user=request.user,
-            status='active',
-            role__in=['owner', 'admin']
-        ).first()
-        
-        if not current_membership:
+
+        # owner/admin или кастомное право members.remove
+        if not has_company_permission(request.user, company.id, 'members.remove'):
             return Response(
                 {'error': 'У вас нет прав для удаления участников'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
+
         try:
             member = CompanyMember.objects.get(
                 company=company,
@@ -343,11 +353,22 @@ class CompanyViewSet(viewsets.ModelViewSet):
                 {'error': 'Участник не найден'},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
+
         if member.role == 'owner':
             return Response(
                 {'error': 'Нельзя удалить владельца компании'},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Удалять администраторов может только владелец/администратор, а не
+        # обладатель кастомного права members.remove.
+        from .utils import company_membership
+        actor = company_membership(request.user, company.id)
+        is_admin = actor is not None and actor.role in ('owner', 'admin')
+        if member.role == 'admin' and not is_admin:
+            return Response(
+                {'error': 'Удалять администраторов может только владелец или администратор'},
+                status=status.HTTP_403_FORBIDDEN
             )
 
         member.delete()

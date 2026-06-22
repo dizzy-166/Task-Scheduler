@@ -290,6 +290,7 @@ const DashboardPage = () => {
   const [deleteCompanyError, setDeleteCompanyError] = useState('');
   const [showRolesPanel, setShowRolesPanel] = useState(false);
   const [availableCustomRoles, setAvailableCustomRoles] = useState([]);
+  const [myPermissions, setMyPermissions] = useState([]);
 
   // Kanban column management
   const [showColumnModal, setShowColumnModal] = useState(false);
@@ -330,15 +331,25 @@ const DashboardPage = () => {
     (activeCompany?.owner === user?.id ? 'owner' : 'member');
   const canManageColumns = currentUserRole === 'owner' || currentUserRole === 'admin';
 
+  // Проверка эффективного права (owner/admin всегда имеют всё; остальные —
+  // по списку, который отдаёт бэкенд /companies/{id}/my_permissions/).
+  const hasPerm = (code) =>
+    currentUserRole === 'owner' ||
+    currentUserRole === 'admin' ||
+    myPermissions.includes(code);
+  const canViewAnalytics = hasPerm('analytics.view');
+
   // ── Load everything when company / project changes ─────────────────────────
   useEffect(() => {
     if (activeCompany) {
       loadAllData();
       loadCompanyMembers();
       loadCustomRoles();
+      loadMyPermissions();
       loadColumns();
       setSelectedInviteCompanyId(activeCompany.id);
     } else {
+      setMyPermissions([]);
       setLoading(false);
     }
   }, [activeCompany, activeProject]);
@@ -790,9 +801,11 @@ const DashboardPage = () => {
       await taskService.updateTaskStatus(taskId, targetCol?.status_key || taskToMove.status, targetColId);
       await loadStats();
       showToast(`«${taskToMove.title}» → ${targetCol?.name || 'колонка'}`);
-    } catch {
+    } catch (err) {
       await loadTasks(taskScope, columns);
-      showToast('Не удалось переместить задачу', 'error');
+      const msg = err?.response?.data?.detail || err?.response?.data?.error
+        || 'Не удалось переместить задачу';
+      showToast(msg, 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -805,6 +818,16 @@ const DashboardPage = () => {
       const roles = await companyAPI.getRoles(activeCompany.id);
       setAvailableCustomRoles(roles.filter(r => !r.is_system));
     } catch { /* ignore */ }
+  };
+
+  const loadMyPermissions = async () => {
+    if (!activeCompany?.id) return;
+    try {
+      const data = await companyAPI.getMyPermissions(activeCompany.id);
+      setMyPermissions(Array.isArray(data?.permissions) ? data.permissions : []);
+    } catch {
+      setMyPermissions([]);
+    }
   };
 
   const safeExtractArray = (response) => {
@@ -1102,7 +1125,9 @@ const DashboardPage = () => {
         {activeCompany && (
           <div className="sidebar-nav-section sidebar-nav-views">
             {!sidebarCollapsed && <div className="sidebar-nav-label">Разделы</div>}
-            {NAV_ITEMS.map(({ view, label, icon }) => (
+            {NAV_ITEMS
+              .filter(({ view }) => canViewAnalytics || (view !== 'analytics' && view !== 'reports'))
+              .map(({ view, label, icon }) => (
               <button
                 key={view}
                 className={`nav-item nav-item--btn${activeView === view ? ' active' : ''}${sidebarCollapsed ? ' nav-item--icon-only' : ''}`}
@@ -1819,10 +1844,14 @@ const DashboardPage = () => {
         )}
 
         {/* ── Analytics ── */}
-        {activeView === 'analytics' && <AnalyticsView />}
+        {activeView === 'analytics' && (canViewAnalytics
+          ? <AnalyticsView />
+          : <div className="analytics-error">Нет доступа к аналитике</div>)}
 
         {/* ── Reports ── */}
-        {activeView === 'reports' && <ReportsView />}
+        {activeView === 'reports' && (canViewAnalytics
+          ? <ReportsView />
+          : <div className="analytics-error">Нет доступа к отчётам</div>)}
 
         {/* ── Gantt ── */}
         {activeView === 'gantt' && (

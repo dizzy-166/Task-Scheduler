@@ -36,6 +36,10 @@ const companyAPI = {
   removeMember: (companyId, userId) => 
     api.post(`/companies/${companyId}/members/${userId}/remove/`),
   
+  // Эффективные права текущего пользователя в компании { role, permissions: [] }
+  getMyPermissions: (companyId) =>
+    api.get(`/companies/${companyId}/my_permissions/`).then(res => res.data),
+
   // Получить мои приглашения
   getMyInvites: () => api.get('/companies/invites/'),
   
