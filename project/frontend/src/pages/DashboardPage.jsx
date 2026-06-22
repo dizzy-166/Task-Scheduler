@@ -1752,10 +1752,15 @@ const DashboardPage = () => {
 
             <div className="members-section">
               <h3>Активные участники</h3>
+              <p className="members-legend">
+                <b>Уровень доступа</b> — базовая роль участника. Владелец и администратор имеют полный доступ ко всему.
+                <b> Доступы</b> — точечные роли, которые добавляют конкретные права обычным участникам.
+              </p>
               <div className="members-list">
                 {companyMembers.map(member => {
                   const unassigned = availableCustomRoles.filter(r => !member.roles?.some(mr => mr.id === r.id));
                   const canEdit = currentUserRole === 'owner' && member.role !== 'owner';
+                  const fullAccess = member.role === 'owner' || member.role === 'admin';
                   return (
                     <div key={member.id} className="member-item">
                       <div className="member-info" style={{ flex: 'none', minWidth: 180 }}>
@@ -1765,39 +1770,52 @@ const DashboardPage = () => {
                         <div className="member-details">
                           <h4>{member.user_name || member.user_email}</h4>
                           <p>{member.user_email}</p>
-                          <span className="member-base-role-badge" data-role={member.role}>
-                            {{ owner: 'Владелец', admin: 'Администратор', member: 'Участник' }[member.role] || member.role}
-                          </span>
+                          <div className="member-role-field">
+                            <span className="member-role-caption">Уровень доступа</span>
+                            <span className="member-base-role-badge" data-role={member.role}>
+                              {{ owner: 'Владелец', admin: 'Администратор', member: 'Участник' }[member.role] || member.role}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
                       <div className="member-custom-roles">
-                        {member.roles?.map(role => (
-                          <span key={role.id} className="member-role-chip">
-                            {role.name}
-                            {canEdit && (
-                              <button onClick={() => handleRemoveRoleFromMember(member.user, role.id)} title="Снять роль">×</button>
+                        <span className="member-role-caption">Доступы</span>
+                        {fullAccess ? (
+                          <span className="member-access-note">Полный доступ ко всему</span>
+                        ) : (
+                          <>
+                            {(!member.roles || member.roles.length === 0) && (
+                              <span className="member-access-note member-access-note--muted">Только базовый доступ</span>
                             )}
-                          </span>
-                        ))}
-                        {canEdit && unassigned.length > 0 && (
-                          <div style={{ position: 'relative' }}>
-                            <button
-                              className="btn-add-role"
-                              onClick={() => setOpenRolePickerFor(openRolePickerFor === member.user ? null : member.user)}
-                            >
-                              + Роль
-                            </button>
-                            {openRolePickerFor === member.user && (
-                              <div className="role-picker-dropdown">
-                                {unassigned.map(role => (
-                                  <button key={role.id} onClick={() => { handleAssignRoleToMember(member.user, role.id); setOpenRolePickerFor(null); }}>
-                                    {role.name}
-                                  </button>
-                                ))}
+                            {member.roles?.map(role => (
+                              <span key={role.id} className="member-role-chip">
+                                {role.name}
+                                {canEdit && (
+                                  <button onClick={() => handleRemoveRoleFromMember(member.user, role.id)} title="Снять роль">×</button>
+                                )}
+                              </span>
+                            ))}
+                            {canEdit && unassigned.length > 0 && (
+                              <div style={{ position: 'relative' }}>
+                                <button
+                                  className="btn-add-role"
+                                  onClick={() => setOpenRolePickerFor(openRolePickerFor === member.user ? null : member.user)}
+                                >
+                                  + Роль
+                                </button>
+                                {openRolePickerFor === member.user && (
+                                  <div className="role-picker-dropdown">
+                                    {unassigned.map(role => (
+                                      <button key={role.id} onClick={() => { handleAssignRoleToMember(member.user, role.id); setOpenRolePickerFor(null); }}>
+                                        {role.name}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             )}
-                          </div>
+                          </>
                         )}
                       </div>
 
