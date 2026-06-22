@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<we:webextension xmlns:we="http://schemas.microsoft.com/office/webextensions/webextension/2010/11" id="{A8CA39FD-306E-4D23-BF94-9CE436A0A014}">
+  <we:reference id="wa200010725" version="1.0.0.1" store="ru-RU" storeType="OMEX"/>
+  <we:alternateReferences>
+    <we:reference id="WA200010725" version="1.0.0.1" store="" storeType="OMEX"/>
+  </we:alternateReferences>
+  <we:properties>
+    <we:property name="claude.fileId" value="&quot;2ae644e2-7eb2-4ae7-b826-560a682af747&quot;"/>
+  </we:properties>
+  <we:bindings/>
+  <we:snapshot xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
+</we:webextension>
