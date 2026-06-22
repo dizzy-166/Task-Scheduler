@@ -17,42 +17,21 @@ export default function AIGenerateModal({ projectId, projectName, onClose, onTas
     setLoading(true);
     setError('');
     try {
-      const prompt =
-        `Ты менеджер проектов. Создай список задач для проекта.\n\n` +
-        `Проект: ${projectName || 'Проект'}\n` +
-        `Описание: ${description.trim()}\n\n` +
-        `Верни JSON-массив из 5-8 задач. Каждая задача:\n` +
-        `- title: название (до 100 символов)\n` +
-        `- description: краткое описание (1-2 предложения)\n` +
-        `- priority: low | medium | high | critical\n` +
-        `- due_days: через сколько дней дедлайн (целое, 3-90)\n\n` +
-        `Верни ТОЛЬКО JSON-массив без пояснений.\n` +
-        `Пример: [{"title":"Название","description":"Описание","priority":"medium","due_days":14}]`;
-
-      const resp = await fetch('https://api.cerebras.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_CEREBRAS_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'llama-3.1-8b',
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.6,
-          max_tokens: 1500,
-        }),
+      // Генерация идёт через backend (/tasks/ai-generate/): ключ Cerebras и
+      // выбор модели остаются на сервере (как и у AI-анализа). Backend сам
+      // строит промпт и парсит JSON-ответ.
+      const data = await taskService.generateAITasks({
+        project_name: projectName || 'Проект',
+        description: description.trim(),
       });
-      if (!resp.ok) throw new Error(`Cerebras ${resp.status}`);
-      const result = await resp.json();
-      const text = result.choices[0].message.content;
-      const match = text.match(/\[[\s\S]*\]/);
-      if (!match) throw new Error('unexpected format');
-      const tasks = JSON.parse(match[0]);
+      const tasks = Array.isArray(data?.tasks) ? data.tasks : [];
+      if (!tasks.length) throw new Error('empty');
       setGenerated(tasks);
       setSelected(new Set(tasks.map((_, i) => i)));
     } catch (e) {
       console.error('AI generate error:', e);
-      setError('Не удалось получить ответ от ИИ. Попробуйте ещё раз.');
+      const msg = e?.response?.data?.error;
+      setError(msg || 'Не удалось получить ответ от ИИ. Попробуйте ещё раз.');
     } finally {
       setLoading(false);
     }
