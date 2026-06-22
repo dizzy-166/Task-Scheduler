@@ -26,22 +26,6 @@ import companyAPI from '../api/companyService';
 import kanbanService from '../api/kanbanService';
 import chatService from '../api/chatService';
 
-const WHATS_NEW = [
-  {
-    date: '8 мая 2026',
-    items: [
-      { emoji: '⏱', text: 'Виджет активного таймера — в правом углу видна задача и время работы' },
-      { emoji: '◀', text: 'Свёрнутый сайдбар стал компактнее: кнопка ≡ для разворота' },
-      { emoji: '🔄', text: 'Задачи синхронизируются в реальном времени каждые 20 секунд' },
-      { emoji: '🔔', text: 'Уведомления о смене статуса задачи приходят всем участникам' },
-      { emoji: '@',  text: '@упоминания в комментариях с уведомлениями' },
-      { emoji: '🔍', text: 'Глобальный поиск — открывается по Ctrl+K' },
-      { emoji: '🎯', text: 'Фильтры на канбане: по исполнителю, приоритету, просроченным' },
-      { emoji: '🏷', text: 'Цветные бейджи дедлайна на карточках (красный / жёлтый)' },
-    ],
-  },
-];
-
 const InviteCards = () => {
   const { invites, respondToInvite, fetchCompanies, setActiveCompany } = useCompanyStore();
   if (!invites.length) return null;
@@ -213,12 +197,6 @@ const DashboardPage = () => {
   const [widgetDisplay, setWidgetDisplay] = useState('00:00:00');
   const widgetIntervalRef = useRef(null);
 
-  const [showWhatsNew, setShowWhatsNew] = useState(false);
-  const [whatsNewSeen, setWhatsNewSeen] = useState(
-    () => localStorage.getItem('whatsNewSeen') === WHATS_NEW[0].date
-  );
-  const whatsNewRef = useRef(null);
-
   const handleTimerChange = useCallback((timerInfo) => {
     if (timerInfo) {
       localStorage.setItem('activeTimer', JSON.stringify(timerInfo));
@@ -254,13 +232,6 @@ const DashboardPage = () => {
     }
     return () => clearInterval(widgetIntervalRef.current);
   }, [activeTimer]);
-
-  useEffect(() => {
-    if (!showWhatsNew) return;
-    const handler = (e) => { if (whatsNewRef.current && !whatsNewRef.current.contains(e.target)) setShowWhatsNew(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showWhatsNew]);
 
   const [archivedTasks, setArchivedTasks] = useState([]);
   const [archivedLoading, setArchivedLoading] = useState(false);
@@ -1216,34 +1187,6 @@ const DashboardPage = () => {
               <span className="search-trigger-sep" aria-hidden="true" />
               <kbd className="search-trigger-kbd">Ctrl+K</kbd>
             </button>
-            <div className="whats-new-wrap" ref={whatsNewRef}>
-              <button
-                className={`whats-new-btn${whatsNewSeen ? '' : ' whats-new-btn--unseen'}`}
-                onClick={() => {
-                  setShowWhatsNew(v => !v);
-                  if (!whatsNewSeen) { setWhatsNewSeen(true); localStorage.setItem('whatsNewSeen', WHATS_NEW[0].date); }
-                }}
-              >
-                ✦ Что нового?
-              </button>
-              {showWhatsNew && (
-                <div className="whats-new-panel">
-                  {WHATS_NEW.map(block => (
-                    <div key={block.date}>
-                      <div className="wnp-date">{block.date}</div>
-                      <ul className="wnp-list">
-                        {block.items.map((item, i) => (
-                          <li key={i} className="wnp-item">
-                            <span className="wnp-emoji">{item.emoji}</span>
-                            <span>{item.text}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
             <NotificationBell onTaskClick={handleTaskClick} onNewNotifications={handleNewNotifications} />
             <button className="theme-toggle-btn" onClick={toggleTheme} title="Сменить тему">
               {theme === 'light' ? (
@@ -1752,10 +1695,6 @@ const DashboardPage = () => {
 
             <div className="members-section">
               <h3>Активные участники</h3>
-              <p className="members-legend">
-                <b>Уровень доступа</b> — базовая роль участника. Владелец и администратор имеют полный доступ ко всему.
-                <b> Доступы</b> — точечные роли, которые добавляют конкретные права обычным участникам.
-              </p>
               <div className="members-list">
                 {companyMembers.map(member => {
                   const unassigned = availableCustomRoles.filter(r => !member.roles?.some(mr => mr.id === r.id));
